@@ -1,0 +1,13 @@
+{
+  "name": "battleship-netcentric",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-player online Battleship over TCP sockets (client-server).",
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
