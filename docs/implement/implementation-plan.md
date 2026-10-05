@@ -220,7 +220,7 @@ than it returns.
 - `src/components/Board.tsx` — the 8×8 grid, shared by the placement and game screens.
 
 Five screens: `NicknameScreen` (→ `"Welcome, <name>."`) → `LobbyScreen` (connected
-clients) → `PlacementScreen` (place 4 ships of 4 cells, rotate; opponent's grid
+clients, Start game button) → `PlacementScreen` (place 4 ships of 4 cells, rotate; opponent's grid
 hidden) → `GameScreen` (own board + target board, both names and scores, 10 s
 countdown) → `EndScreen` (Win/Lost, both scores, Rematch).
 
@@ -251,7 +251,7 @@ payloads, so `System.Text.Json`, `JSON.parse`, and `json.loads` all handle it
 without custom converters — that cross-language property is why the Python bot
 is cheap.
 
-**Client → Server** (4 verbs): `join` · `place` · `fire` · `rematch`
+**Client → Server** (5 verbs): `join` · `findMatch` · `place` · `fire` · `rematch`
 
 **Server → Client** (events): `connected` · `welcome` · `lobby` · `matchStart` ·
 `placed` · `turn` · `fireResult` · `matchEnd` · `rematchPending` · `opponentLeft` ·

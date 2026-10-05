@@ -6,6 +6,10 @@ A change to this file must land in the same pull request as the matching changes
 to `web/src/protocol.ts` and the C# DTOs in `Battleship.Core`. If those three
 disagree, this document wins.
 
+> **⚠ Changed after freeze.** Added the `findMatch` verb and the `"searching"`
+> lobby status: a player now presses *Start game* before the server pairs them.
+> If you already wrote `protocol.ts` or the C# DTOs, add both.
+
 ---
 
 ## 1. Transport
@@ -72,7 +76,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (4 verbs) · `S→C` server to client (12 events)
+`C→S` client to server (5 verbs) · `S→C` server to client (12 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -80,7 +84,8 @@ either side.
 | `join` | C→S | Player submits a nickname |
 | `welcome` | S→C | Nickname accepted |
 | `lobby` | S→C | Any client connects, names itself, changes state, or leaves |
-| `matchStart` | S→C | Two idle players are paired |
+| `findMatch` | C→S | Player presses *Start game* in the lobby |
+| `matchStart` | S→C | Two searching players are paired, or both asked for a rematch |
 | `place` | C→S | Player finishes placing 4 ships |
 | `placed` | S→C | Placement accepted |
 | `turn` | S→C | A turn begins |
@@ -101,10 +106,15 @@ either side.
       TCP connect
            │
            ▼
-   ┌───────────────┐  join    ┌────────┐  matchStart  ┌──────────┐
-   │  CONNECTING   │─────────►│  IDLE  │─────────────►│ PLACING  │
-   └───────────────┘ welcome  └────────┘              └──────────┘
-                                  ▲                         │ place
+   ┌───────────────┐  join    ┌────────┐  findMatch  ┌───────────┐
+   │  CONNECTING   │─────────►│  IDLE  │────────────►│ SEARCHING │
+   └───────────────┘ welcome  └────────┘             └───────────┘
+                                  ▲                         │ matchStart
+                                  │                         ▼
+                                  │                   ┌──────────┐
+                                  │                   │ PLACING  │
+                                  │                   └──────────┘
+                                  │                         │ place
                                   │                         ▼ placed
                                   │                   ┌──────────┐
                     opponentLeft  │        turn ─────►│ PLAYING  │
@@ -119,7 +129,12 @@ either side.
 ```
 
 `PLACING` is entered on every `matchStart`, including rematches — boards are
-cleared and both players place again.
+cleared and both players place again. A rematch goes straight from `MATCHEND` to
+`PLACING`; it never passes through `SEARCHING`.
+
+`IDLE` means "in the lobby, not looking for a match". The server never pairs an
+`IDLE` player. Every return to `IDLE` (`opponentLeft`, `reset`) needs a new
+`findMatch` before the player is paired again.
 
 ---
 
@@ -161,7 +176,8 @@ dashboard's own display.
 ```
 
 `status` is one of `"connecting"` (socket open, no nickname yet), `"idle"`,
-`"placing"`, `"in-match"`. `count` equals the length of `clients` and is sent
+`"searching"` (pressed *Start game*, waiting for an opponent), `"placing"`,
+`"in-match"`. `count` equals the length of `clients` and is sent
 explicitly so the dashboard needs no derivation.
 
 ### `matchStart`
@@ -260,8 +276,9 @@ sends a fresh `matchStart` instead of another `rematchPending`.
 {"type":"opponentLeft","id":"p2"}
 ```
 
-The surviving player returns to `IDLE`. Scores are retained — a disconnect is not
-a loss, and awarding a win for it would be trivially exploitable in a demo.
+The surviving player returns to `IDLE` and must send `findMatch` again to be
+paired. Scores are retained — a disconnect is not a loss, and awarding a win for
+it would be trivially exploitable in a demo.
 
 ### `reset`
 
@@ -271,6 +288,8 @@ a loss, and awarding a win for it would be trivially exploitable in a demo.
 
 Triggered by the dashboard RESET button. Every client abandons any match, clears
 its board, zeroes both scores, and returns to `IDLE`. A fresh `lobby` follows.
+Searching players stop searching too — after a reset nobody is paired until
+they send `findMatch` again.
 
 ### `error`
 
@@ -288,7 +307,7 @@ Errors never change client state — the client stays where it was.
 | `not-your-turn` | `fire` from the player who is not active |
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
-| `not-in-match` | `place`, `fire`, or `rematch` sent in the wrong state |
+| `not-in-match` | `findMatch`, `place`, `fire`, or `rematch` sent in the wrong state |
 | `unknown` | Anything else |
 
 ---
@@ -304,6 +323,18 @@ Errors never change client state — the client stays where it was.
 Nickname is trimmed and must be 1–16 characters after trimming. The server may
 de-duplicate (`"Alice"` → `"Alice (2)"`); the authoritative result comes back in
 `welcome`. Sent once, in `CONNECTING`.
+
+### `findMatch`
+
+```json
+{"type":"findMatch"}
+```
+
+Sent when the player presses *Start game*. Valid only in `IDLE`. The player's
+lobby status becomes `"searching"`, and the server pairs them as soon as a second
+player is searching. Sending it again while `SEARCHING` is idempotent — ignored,
+not an error. There is no cancel in v1: a searching player stays searching until
+paired or disconnected.
 
 ### `place`
 
@@ -352,6 +383,9 @@ Alice(p1)                      Server                      Bob(p2)
     │                             │◄─── join "Bob" ────────────┤
     │◄──── lobby (2) ─────────────┼──── welcome, lobby ───────►│
     │                             │                            │
+    ├───── findMatch ────────────►│                            │  p1 → SEARCHING
+    │◄──── lobby ─────────────────┼──── lobby ────────────────►│
+    │                             │◄─── findMatch ─────────────┤  p2 → SEARCHING
     │◄──── matchStart ────────────┼──── matchStart ───────────►│  both → PLACING
     ├───── place ────────────────►│                            │
     │◄──── placed p1 ─────────────┼──── placed p1 ────────────►│
@@ -379,8 +413,9 @@ Alice(p1)                      Server                      Bob(p2)
 
 Server obligations, not client concerns, but every implementer should know them.
 
-1. **Matchmaking** pairs the first two `idle` players. A third client stays in the
-   lobby and receives `lobby` updates only.
+1. **Matchmaking** pairs the first two `searching` players. `idle` players are
+   never paired. A third client stays in the lobby and receives `lobby` updates
+   only.
 2. **The turn timer is 10 seconds**, started when `turn` is sent. On expiry the
    server fires a uniformly random cell the active player has not yet targeted,
    and emits `fireResult` with `auto: true`. A match can therefore never stall on
@@ -415,6 +450,7 @@ export type ServerEvent =
 
 export type ClientVerb =
   | { type: "join"; nickname: string }
+  | { type: "findMatch" }
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
   | { type: "rematch" };
@@ -439,8 +475,10 @@ while chunk := sock.recv(4096).decode("utf-8"):
             handle(json.loads(line))
 ```
 
-The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`, and
-`matchEnd`. It may ignore the rest.
+The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest. It must send
+`findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
+will never be paired.
 
 ---
 
@@ -454,3 +492,5 @@ the team picks its extra features:
 - **Chat, spectators, rooms, replay.** All reachable by adding new `type` values
   under the ignore-unknown rules in section 1 — no re-freeze required.
 - **Placement time limit.** Only the 10-second turn timer is specified.
+- **Cancelling a search.** Once `findMatch` is sent the player stays searching.
+  A cancel verb can be added later under the ignore-unknown rules.

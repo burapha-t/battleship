@@ -10,6 +10,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/instruction.md` | Requirements and grading criteria |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
+| `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
 
 ## Stage
