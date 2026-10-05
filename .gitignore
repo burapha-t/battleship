@@ -5,3 +5,9 @@
 
 # for storing temporary files to local
 /tmp
+
+# .NET build output and IDE files
+bin/
+obj/
+.vs/
+*.user
