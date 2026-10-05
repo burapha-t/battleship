@@ -280,21 +280,26 @@ without pre-committing to any:
 
 ## Team split (7 people)
 
+1 tech lead, 3 backend, 2 PM + frontend, 1 AI engineer.
+
 | Who | Owns | Graded criteria covered |
 |---|---|---|
-| **Lead** | `protocol.md`, solution scaffolding, integration, review, demo run-of-show, network testing | System setup (2.0), demo creativity (5.0) |
-| **2 people** | Server: accept loop, sessions, match state machine, turn timer, scoring, rematch | Turn timer, hit/miss, scoring, rematch, first-player randomisation (3.0) |
-| **1 person** | Dashboard (count / list / reset) — small and independent; then the Python bot | Server display + reset (2.0), AI feature (2.0) |
-| **1 person** | Client: `TcpClient` + web host + WebSocket bridge | No-manual-IP connect, lobby info (1.5) |
-| **2 people** | Web UI: React components, the five screens, `protocol.ts` | Nickname, name+score display, 8×8 grid + placement (1.5), creativity |
+| **Tech lead** | `protocol.md`, solution scaffolding, CI, review, network testing, demo machines, two-machine acceptance runs | System setup (2.0) |
+| **Backend 1** — server edge | Accept loop, sessions, lobby broadcasts, disconnects, dashboard (count / list / reset) | Server display + reset (2.0) |
+| **Backend 2** — match engine | Matchmaking, placement, turns, turn timer, scoring, rematch, reset semantics | First-player randomisation, winner starts rematch (1.0) |
+| **Backend 3** — client + tests | Client: `TcpClient` + web host + WebSocket bridge, publish builds; integration tests | No-manual-IP connect (0.5) |
+| **2 PM + frontend** | Web UI: React components, the five screens, `protocol.ts`; planning, extras decision, demo story, rehearsals | Nickname, lobby, name+score, grid + placement, countdown, hit/miss, end screen, rematch (4.5), demo creativity (5.0) |
+| **AI engineer** | Python bot | AI feature (2.0) |
 
-Within the UI pair, the person with React experience takes `Board.tsx`,
+The tech lead stays off the feature critical path, free to review and unblock.
+
+Within the PM + frontend pair, the person with React experience takes `Board.tsx`,
 `PlacementScreen`, and `GameScreen` — the grid interaction, drag/rotate, and
 countdown are where the real difficulty is. The other takes the app shell,
 nickname, lobby, and end screens, plus `protocol.ts`.
 
 `Battleship.Core` is built by everyone together in week 1 as the C# onboarding
-exercise, then handed to the server pair.
+exercise, then handed to the match-engine backend.
 
 ## Timeline (4 weeks)
 

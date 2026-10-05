@@ -6,10 +6,6 @@ A change to this file must land in the same pull request as the matching changes
 to `web/src/protocol.ts` and the C# DTOs in `Battleship.Core`. If those three
 disagree, this document wins.
 
-> **⚠ Changed after freeze.** Added the `findMatch` verb and the `"searching"`
-> lobby status: a player now presses *Start game* before the server pairs them.
-> If you already wrote `protocol.ts` or the C# DTOs, add both.
-
 ---
 
 ## 1. Transport
