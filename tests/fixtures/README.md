@@ -45,23 +45,10 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 All 17 message types and all five lobby statuses appear. The `unknown` error
 code does not, because `protocol.md` gives no trigger for it.
 
-### Where `protocol.md` is silent
+### Don't depend on
 
-These are this file's readings, not yet the contract:
-
-- A `connecting` client's lobby entry has `"name": null`, following the protocol's
-  own `sunkCells: null`.
-- A lobby is broadcast when a client connects (protocol §2's table), although
-  §6's diagram leaves it out.
-- An input that changes the roster produces one lobby after the input's other
-  frames. For example, the second `findMatch` produces `matchStart` and then a
-  single lobby showing both players `placing`.
-- Both players go from `placing` to `in-match` when the first `turn` is sent, and
-  stay `in-match` through `matchEnd`. There is no match-end status.
-- A rematch gets a new `matchId`, and its `turnNumber` restarts at 1.
-
-Don't depend on the order of `players` (`m3` lists `p2` first). Find yourself by
-`id`. Error `message` texts are placeholders; branch on `code`.
+- The order of `players`: `m3` lists `p2` first. Find yourself by `id`.
+- Error `message` texts: they are placeholders. Branch on `code`.
 
 ### Changing it
 

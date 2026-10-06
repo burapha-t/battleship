@@ -171,10 +171,27 @@ dashboard's own display.
 ]}
 ```
 
-`status` is one of `"connecting"` (socket open, no nickname yet), `"idle"`,
-`"searching"` (pressed *Start game*, waiting for an opponent), `"placing"`,
-`"in-match"`. `count` equals the length of `clients` and is sent
-explicitly so the dashboard needs no derivation.
+`count` equals the length of `clients` and is sent explicitly so the dashboard
+needs no derivation. Every connected client is listed, including one that has not
+joined yet: its `name` is `null` until its `welcome`.
+
+| `status` | From | Until |
+|---|---|---|
+| `"connecting"` | TCP accept — socket open, no nickname yet | `welcome` |
+| `"idle"` | `welcome`, `opponentLeft` or `reset` | `findMatch` |
+| `"searching"` | `findMatch` — pressed *Start game*, waiting for an opponent | `matchStart` or `reset` |
+| `"placing"` | `matchStart`, rematches included | the match's first `turn`, `opponentLeft` or `reset` |
+| `"in-match"` | the match's first `turn` | a rematch's `matchStart`, `opponentLeft` or `reset` |
+
+Both players in a match change status together. A player stays `"in-match"`
+after `matchEnd`; there is no match-over status. A client that disconnects
+leaves the list.
+
+Whatever changes the roster — a client message, a disconnect, a RESET — produces
+one `lobby`, sent after its other frames and showing the result. When a second
+`findMatch` completes a pair, the server sends `matchStart` to both players, then
+one `lobby` with both `"placing"`; the second player never appears as
+`"searching"`.
 
 ### `matchStart`
 
@@ -186,7 +203,8 @@ explicitly so the dashboard needs no derivation.
 ```
 
 `players` always has exactly 2 entries and carries current scores, so the UI can
-render both names and scores from this one message.
+render both names and scores from this one message. Every match has its own
+`matchId`, rematches included.
 
 `firstPlayerId` is **random** for a first match, and is the **previous match's
 winner** for a rematch.
@@ -211,8 +229,8 @@ rejected placement produces an `error` instead, and that player stays in
 ```
 
 Sent to both players when a turn begins. `seconds` is always `10`; it is on the
-wire so the UI never hardcodes it. `turnNumber` starts at 1 and increments for
-every turn in the match.
+wire so the UI never hardcodes it. `turnNumber` starts at 1 in every match,
+rematches included, and increments for every turn.
 
 The client starts its countdown on receipt. **The countdown is display only —
 the server's timer is authoritative.** Never let the client decide a turn expired.
@@ -376,6 +394,7 @@ Alice(p1)                      Server                      Bob(p2)
     │◄──── welcome ───────────────┤                            │
     │◄──── lobby (1) ─────────────┤                            │
     │                             ├──── connected p2 ─────────►│
+    │◄──── lobby (2) ─────────────┤                            │  p2 listed "connecting"
     │                             │◄─── join "Bob" ────────────┤
     │◄──── lobby (2) ─────────────┼──── welcome, lobby ───────►│
     │                             │                            │
@@ -383,12 +402,14 @@ Alice(p1)                      Server                      Bob(p2)
     │◄──── lobby ─────────────────┼──── lobby ────────────────►│
     │                             │◄─── findMatch ─────────────┤  p2 → SEARCHING
     │◄──── matchStart ────────────┼──── matchStart ───────────►│  both → PLACING
+    │◄──── lobby ─────────────────┼──── lobby ────────────────►│  both listed "placing"
     ├───── place ────────────────►│                            │
     │◄──── placed p1 ─────────────┼──── placed p1 ────────────►│
     │                             │◄─── place ─────────────────┤
     │◄──── placed p2 ─────────────┼──── placed p2 ────────────►│
     │                             │                            │
     │◄──── turn (active p1) ──────┼──── turn (active p1) ─────►│  both → PLAYING
+    │◄──── lobby ─────────────────┼──── lobby ────────────────►│  both listed "in-match"
     ├───── fire 3,5 ─────────────►│                            │
     │◄──── fireResult hit ────────┼──── fireResult hit ───────►│
     │◄──── turn (active p2) ──────┼──── turn (active p2) ─────►│
@@ -401,6 +422,7 @@ Alice(p1)                      Server                      Bob(p2)
     │◄──── rematchPending p1 ─────┼──── rematchPending p1 ────►│
     │                             │◄─── rematch ───────────────┤
     │◄──── matchStart ────────────┼──── matchStart ───────────►│  p1 first (won)
+    │◄──── lobby ─────────────────┼──── lobby ────────────────►│  both listed "placing"
 ```
 
 ---
