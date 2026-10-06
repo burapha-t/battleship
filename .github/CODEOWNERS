@@ -1,0 +1,10 @@
+# CI, branch guardrails, and this file
+/.github/                       @burapha-t
+
+# Wire protocol: change these together (protocol-change rule)
+/docs/implement/protocol.md     @burapha-t
+/web/src/protocol.ts            @burapha-t
+/tests/fixtures/                @burapha-t
+
+# Shared rules library: stays on netstandard2.1 for Unity
+/src/Battleship.Core/           @burapha-t
