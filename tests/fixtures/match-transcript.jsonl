@@ -1,0 +1,282 @@
+{"from":"server","to":"p1","frame":{"type":"connected","id":"p1","protocolVersion":1}}
+{"from":"p1","to":"server","frame":{"type":"join","nickname":"Alice"}}
+{"from":"server","to":"p1","frame":{"type":"welcome","id":"p1","nickname":"Alice"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":1,"clients":[{"id":"p1","name":"Alice","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"connected","id":"p2","protocolVersion":1}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":null,"status":"connecting"}]}}
+{"from":"p2","to":"server","frame":{"type":"join","nickname":"   "}}
+{"from":"server","to":"p2","frame":{"type":"error","code":"bad-nickname","message":"Nickname must be 1-16 characters."}}
+{"from":"p2","to":"server","frame":{"type":"join","nickname":"Bob"}}
+{"from":"server","to":"p2","frame":{"type":"welcome","id":"p2","nickname":"Bob"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"connected","id":"p3","protocolVersion":1}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
+{"from":"p3","to":"server","frame":{"type":"join","nickname":"Alice"}}
+{"from":"server","to":"p3","frame":{"type":"welcome","id":"p3","nickname":"Alice (2)"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"findMatch"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p2","to":"server","frame":{"type":"findMatch"}}
+{"from":"server","to":"p1","frame":{"type":"matchStart","matchId":"m1","players":[{"id":"p1","name":"Alice","score":0},{"id":"p2","name":"Bob","score":0}],"firstPlayerId":"p2"}}
+{"from":"server","to":"p2","frame":{"type":"matchStart","matchId":"m1","players":[{"id":"p1","name":"Alice","score":0},{"id":"p2","name":"Bob","score":0}],"firstPlayerId":"p2"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"place","ships":[[[0,0],[0,1],[0,2],[0,3]],[[2,1],[3,1],[4,1],[5,1]],[[7,0],[7,1],[7,2],[7,3]],[[1,6],[2,6],[3,6],[4,6]]]}}
+{"from":"server","to":"p1","frame":{"type":"placed","id":"p1"}}
+{"from":"server","to":"p2","frame":{"type":"placed","id":"p1"}}
+{"from":"p2","to":"server","frame":{"type":"place","ships":[[[1,0],[1,1],[1,2],[1,3]],[[3,2],[3,3],[3,4],[4,4]],[[4,7],[5,7],[6,7],[7,7]],[[6,1],[6,2],[6,3],[6,4]]]}}
+{"from":"server","to":"p2","frame":{"type":"error","code":"invalid-placement","message":"Each ship must be a straight line."}}
+{"from":"p2","to":"server","frame":{"type":"place","ships":[[[1,0],[1,1],[1,2],[1,3]],[[3,2],[3,3],[3,4],[3,5]],[[4,7],[5,7],[6,7],[7,7]],[[6,1],[6,2],[6,3],[6,4]]]}}
+{"from":"server","to":"p1","frame":{"type":"placed","id":"p2"}}
+{"from":"server","to":"p2","frame":{"type":"placed","id":"p2"}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":1}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":1}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":0,"col":0}}
+{"from":"server","to":"p1","frame":{"type":"error","code":"not-your-turn","message":"It is not your turn."}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":4,"col":4}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":4,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":4,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":2}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":2}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":3,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":3}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":3}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":2,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":2,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":2,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":4}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":4}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":3,"col":4}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":4,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":4,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":5}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":5}}
+{"from":"p3","to":"server","frame":{"type":"fire","row":0,"col":0}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"not-in-match","message":"You are not in a match."}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":5,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":6}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":6}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":3,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":7}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":7}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":5,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":2,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":2,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":8}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":8}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":3,"col":5}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":5,"result":"hit","sunk":true,"sunkCells":[[3,2],[3,3],[3,4],[3,5]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":5,"result":"hit","sunk":true,"sunkCells":[[3,2],[3,3],[3,4],[3,5]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":9}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":9}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":4,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":10}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":10}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":8,"col":5}}
+{"from":"server","to":"p1","frame":{"type":"error","code":"out-of-range","message":"Row and column must be 0-7."}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":5,"col":5}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":5,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":5,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":11}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":11}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":3,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":3,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":3,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":12}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":12}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":13}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":13}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":6,"col":6,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":true}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":6,"col":6,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":true}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":14}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":14}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":4}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":4,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":4,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":15}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":15}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":2,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":1,"result":"hit","sunk":true,"sunkCells":[[2,1],[3,1],[4,1],[5,1]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":1,"result":"hit","sunk":true,"sunkCells":[[2,1],[3,1],[4,1],[5,1]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":16}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":16}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":5}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":17}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":17}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":0,"col":5}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":5,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":18}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":18}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":19}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":19}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":7,"col":7}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":7,"col":7,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":7,"col":7,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":20}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":20}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":1,"result":"hit","sunk":true,"sunkCells":[[6,1],[6,2],[6,3],[6,4]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":1,"result":"hit","sunk":true,"sunkCells":[[6,1],[6,2],[6,3],[6,4]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":21}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":21}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":1,"col":6}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":1,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":1,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":22}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":22}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":1,"col":1}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":1,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":23}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":23}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":2,"col":6}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":2,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":24}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":24}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"error","code":"already-fired","message":"You already fired at that cell."}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":1,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":25}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":25}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":0,"col":6}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":6,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":6,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":26}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":26}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":1,"col":0}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":0,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":0,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":27}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":27}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":3,"col":6}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":3,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":3,"col":6,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":28}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":28}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":1,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":3,"result":"hit","sunk":true,"sunkCells":[[1,0],[1,1],[1,2],[1,3]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":1,"col":3,"result":"hit","sunk":true,"sunkCells":[[1,0],[1,1],[1,2],[1,3]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":29}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":29}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":4,"col":6}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":6,"result":"hit","sunk":true,"sunkCells":[[1,6],[2,6],[3,6],[4,6]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":4,"col":6,"result":"hit","sunk":true,"sunkCells":[[1,6],[2,6],[3,6],[4,6]],"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":30}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":30}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":5,"col":7}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":5,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":5,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":31}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":31}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":0,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":32}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":32}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":4,"col":7}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":4,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":4,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":33}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":33}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":0,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":0,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":34}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":34}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":6,"col":7}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":6,"col":7,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":35}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":35}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":6,"col":0}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":6,"col":0,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":6,"col":0,"result":"miss","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":36}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":36}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":7,"col":7}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":7,"col":7,"result":"hit","sunk":true,"sunkCells":[[4,7],[5,7],[6,7],[7,7]],"allSunk":true,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":7,"col":7,"result":"hit","sunk":true,"sunkCells":[[4,7],[5,7],[6,7],[7,7]],"allSunk":true,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
+{"from":"server","to":"p2","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
+{"from":"p2","to":"server","frame":{"type":"rematch"}}
+{"from":"server","to":"p1","frame":{"type":"rematchPending","from":"p2"}}
+{"from":"server","to":"p2","frame":{"type":"rematchPending","from":"p2"}}
+{"from":"p1","to":"server","frame":{"type":"rematch"}}
+{"from":"server","to":"p1","frame":{"type":"matchStart","matchId":"m2","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}],"firstPlayerId":"p1"}}
+{"from":"server","to":"p2","frame":{"type":"matchStart","matchId":"m2","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}],"firstPlayerId":"p1"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p2","to":"server","frame":{"type":"place","ships":[[[0,4],[0,5],[0,6],[0,7]],[[2,2],[3,2],[4,2],[5,2]],[[4,4],[4,5],[4,6],[4,7]],[[7,0],[7,1],[7,2],[7,3]]]}}
+{"from":"server","to":"p1","frame":{"type":"placed","id":"p2"}}
+{"from":"server","to":"p2","frame":{"type":"placed","id":"p2"}}
+{"from":"p1","to":"server","frame":{"type":"place","ships":[[[0,0],[1,0],[2,0],[3,0]],[[5,2],[5,3],[5,4],[5,5]],[[2,7],[3,7],[4,7],[5,7]],[[7,4],[7,5],[7,6],[7,7]]]}}
+{"from":"server","to":"p1","frame":{"type":"placed","id":"p1"}}
+{"from":"server","to":"p2","frame":{"type":"placed","id":"p1"}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":1}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":1}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"in-match"},{"id":"p2","name":"Bob","status":"in-match"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"fire","row":3,"col":2}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":3,"col":2,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":2}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p2","seconds":10,"turnNumber":2}}
+{"from":"p2","to":"server","frame":{"type":"fire","row":5,"col":3}}
+{"from":"server","to":"p1","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p2","frame":{"type":"fireResult","by":"p2","target":"p1","row":5,"col":3,"result":"hit","sunk":false,"sunkCells":null,"allSunk":false,"auto":false}}
+{"from":"server","to":"p1","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":3}}
+{"from":"server","to":"p2","frame":{"type":"turn","activePlayerId":"p1","seconds":10,"turnNumber":3}}
+{"from":"server","to":"p1","frame":{"type":"reset"}}
+{"from":"server","to":"p2","frame":{"type":"reset"}}
+{"from":"server","to":"p3","frame":{"type":"reset"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p2","to":"server","frame":{"type":"findMatch"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"findMatch"}}
+{"from":"server","to":"p1","frame":{"type":"matchStart","matchId":"m3","players":[{"id":"p2","name":"Bob","score":0},{"id":"p1","name":"Alice","score":0}],"firstPlayerId":"p1"}}
+{"from":"server","to":"p2","frame":{"type":"matchStart","matchId":"m3","players":[{"id":"p2","name":"Bob","score":0},{"id":"p1","name":"Alice","score":0}],"firstPlayerId":"p1"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"p1","to":"server","frame":{"type":"place","ships":[[[0,0],[0,1],[0,2],[0,3]],[[2,1],[3,1],[4,1],[5,1]],[[7,0],[7,1],[7,2],[7,3]],[[1,6],[2,6],[3,6],[4,6]]]}}
+{"from":"server","to":"p1","frame":{"type":"placed","id":"p1"}}
+{"from":"server","to":"p2","frame":{"type":"placed","id":"p1"}}
+{"from":"server","to":"p1","frame":{"type":"opponentLeft","id":"p2"}}
+{"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
+{"from":"server","to":"p3","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

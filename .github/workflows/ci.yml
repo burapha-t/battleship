@@ -1,0 +1,20 @@
+name: CI
+
+# No `paths:` filter: a required check that never runs leaves the PR stuck.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - run: dotnet build --no-restore
+      - run: dotnet test --no-build
