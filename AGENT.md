@@ -16,8 +16,8 @@ bot. 7 people, 4 weeks, graded.
 ## Stage
 
 Protocol frozen; `Battleship.sln` scaffolded — Core holds only `GameRules` and
-`Coord`, Server and Client are empty console apps. `web/` and `bot/` are still to
-be scaffolded per the plan's *First steps*.
+`Coord`, Server and Client are empty console apps. `web/` is a bare Vite + React +
+TS scaffold; `bot/` is still to be scaffolded per the plan's *First steps*.
 
 ## Invariants
 
@@ -34,6 +34,11 @@ Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`
 - `dotnet build` — build the whole solution
 - `dotnet test` — run every test project
 - `dotnet test tests/Battleship.Core.Tests` — Core unit tests only
+
+The UI needs Node 24 LTS. Run these in `web/`, after `npm ci` once:
+
+- `npm run dev` — Vite dev server on :5173 with hot reload
+- `npm run build` — type-check (strict) and bundle into `web/dist/`
 
 ## Maintaining this file
 
