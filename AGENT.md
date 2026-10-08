@@ -8,6 +8,8 @@ bot. 7 people, 4 weeks, graded.
 | Doc | Decides |
 |---|---|
 | `docs/instruction.md` | Requirements and grading criteria |
+| `docs/setup.md` | Installing .NET 8, Node and Python; the firewall prompt |
+| `docs/convention.md` | Branch, commit and PR names — every one must follow it |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
