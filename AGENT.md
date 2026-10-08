@@ -17,10 +17,13 @@ bot. 7 people, 4 weeks, graded.
 
 ## Stage
 
-Protocol frozen; `Battleship.sln` scaffolded — Core holds only `GameRules` and
-`Coord`, Server and Client are empty console apps. `web/` is a Vite + React + TS
-scaffold plus `src/protocol.ts`; `bot/` is still to be scaffolded per the plan's
-*First steps*.
+- Protocol: frozen.
+- `Battleship.sln`: scaffolded.
+- `Battleship.Core`: in progress — the shared game rules (ships, board and shots,
+  placement checks, random placement, nicknames, protocol messages), written one
+  class per person. Check `src/Battleship.Core/` for what exists.
+- `Battleship.Server`, `Battleship.Client`: empty console apps.
+- `web/`, `bot/`: not scaffolded yet (see the plan's *First steps*).
 
 ## Invariants
 
