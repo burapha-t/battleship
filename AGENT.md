@@ -41,6 +41,11 @@ Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`
 - `dotnet test` — run every test project
 - `dotnet test tests/Battleship.Core.Tests` — Core unit tests only
 
+The UI needs Node 24 LTS. Run these in `web/`, after `npm ci` once:
+
+- `npm run dev` — Vite dev server on :5173 with hot reload
+- `npm run build` — type-check (strict) and bundle into `web/dist/`
+
 ## Maintaining this file
 
 Coding with an agent? Update AGENT.md in the same change that makes it stale — a
