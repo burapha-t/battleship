@@ -18,8 +18,9 @@ bot. 7 people, 4 weeks, graded.
 ## Stage
 
 Protocol frozen; `Battleship.sln` scaffolded — Core holds only `GameRules` and
-`Coord`, Server and Client are empty console apps. `web/` is a bare Vite + React +
-TS scaffold; `bot/` is still to be scaffolded per the plan's *First steps*.
+`Coord`, Server and Client are empty console apps. `web/` is a Vite + React + TS
+scaffold plus `src/protocol.ts`; `bot/` is still to be scaffolded per the plan's
+*First steps*.
 
 ## Invariants
 
