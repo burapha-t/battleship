@@ -29,7 +29,10 @@ runtime and the built web UI.
 
 1. Open `publish/<os>/client/client.json` in a text editor and set `"serverHost"` to the
    address from step 2.3. On Computer A itself, keep `127.0.0.1`. Leave `serverPort`
-   at `5050` and `webPort` at `3000`.
+   at `5050` and `webPort` at `3000`. `client.json` is gitignored, so a fresh clone has
+   none: the build then makes one from `src/Battleship.Client/client_example.json`. To
+   set the address before building, copy that file to `client.json` beside it and edit
+   the copy.
 2. Run `Battleship.Client` (`Battleship.Client.exe` on Windows). The game opens in the
    default browser by itself: nobody types an IP address or a port.
 
@@ -49,4 +52,6 @@ The second client needs its own web port: `Battleship.Client --web-port 3001`.
 
 From source, with the SDK: `dotnet run --project src/Battleship.Server`, then
 `dotnet run --project src/Battleship.Client` and
-`dotnet run --project src/Battleship.Client -- --web-port 3001`.
+`dotnet run --project src/Battleship.Client -- --web-port 3001`. The client reads
+`client.json` from its build output; without your own copy of it (see step 3.1), that is
+the example's `127.0.0.1`.

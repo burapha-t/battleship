@@ -1,7 +1,7 @@
 /* Screen layouts, after docs/frontend/1–4_*.html. Board cells shrink with the
    window so a whole screen fits a 1280×800 projector or a laptop window. */
 
-/* ── Nickname and lobby (1_home) ─────────────────────────────── */
+/* ── Home and lobby (1_home) ─────────────────────────────── */
 
 .home {
   flex: 1;
@@ -48,15 +48,9 @@
 }
 
 .join h2 {
-  margin-bottom: 4px;
-  font-size: 30px;
+  margin-bottom: 18px;
+  font-size: 32px;
   overflow-wrap: anywhere;
-}
-
-.hint {
-  margin-bottom: 16px;
-  font-size: 15px;
-  color: var(--muted);
 }
 
 .field {
@@ -605,6 +599,29 @@
   font-size: 28px;
 }
 
+.actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Not .home: that's the lobby screen's layout. */
+.btn.go-home {
+  height: 62px;
+  padding: 10px 22px;
+  font-size: 22px;
+}
+
+.btn.big.rm {
+  height: 62px;
+  white-space: nowrap;
+}
+
+.btn.big.pressed.rm {
+  padding: 10px 26px;
+  font-size: 23px;
+}
+
 .note {
   display: flex;
   align-items: center;
@@ -694,6 +711,10 @@
   }
   .hero svg {
     display: none;
+  }
+  .actions {
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .field2 {
     grid-template-columns: minmax(0, 1fr);

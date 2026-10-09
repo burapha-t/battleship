@@ -1,1 +1,2 @@
-{ "serverHost": "127.0.0.1", "serverPort": 5050, "webPort": 3000 }
+{ "serverHost": "172.20.10.3", "serverPort": 5050, "webPort": 3000 }
+

@@ -13,7 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- client.json is per machine and gitignored; without one, ship the example under that name. -->
     <None Update="client.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Remove="client_example.json" />
+    <None Include="client_example.json" Link="client.json" CopyToOutputDirectory="PreserveNewest" Condition="!Exists('client.json')" />
     <!-- The built UI, served as wwwroot/. Matches nothing until `npm run build` in web/. -->
     <Content Include="..\..\web\dist\**\*" LinkBase="wwwroot" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

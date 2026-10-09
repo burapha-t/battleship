@@ -1,0 +1,333 @@
+/* The captain's ID card, after docs/frontend/0_login*.html. Every rule sits
+   under .login so none of it reaches the other screens; the shared .card,
+   .btn and .field come from index.css and screens.css. */
+
+.login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 80px;
+}
+
+.login .idcard,
+.login .load {
+  width: min(840px, 100%);
+}
+
+.login .idcard {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+
+.idcard .idhead {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 26px 8px;
+  font: 800 20px / 1.2 var(--font-display);
+  color: #fff;
+  background: var(--ink);
+  border-radius: 17px 17px 0 0;
+}
+
+.idcard .idhead span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.idcard .idhead small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.75;
+  letter-spacing: 0.5px;
+}
+
+/* ── Stub: the photo, name and barcode ──────────────────────── */
+
+.idcard .stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 24px 22px;
+  background: var(--mist);
+  border-radius: 0 0 0 17px;
+}
+
+.idcard .photo {
+  display: grid;
+  place-items: center;
+  width: 136px;
+  height: 156px;
+  margin-bottom: 12px;
+  font: 800 78px / 1.05 var(--font-display);
+  background: var(--sun);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+/* Not issued yet: a dashed, empty slot. */
+.idcard .photo.new {
+  font-size: 64px;
+  color: var(--muted);
+  background: var(--paper);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.idcard .stub .rank {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.idcard .stub .holder {
+  max-width: 100%;
+  font: 800 28px / 1 var(--font-display);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.idcard .stub .no {
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.idcard .stub .barcode {
+  width: 180px;
+  max-width: 100%;
+  height: 42px;
+  margin-top: auto;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink) 0 3px,
+    transparent 3px 6px,
+    var(--ink) 6px 7px,
+    transparent 7px 10px,
+    var(--ink) 10px 14px,
+    transparent 14px 17px
+  );
+}
+
+/* ── Form, past the perforated edge ─────────────────────────── */
+
+.idcard .form {
+  position: relative;
+  padding: 22px 36px 28px;
+  border-left: 3px dashed var(--ink);
+}
+
+/* The notches punched out of the edge: the page shows through. */
+.idcard .form::before,
+.idcard .form::after {
+  content: '';
+  position: absolute;
+  left: -16px;
+  width: 26px;
+  height: 26px;
+  background: var(--sky);
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+}
+
+.idcard .form::before {
+  top: -15px;
+}
+
+.idcard .form::after {
+  bottom: -17px;
+}
+
+.idcard .tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 18px;
+  background: var(--mist);
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+}
+
+.idcard .tab {
+  padding: 6px 0 4px;
+  font: 800 20px / 1.2 var(--font-display);
+  text-align: center;
+  color: var(--muted);
+  background: transparent;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.idcard .tab:disabled {
+  cursor: default;
+}
+
+.idcard .tab:focus-visible {
+  outline: 4px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.idcard .tab.on {
+  color: var(--ink);
+  background: var(--sun);
+  border-color: var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+.idcard .form h1 {
+  margin-bottom: 16px;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.idcard .form label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+/* Overrides the base .field (60px tall, 24px type) with the card's sizes. */
+.idcard .field {
+  display: block;
+  width: 100%;
+  height: 54px;
+  margin-bottom: 16px;
+  padding: 0 18px;
+  font-size: 22px;
+  font-weight: 800;
+  caret-color: var(--sea);
+  background: var(--mist);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+}
+
+.idcard .field.pw {
+  font-size: 26px;
+  letter-spacing: 4px;
+}
+
+.idcard .field.bad {
+  border-color: var(--coral);
+}
+
+.idcard .form .btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px;
+  font-size: 26px;
+}
+
+.login .login-error {
+  margin-top: 14px;
+  font-weight: 800;
+  color: var(--coral-text);
+}
+
+.idcard .stamp {
+  position: absolute;
+  left: 26px;
+  top: 322px;
+  z-index: 5;
+  padding: 6px 16px 2px;
+  font: 800 28px / 1.2 var(--font-display);
+  white-space: nowrap;
+  color: #1a8f72;
+  background: rgba(255, 255, 255, 0.85);
+  border: 5px double #1a8f72;
+  border-radius: 14px;
+  transform: rotate(-10deg);
+}
+
+/* ── Raising the anchor ─────────────────────────────────────── */
+
+.login .load {
+  margin-top: 30px;
+}
+
+.login .load .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.login .load b {
+  font: 800 24px / 1.2 var(--font-display);
+}
+
+.login .load span {
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.login .track {
+  height: 30px;
+  overflow: hidden;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+/* The width is set inline from the percentage. */
+.login .track i {
+  display: block;
+  height: 100%;
+  background: var(--kelp);
+  background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.28) 0 10px, transparent 10px 20px);
+  border-right: 3px solid var(--ink);
+  transition: none;
+}
+
+/* ── Short and narrow windows ───────────────────────────────── */
+
+@media (max-height: 760px) {
+  .login {
+    padding-bottom: 40px;
+  }
+  .idcard .form h1 {
+    margin-bottom: 12px;
+    font-size: 30px;
+  }
+  .idcard .tabs {
+    margin-bottom: 12px;
+  }
+  .login .load {
+    margin-top: 22px;
+  }
+}
+
+/* Too narrow for the stub: the form alone, edge and notches gone. */
+@media (max-width: 900px) {
+  .login .idcard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .idcard .stub {
+    display: none;
+  }
+  .idcard .form {
+    border-left: 0;
+  }
+  .idcard .form::before,
+  .idcard .form::after {
+    display: none;
+  }
+  .idcard .stamp {
+    left: auto;
+    right: 20px;
+    top: 70px;
+  }
+}

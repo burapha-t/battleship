@@ -14,3 +14,14 @@ obj/
 
 # Demo builds from scripts/publish.ps1 and scripts/publish.sh
 publish/
+
+# Claude Code / claude-flow local tooling
+.claude-flow/
+.claude/.proven-config-version
+.claude/proven-config.json
+
+# Stray root lockfile (the real one lives in web/)
+/package-lock.json
+
+# Per-machine client config; start from src/Battleship.Client/client_example.json
+src/Battleship.Client/client.json
