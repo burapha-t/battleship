@@ -24,6 +24,8 @@ export function LoginScreen({ connected, lastError, welcomedAs, onLogin, onSignu
   const [mode, setMode] = useState<AuthMode>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  // The eye beside the password: show it as plain text.
+  const [reveal, setReveal] = useState(false)
   // What I sent: the lastError at that moment and the tab. Until lastError
   // changes the request is in flight (a `welcome` comes back, or an `error`).
   const [sent, setSent] = useState<{ lastError: GameState['lastError']; mode: AuthMode } | null>(null)
@@ -160,21 +162,43 @@ export function LoginScreen({ connected, lastError, welcomedAs, onLogin, onSignu
             autoFocus
           />
           <label htmlFor="login-password">Password</label>
-          <input
-            id="login-password"
-            type="password"
-            className={bad('password') ? 'field pw bad' : 'field pw'}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              clearError()
-            }}
-            maxLength={PASSWORD_MAX}
-            readOnly={locked}
-            aria-invalid={bad('password')}
-            aria-describedby={shown ? 'login-error' : undefined}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          />
+          <div className="pw-box">
+            <input
+              id="login-password"
+              type={reveal ? 'text' : 'password'}
+              // .pw spaces out the dots; shown as text it reads like the username.
+              className={`field${reveal ? '' : ' pw'}${bad('password') ? ' bad' : ''}`}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                clearError()
+              }}
+              maxLength={PASSWORD_MAX}
+              readOnly={locked}
+              aria-invalid={bad('password')}
+              aria-describedby={shown ? 'login-error' : undefined}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              // Shown as text, a password must not reach spellcheck or autocorrect.
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              className="eye"
+              onClick={() => setReveal(!reveal)}
+              aria-label={reveal ? 'Hide password' : 'Show password'}
+              aria-controls="login-password"
+              aria-pressed={reveal}
+              title={reveal ? 'Hide password' : 'Show password'}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="#fff" stroke="#14325A" strokeWidth="2.4" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="3.2" fill="#FFC83D" stroke="#14325A" strokeWidth="2.2" />
+                {reveal && <path d="M4 4l16 16" fill="none" stroke="#14325A" strokeWidth="2.6" strokeLinecap="round" />}
+              </svg>
+            </button>
+          </div>
 
           <button type="submit" className={locked ? 'btn pressed' : 'btn'} disabled={!connected || locked}>
             {buttonText}

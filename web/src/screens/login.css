@@ -219,6 +219,39 @@
   letter-spacing: 4px;
 }
 
+/* The password, with the show/hide eye inside its right end. */
+.idcard .pw-box {
+  position: relative;
+}
+
+.idcard .pw-box .field {
+  padding-right: 62px;
+}
+
+/* Edge draws its own reveal button; the eye replaces it. */
+.idcard .pw-box .field::-ms-reveal {
+  display: none;
+}
+
+.idcard .eye {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 42px;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.idcard .eye:focus-visible {
+  outline: 4px solid var(--sea);
+  outline-offset: 0;
+}
+
 .idcard .field.bad {
   border-color: var(--coral);
 }
