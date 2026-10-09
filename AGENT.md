@@ -18,12 +18,12 @@ bot. 7 people, 4 weeks, graded.
 ## Stage
 
 - Protocol: frozen.
-- `Battleship.sln`: scaffolded.
-- `Battleship.Core`: in progress — the shared game rules (ships, board and shots,
-  placement checks, random placement, nicknames, protocol messages), written one
-  class per person. Check `src/Battleship.Core/` for what exists.
-- `Battleship.Server`, `Battleship.Client`: empty console apps.
-- `web/`, `bot/`: not scaffolded yet (see the plan's *First steps*).
+- `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`,
+  `RandomPlacement`, `NicknamePolicy`) and the protocol DTOs + `ProtocolJson`.
+- `Battleship.Server`: TCP :5050, one `GameHost` loop (SRV-0), match engine, dashboard on :8080.
+- `Battleship.Client`: `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
+- `web/`: all five screens. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
+- `bot/`: not scaffolded yet.
 
 ## Invariants
 
@@ -39,12 +39,18 @@ Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`
 
 - `dotnet build` — build the whole solution
 - `dotnet test` — run every test project
-- `dotnet test tests/Battleship.Core.Tests` — Core unit tests only
+- `dotnet test tests/Battleship.Core.Tests` — Core unit tests only (`Battleship.Server.Tests`: engine, no sockets)
+- `dotnet run --project src/Battleship.Server` — game server (all interfaces :5050) + dashboard http://localhost:8080
+- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser]` — a player's client; UI on http://localhost:3000
+- `scripts/publish.ps1` / `scripts/publish.sh` — self-contained server + client into `publish/<rid>/`
+
+The client copies `web/dist` when it builds: run `npm run build` first, then rebuild the client.
 
 The UI needs Node 24 LTS. Run these in `web/`, after `npm ci` once:
 
-- `npm run dev` — Vite dev server on :5173 with hot reload
+- `npm run dev` — Vite dev server on :5173 with hot reload; proxies `/ws` to a client on :3000
 - `npm run build` — type-check (strict) and bundle into `web/dist/`
+- `npm test` — vitest (reducer, placement rules) · `npm run lint` — oxlint
 
 ## Maintaining this file
 
