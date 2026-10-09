@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\src\Battleship.Core\Battleship.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\fixtures\match-transcript.jsonl" Link="match-transcript.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

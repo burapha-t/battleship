@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1320">
+<title>Battleship Server</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#DDF0FF; --sea:#2F8FE0; --sea-deep:#1E6FBF; --ink:#14325A; --paper:#FFFFFF;
+  --sun:#FFC83D; --coral:#FF4F5E; --kelp:#34C3A0; --lilac:#A98BFF; --peach:#FFA26B;
+  --mist:#E6F1FB; --muted:#5B7493;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#BFE0FA;font-family:'Nunito','Trebuchet MS',system-ui,sans-serif;color:var(--ink);min-width:1320px;padding:20px 0}
+.app{width:1280px;height:800px;margin:0 auto;position:relative;overflow:hidden;background:var(--sky);
+  border:4px solid var(--ink);border-radius:26px;padding:26px 40px}
+.app > *:not(.waves):not(.bubbles){position:relative;z-index:2}
+.waves{position:absolute;left:0;right:0;bottom:0;height:110px;z-index:0}
+.bubbles span{position:absolute;border:3px solid #fff;border-radius:50%;opacity:.7;z-index:1}
+h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.05}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:'Baloo 2','Trebuchet MS',sans-serif;
+  font-weight:800;font-size:22px;background:var(--sun);color:var(--ink);border:3px solid var(--ink);border-radius:16px;
+  box-shadow:0 6px 0 var(--ink);padding:8px 28px 6px;cursor:pointer}
+.btn.coral{background:var(--coral);color:#fff}
+.btn.white{background:#fff}
+.btn.small{font-size:17px;padding:4px 16px 2px;box-shadow:0 4px 0 var(--ink);border-radius:12px}
+.btn.pressed{box-shadow:0 2px 0 var(--ink);transform:translateY(4px);background:var(--mist);color:var(--muted)}
+.btn.disabled{background:var(--mist);color:var(--muted);box-shadow:0 6px 0 #9DB4CC;border-color:#9DB4CC}
+.pill{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;background:#fff;border:2.5px solid var(--ink);
+  border-radius:999px;padding:4px 14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--kelp);border:2px solid var(--ink)}
+.dot.sun{background:var(--sun)} .dot.coral{background:var(--coral)} .dot.grey{background:#C3D3E3}
+.avatar{width:52px;height:52px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;flex:none}
+.logo{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;letter-spacing:.5px;color:var(--ink)}
+.logo b{display:inline-block;transform:rotate(-4deg);color:var(--sea)}
+
+/* boards */
+.board{display:grid;grid-template-columns:22px auto;grid-template-rows:22px auto;gap:4px}
+.board .cols{grid-column:2;display:grid;grid-template-columns:repeat(8,var(--cell));padding:0 3px}
+.board .rows{grid-row:2;display:grid;grid-template-rows:repeat(8,var(--cell));padding:3px 0}
+.board .cols span,.board .rows span{display:grid;place-items:center;font-weight:900;font-size:13px;color:var(--muted)}
+.water{position:relative;background:var(--sea);border:3px solid var(--ink);border-radius:14px;overflow:hidden;
+  display:grid;grid-template-columns:repeat(8,var(--cell));grid-template-rows:repeat(8,var(--cell));
+  box-shadow:5px 5px 0 var(--ink)}
+.water.enemy{background:var(--sea-deep)}
+.cell{border-right:1.5px solid rgba(255,255,255,.28);border-bottom:1.5px solid rgba(255,255,255,.28)}
+.cell:nth-child(8n){border-right:0}
+.cell:nth-child(n+57){border-bottom:0}
+.ship{position:absolute;z-index:1;border:3px solid var(--ink);border-radius:999px;
+  background-repeat:no-repeat}
+.ship .ports{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-around}
+.ship.v .ports{flex-direction:column}
+.ship .ports i{width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid var(--ink)}
+.ship.sunk{background:#8DA2B8 !important;opacity:.95}
+.ship.sunk .ports i{background:#5E7187}
+.ship.ghost{background:rgba(52,195,160,.25) !important;border:3px dashed #fff}
+.ship.ghost .ports i{opacity:.5}
+.mk{position:absolute;z-index:3;display:grid;place-items:center;pointer-events:none}
+.mk.hit .b{width:72%;height:72%;border-radius:50%;background:var(--coral);border:3px solid var(--ink);
+  display:grid;place-items:center;color:#fff;font-weight:900;font-family:'Baloo 2',sans-serif;font-size:calc(var(--cell)*.42);line-height:1}
+.mk.miss .b{width:34%;height:34%;border-radius:50%;background:transparent;border:3px solid #fff;box-shadow:0 0 0 4px rgba(255,255,255,.25)}
+.mk.aim .b{width:86%;height:86%;border-radius:12px;border:3.5px dashed var(--sun);background:rgba(255,200,61,.18)}
+.mk.aim .b::after{content:"";width:14px;height:14px;border-radius:50%;background:var(--sun);border:2.5px solid var(--ink)}
+.mk.aim .b{display:grid;place-items:center}
+.legend{display:flex;gap:18px;align-items:center;font-weight:800;font-size:14px}
+.legend .sw{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:inline-block;vertical-align:middle;margin-right:6px}
+
+.app{background:#EEF6FD}
+.top{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.top h1{font-size:40px;font-weight:800}
+.top .pill{background:#D9F5EC}
+.top .btn{margin-left:auto}
+.grid2{display:grid;grid-template-columns:1fr 420px;gap:30px}
+.box{padding:20px 24px}
+.box h2{font-size:26px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.online{display:flex;align-items:center;gap:22px;padding:20px 24px;margin-bottom:24px}
+.online .num{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:76px;line-height:1;background:var(--kelp);border:3px solid var(--ink);
+  border-radius:20px;width:110px;text-align:center;box-shadow:4px 4px 0 var(--ink)}
+.online b{font-size:24px;font-family:'Baloo 2',sans-serif} .online span{display:block;font-weight:700;color:var(--muted)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-weight:800;font-size:16px}
+th{text-align:left;font-size:13px;color:var(--muted);font-weight:900;padding:0 10px 8px}
+td{padding:11px 10px;border-top:2.5px dashed #C7DCEF}
+td .avatar{width:34px;height:34px;font-size:16px;display:inline-grid;vertical-align:middle;margin-right:10px;border-width:2.5px}
+.match .vsrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.match .p{text-align:center;font-weight:900}
+.match .p .avatar{margin:0 auto 4px}
+.match .big{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:50px}
+.rule{display:flex;gap:12px;align-items:center;border:3px solid var(--ink);border-radius:14px;padding:10px 14px;margin-top:10px;font-weight:800;font-size:15px}
+.rule .ic{font-size:22px}
+.rule small{display:block;color:var(--muted);font-weight:700;font-size:13px}
+.events{margin-top:24px;padding:16px 22px}
+.events h2{font-size:22px;margin-bottom:6px}
+.ev{display:flex;gap:16px;font-weight:700;font-size:15px;padding:5px 0;border-top:2px dashed #C7DCEF}
+.ev time{color:var(--muted);font-weight:900;width:70px}
+</style></head>
+<body><div class="app"><svg class="waves" viewBox="0 0 1280 110" preserveAspectRatio="none">
+<path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3"/>
+<path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" stroke-width="3"/>
+</svg>
+<div class="top"><div class="avatar" style="background:var(--sea);color:#fff">⚓</div><h1>Battleship Server</h1>
+ <span class="pill"><span class="dot"></span>Running on port 5050</span>
+ <a class="btn coral">Reset game and scores</a></div>
+<div class="grid2">
+ <div>
+  <div class="card online"><div class="num">3</div><div><b>Clients online</b><span>Connected to this server right now</span></div></div>
+  <div class="card box"><h2>Connected clients</h2>
+   <table><tr><th>Nickname</th><th>Address</th><th>Status</th><th>Connected</th></tr>
+    <tr><td><span class="avatar" style="background:var(--sun)">A</span>Alice</td><td>192.168.1.20 (this PC)</td><td><span class="pill"><span class="dot coral"></span>In match</span></td><td>12:04</td></tr>
+    <tr><td><span class="avatar" style="background:var(--lilac)">B</span>Bob</td><td>192.168.1.34</td><td><span class="pill"><span class="dot coral"></span>In match</span></td><td>12:05</td></tr>
+    <tr><td><span class="avatar" style="background:var(--peach)">C</span>Chloe</td><td>192.168.1.41</td><td><span class="pill"><span class="dot sun"></span>Lobby</span></td><td>12:21</td></tr>
+   </table></div>
+ </div>
+ <div>
+  <div class="card box match"><h2>Current match</h2>
+   <div class="vsrow">
+    <div class="p"><div class="avatar" style="background:var(--sun)">A</div>Alice<div class="big">2</div></div>
+    <div class="big" style="font-size:28px">vs</div>
+    <div class="p"><div class="avatar" style="background:var(--lilac)">B</div>Bob<div class="big">1</div></div>
+   </div>
+   <div class="rule"><span class="ic">🎲</span><div>Match 1 opener: Bob<small>Picked at random by the server</small></div></div>
+   <div class="rule" style="background:#FFF6D9"><span class="ic">🏆</span><div>Next opener: Alice<small>Winner of the last match starts the rematch</small></div></div>
+  </div>
+  <div class="card events"><h2>Activity</h2>
+   <div class="ev"><time>12:31:12</time>Bob asked for a rematch</div>
+   <div class="ev"><time>12:31:08</time>Alice won match 3</div>
+   <div class="ev"><time>12:21:40</time>Chloe connected</div>
+   <div class="ev"><time>12:05:02</time>Bob connected</div>
+  </div>
+ </div>
+</div></div></body></html>

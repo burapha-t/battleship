@@ -11,3 +11,6 @@ bin/
 obj/
 .vs/
 *.user
+
+# Demo builds from scripts/publish.ps1 and scripts/publish.sh
+publish/

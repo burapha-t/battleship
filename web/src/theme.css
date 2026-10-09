@@ -1,0 +1,43 @@
+/* Colour and font tokens, taken from the docs/frontend/ mockups (the visual
+   direction). Fonts are bundled from @fontsource (see main.tsx), so the demo
+   works with no internet. */
+
+:root {
+  /* Palette */
+  --sky: #ddf0ff;
+  --sea: #2f8fe0;
+  --sea-deep: #1e6fbf;
+  --ink: #14325a;
+  --paper: #ffffff;
+  --sun: #ffc83d;
+  --coral: #ff4f5e;
+  --coral-text: #c8202f; /* coral dark enough for text on white */
+  --kelp: #34c3a0;
+  --lilac: #a98bff;
+  --peach: #ffa26b;
+  --mist: #e6f1fb;
+  --muted: #5b7493;
+  --backdrop: #bfe0fa;
+  --foam: #9ccdf3;
+  --rule: #c7dcef;
+  --off: #9db4cc;
+  --wreck: #8da2b8;
+  --wreck-dark: #5e7187;
+
+  /* Board cells: each state also has a shape (✕, ring, hatched hull, dashed
+     square), so none relies on colour alone. */
+  --color-water: var(--sea);
+  --color-water-enemy: var(--sea-deep);
+  --color-hit: var(--coral);
+  --color-miss: #ffffff;
+  --color-sunk: var(--wreck);
+  --color-aim: var(--sun);
+  --ship-1: var(--kelp);
+  --ship-2: var(--sun);
+  --ship-3: var(--lilac);
+  --ship-4: var(--peach);
+
+  /* Type */
+  --font-display: 'Baloo 2', 'Trebuchet MS', sans-serif;
+  --font-body: 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
+}
