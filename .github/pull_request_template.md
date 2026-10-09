@@ -6,12 +6,13 @@
 
 -
 
-## Demo
+## Demo/Screenshot(s)
 
 
-## Checklist
+## Type of change
 
-- [ ] Deploy a demo
-- [ ] Check browsers compatibility
-- [ ] Wrote coverage tests
-
+- [ ] Feature
+- [ ] Bug fix
+- [ ] Refactor
+- [ ] Documentation
+- [ ] Maintenance
