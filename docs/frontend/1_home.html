@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1320">
+<title>Battleship · Home</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#DDF0FF; --sea:#2F8FE0; --sea-deep:#1E6FBF; --ink:#14325A; --paper:#FFFFFF;
+  --sun:#FFC83D; --coral:#FF4F5E; --kelp:#34C3A0; --lilac:#A98BFF; --peach:#FFA26B;
+  --mist:#E6F1FB; --muted:#5B7493;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#BFE0FA;font-family:'Nunito','Trebuchet MS',system-ui,sans-serif;color:var(--ink);min-width:1320px;padding:20px 0}
+.app{width:1280px;height:800px;margin:0 auto;position:relative;overflow:hidden;background:var(--sky);
+  border:4px solid var(--ink);border-radius:26px;padding:26px 40px}
+.app > *:not(.waves):not(.bubbles){position:relative;z-index:2}
+.waves{position:absolute;left:0;right:0;bottom:0;height:110px;z-index:0}
+.bubbles span{position:absolute;border:3px solid #fff;border-radius:50%;opacity:.7;z-index:1}
+h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.05}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:'Baloo 2','Trebuchet MS',sans-serif;
+  font-weight:800;font-size:22px;background:var(--sun);color:var(--ink);border:3px solid var(--ink);border-radius:16px;
+  box-shadow:0 6px 0 var(--ink);padding:8px 28px 6px;cursor:pointer}
+.btn.coral{background:var(--coral);color:#fff}
+.btn.white{background:#fff}
+.btn.small{font-size:17px;padding:4px 16px 2px;box-shadow:0 4px 0 var(--ink);border-radius:12px}
+.btn.pressed{box-shadow:0 2px 0 var(--ink);transform:translateY(4px);background:var(--mist);color:var(--muted)}
+.btn.disabled{background:var(--mist);color:var(--muted);box-shadow:0 6px 0 #9DB4CC;border-color:#9DB4CC}
+.pill{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;background:#fff;border:2.5px solid var(--ink);
+  border-radius:999px;padding:4px 14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--kelp);border:2px solid var(--ink)}
+.dot.sun{background:var(--sun)} .dot.coral{background:var(--coral)} .dot.grey{background:#C3D3E3}
+.avatar{width:52px;height:52px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;flex:none}
+.logo{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;letter-spacing:.5px;color:var(--ink)}
+.logo b{display:inline-block;transform:rotate(-4deg);color:var(--sea)}
+
+/* boards */
+.board{display:grid;grid-template-columns:22px auto;grid-template-rows:22px auto;gap:4px}
+.board .cols{grid-column:2;display:grid;grid-template-columns:repeat(8,var(--cell));padding:0 3px}
+.board .rows{grid-row:2;display:grid;grid-template-rows:repeat(8,var(--cell));padding:3px 0}
+.board .cols span,.board .rows span{display:grid;place-items:center;font-weight:900;font-size:13px;color:var(--muted)}
+.water{position:relative;background:var(--sea);border:3px solid var(--ink);border-radius:14px;overflow:hidden;
+  display:grid;grid-template-columns:repeat(8,var(--cell));grid-template-rows:repeat(8,var(--cell));
+  box-shadow:5px 5px 0 var(--ink)}
+.water.enemy{background:var(--sea-deep)}
+.cell{border-right:1.5px solid rgba(255,255,255,.28);border-bottom:1.5px solid rgba(255,255,255,.28)}
+.cell:nth-child(8n){border-right:0}
+.cell:nth-child(n+57){border-bottom:0}
+.ship{position:absolute;z-index:1;border:3px solid var(--ink);border-radius:999px;
+  background-repeat:no-repeat}
+.ship .ports{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-around}
+.ship.v .ports{flex-direction:column}
+.ship .ports i{width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid var(--ink)}
+.ship.sunk{background:#8DA2B8 !important;opacity:.95}
+.ship.sunk .ports i{background:#5E7187}
+.ship.ghost{background:rgba(52,195,160,.25) !important;border:3px dashed #fff}
+.ship.ghost .ports i{opacity:.5}
+.mk{position:absolute;z-index:3;display:grid;place-items:center;pointer-events:none}
+.mk.hit .b{width:72%;height:72%;border-radius:50%;background:var(--coral);border:3px solid var(--ink);
+  display:grid;place-items:center;color:#fff;font-weight:900;font-family:'Baloo 2',sans-serif;font-size:calc(var(--cell)*.42);line-height:1}
+.mk.miss .b{width:34%;height:34%;border-radius:50%;background:transparent;border:3px solid #fff;box-shadow:0 0 0 4px rgba(255,255,255,.25)}
+.mk.aim .b{width:86%;height:86%;border-radius:12px;border:3.5px dashed var(--sun);background:rgba(255,200,61,.18)}
+.mk.aim .b::after{content:"";width:14px;height:14px;border-radius:50%;background:var(--sun);border:2.5px solid var(--ink)}
+.mk.aim .b{display:grid;place-items:center}
+.legend{display:flex;gap:18px;align-items:center;font-weight:800;font-size:14px}
+.legend .sw{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:inline-block;vertical-align:middle;margin-right:6px}
+
+.home{display:grid;grid-template-columns:1fr 470px;gap:44px;height:100%;align-items:center;padding-bottom:60px}
+.hero h1{font-size:118px;font-weight:800;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;
+  text-shadow:7px 7px 0 var(--ink);transform:rotate(-3deg);transform-origin:left;margin-bottom:6px}
+.hero p{font-size:21px;font-weight:700;max-width:520px;color:var(--ink);margin:6px 0 0 6px}
+.hero svg{display:block;margin:6px 0 0 40px}
+.side{display:flex;flex-direction:column;gap:22px}
+.join{padding:26px 28px}
+.join h2{font-size:30px;margin-bottom:4px}
+.join .hint{color:var(--muted);font-weight:700;font-size:15px;margin-bottom:16px}
+.field{display:flex;align-items:center;border:3px solid var(--ink);border-radius:16px;background:var(--mist);height:60px;padding:0 18px;
+  font-size:24px;font-weight:800;margin-bottom:18px}
+.field .caret{width:3px;height:30px;background:var(--sea);margin-left:3px}
+.join .btn{width:100%;font-size:26px;padding:10px}
+.conn{display:flex;gap:10px;align-items:center;margin-top:18px;font-size:14px;font-weight:800;color:var(--muted)}
+.lobby{padding:20px 24px}
+.lobby .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.lobby h3{font-size:24px}
+.count{background:var(--kelp);border:3px solid var(--ink);border-radius:999px;font-weight:900;padding:2px 14px;font-size:16px}
+.who{display:flex;align-items:center;gap:14px;padding:10px 0;border-top:2.5px dashed #C7DCEF}
+.who .avatar{width:42px;height:42px;font-size:19px}
+.who .name{font-weight:900;font-size:18px;flex:1}
+.who .name small{display:block;font-weight:700;font-size:13px;color:var(--muted)}
+</style></head>
+<body><div class="app"><div class="bubbles"><span style="left:70px;top:640px;width:18px;height:18px"></span><span style="left:110px;top:600px;width:10px;height:10px"></span><span style="left:640px;top:90px;width:22px;height:22px"></span><span style="left:680px;top:60px;width:12px;height:12px"></span><span style="left:1180px;top:40px;width:16px;height:16px"></span></div><svg class="waves" viewBox="0 0 1280 110" preserveAspectRatio="none">
+<path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3"/>
+<path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" stroke-width="3"/>
+</svg>
+<div class="home">
+ <section class="hero">
+  <h1>Battleship</h1>
+  <p>Hide your fleet, take a shot every 10 seconds, and sink all 4 enemy ships first.</p>
+  <svg viewBox="0 0 460 300" width="460" height="300" aria-hidden="true">
+ <g stroke="#14325A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+  <circle cx="300" cy="46" r="18" fill="#fff"/><circle cx="330" cy="26" r="13" fill="#fff"/><circle cx="352" cy="12" r="8" fill="#fff"/>
+  <rect x="262" y="70" width="44" height="78" rx="8" fill="#FFC83D"/>
+  <rect x="262" y="88" width="44" height="14" fill="#FF4F5E"/>
+  <rect x="150" y="110" width="150" height="64" rx="12" fill="#fff"/>
+  <circle cx="186" cy="142" r="11" fill="#9CCDF3"/><circle cx="226" cy="142" r="11" fill="#9CCDF3"/><circle cx="266" cy="142" r="11" fill="#9CCDF3"/>
+  <line x1="120" y1="40" x2="120" y2="172"/>
+  <path d="M124 48 L176 66 L124 84 Z" fill="#FF4F5E"/>
+  <path d="M40 172 H420 L380 250 H86 Z" fill="#FF4F5E"/>
+  <path d="M52 196 H408" />
+  <circle cx="130" cy="220" r="9" fill="#fff"/><circle cx="190" cy="220" r="9" fill="#fff"/><circle cx="250" cy="220" r="9" fill="#fff"/><circle cx="310" cy="220" r="9" fill="#fff"/>
+ </g>
+ <path d="M10 262 Q 50 240 90 262 T 170 262 T 250 262 T 330 262 T 410 262 T 460 258" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+ <path d="M10 262 Q 50 240 90 262 T 170 262 T 250 262 T 330 262 T 410 262 T 460 258" fill="none" stroke="#14325A" stroke-width="3" stroke-linecap="round"/>
+</svg>
+ </section>
+ <aside class="side">
+  <div class="card join">
+   <h2>Ahoy, captain!</h2>
+   <div class="hint">Choose a nickname your opponent will see.</div>
+   <div class="field">Alice<span class="caret"></span></div>
+   <a class="btn">Start playing</a>
+   <div class="conn"><span class="dot"></span>Connected to game server automatically</div>
+  </div>
+  <div class="card lobby">
+   <div class="head"><h3>Captains online</h3><span class="count">3</span></div>
+   <div class="who"><div class="avatar" style="background:var(--sun)">A</div><div class="name">Alice <small>That's you</small></div><span class="pill"><span class="dot"></span>Lobby</span></div>
+   <div class="who"><div class="avatar" style="background:var(--lilac)">B</div><div class="name">Bob <small>Looking for a match</small></div><span class="pill"><span class="dot"></span>Lobby</span></div>
+   <div class="who"><div class="avatar" style="background:var(--peach)">C</div><div class="name">Chloe <small>Joined 2 min ago</small></div><span class="pill"><span class="dot sun"></span>Waiting</span></div>
+  </div>
+ </aside>
+</div></div></body></html>

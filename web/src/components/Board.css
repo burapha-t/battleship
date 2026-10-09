@@ -1,0 +1,222 @@
+.board {
+  --cell: 50px;
+  display: grid;
+  grid-template-columns: 22px auto;
+  grid-template-rows: 22px auto;
+  gap: 4px;
+  width: max-content;
+}
+
+.board-cols {
+  grid-column: 2;
+  display: grid;
+  padding: 0 3px;
+}
+
+.board-rows {
+  grid-row: 2;
+  display: grid;
+  padding: 3px 0;
+}
+
+.board-cols span,
+.board-rows span {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.water {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  background: var(--color-water);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.board.enemy .water {
+  background: var(--color-water-enemy);
+}
+
+/* Grid lines: each cell shades the start of its right and bottom neighbours;
+   the water's overflow clips the last row and column. */
+.cell {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: 1.5px 1.5px 0 rgba(255, 255, 255, 0.28);
+  cursor: pointer;
+}
+
+.cell:disabled {
+  cursor: default;
+}
+
+.board.enemy .cell:not(:disabled) {
+  cursor: crosshair;
+}
+
+.cell:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cell:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: -3px;
+}
+
+/* Ship hulls, marks and the aim marker sit on top of the cells and let
+   clicks through to them. */
+.ship,
+.mark {
+  pointer-events: none;
+}
+
+.ship {
+  z-index: 1;
+  margin: calc(var(--cell) * 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background-color: var(--ship-1);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+}
+
+.ship.v {
+  flex-direction: column;
+}
+
+.ship i {
+  width: calc(var(--cell) * 0.22);
+  height: calc(var(--cell) * 0.22);
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+}
+
+/* Sunk: grey, hatched hull — the hatch tells it apart without colour. */
+.ship.sunk {
+  background-color: var(--color-sunk) !important;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 7px,
+    rgba(20, 50, 90, 0.22) 7px 10px
+  );
+  animation: sink 0.7s ease-out;
+}
+
+.ship.sunk i {
+  background: var(--wreck-dark);
+}
+
+.ship.ghost {
+  background-color: rgba(52, 195, 160, 0.3) !important;
+  border: 3px dashed #fff;
+}
+
+.ship.ghost i {
+  opacity: 0.5;
+}
+
+/* Can't drop here: red with bold stripes, so it reads without colour too. */
+.ship.ghost.blocked {
+  background-color: var(--color-hit) !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    rgba(20, 50, 90, 0.45) 6px 10px
+  );
+  border-color: var(--ink);
+  opacity: 0.85;
+}
+
+.mark {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+
+/* Hit: a red disc with a ✕. */
+.mark.hit b {
+  width: 72%;
+  height: 72%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-hit);
+  border: 3px solid var(--ink);
+  color: #fff;
+  font: 800 calc(var(--cell) * 0.42) / 1 var(--font-display);
+  animation: pop 0.35s ease-out;
+}
+
+.mark.hit::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 4px solid var(--sun);
+  opacity: 0;
+  animation: burst 0.6s ease-out;
+}
+
+/* Miss: an empty white ring. */
+.mark.miss b {
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  border: 3px solid var(--color-miss);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+  animation: splash 0.5s ease-out;
+}
+
+/* Aim (hover): a dashed square with a dot. */
+.mark.aim b {
+  width: 86%;
+  height: 86%;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 3.5px dashed var(--color-aim);
+  background: rgba(255, 200, 61, 0.18);
+}
+
+.mark.aim b::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-aim);
+  border: 2.5px solid var(--ink);
+}
+
+@keyframes pop {
+  0% { transform: scale(0.2); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes burst {
+  0% { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+@keyframes splash {
+  0% { transform: scale(0.2); opacity: 0; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.9); }
+  70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25); }
+}
+
+@keyframes sink {
+  0% { transform: scale(1.1) rotate(-3deg); filter: brightness(1.8); }
+  35% { transform: rotate(3deg); }
+  65% { transform: rotate(-1.5deg); }
+  100% { transform: none; filter: none; }
+}

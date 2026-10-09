@@ -1,0 +1,707 @@
+/* Screen layouts, after docs/frontend/1–4_*.html. Board cells shrink with the
+   window so a whole screen fits a 1280×800 projector or a laptop window. */
+
+/* ── Nickname and lobby (1_home) ─────────────────────────────── */
+
+.home {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 470px;
+  gap: 44px;
+  align-items: center;
+  padding-bottom: 60px;
+}
+
+.hero h1 {
+  font-size: 118px;
+  color: #fff;
+  -webkit-text-stroke: 5px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 7px 7px 0 var(--ink);
+  transform: rotate(-3deg);
+  transform-origin: left;
+  margin-bottom: 6px;
+}
+
+.hero p {
+  max-width: 520px;
+  margin: 6px 0 0 6px;
+  font-size: 21px;
+}
+
+.hero svg {
+  display: block;
+  width: 460px;
+  max-width: 100%;
+  height: auto;
+  margin: 6px 0 0 40px;
+}
+
+.home-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.join {
+  padding: 26px 28px;
+}
+
+.join h2 {
+  margin-bottom: 4px;
+  font-size: 30px;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin-bottom: 16px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.field {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 18px;
+  padding: 0 18px;
+  font-size: 24px;
+  font-weight: 800;
+  background: var(--mist);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+}
+
+.field:focus {
+  outline: 4px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.field-error {
+  margin: -6px 0 14px;
+  font-weight: 800;
+  color: var(--coral-text);
+}
+
+.join .btn {
+  padding: 10px;
+  font-size: 26px;
+}
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.lobby {
+  padding: 20px 24px;
+}
+
+.lobby-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lobby h3 {
+  font-size: 24px;
+}
+
+.count {
+  padding: 2px 14px;
+  font-size: 16px;
+  font-weight: 900;
+  background: var(--kelp);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+}
+
+.lobby ul {
+  max-height: 250px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 2.5px dashed var(--rule);
+}
+
+.who-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.who-name small {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.who-name em {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ── Placement (2_ship_placement) ───────────────────────────── */
+
+.placement {
+  flex: 1;
+}
+
+.title {
+  margin-bottom: 6px;
+  font-size: 52px;
+  color: #fff;
+  -webkit-text-stroke: 4px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 5px 5px 0 var(--ink);
+}
+
+.sub {
+  max-width: 760px;
+  margin-bottom: 14px;
+  font-size: 18px;
+}
+
+.placement-lay {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.placement .board {
+  --cell: clamp(32px, calc((100vh - 290px) / 8), 54px);
+}
+
+.board-hint {
+  margin: 14px 0 0 26px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.placement-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 520px;
+}
+
+.panel {
+  padding: 22px 26px;
+}
+
+.panel h3 {
+  margin-bottom: 12px;
+  font-size: 26px;
+}
+
+.fleet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  list-style: none;
+}
+
+.fl {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  font-size: 17px;
+  font-weight: 900;
+  text-align: left;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.fl.done {
+  background: var(--mist);
+}
+
+.fl.now {
+  background: #fff6d9;
+  border-style: dashed;
+}
+
+.fl:disabled {
+  cursor: default;
+}
+
+.fl:focus-visible {
+  outline: 3px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.mini {
+  flex: none;
+  width: 120px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+}
+
+.mini i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ink);
+}
+
+.fl .st {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.fl.done .st {
+  color: #1a8f72;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.panel .field-error {
+  margin: 14px 0 0;
+}
+
+.opp {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.opp b {
+  font-size: 17px;
+}
+
+.opp div span {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.opp > .dot {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+/* ── Game (3_gameplay) ──────────────────────────────────────── */
+
+.game {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.banner {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 6px 28px;
+  font: 800 22px / 1.2 var(--font-display);
+  text-align: center;
+  background: var(--sun);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.banner.theirs {
+  background: #fff;
+}
+
+/* Always takes its line, so the boards don't jump when it appears. */
+.auto-note {
+  min-height: 34px;
+  padding: 6px 0 4px;
+  text-align: center;
+}
+
+.auto-note span {
+  padding: 2px 14px;
+  font-weight: 800;
+  background: #fff6d9;
+  border: 2.5px dashed var(--ink);
+  border-radius: 12px;
+}
+
+.field2 {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 20px;
+}
+
+.game .board {
+  --cell: clamp(28px, min(calc((100vh - 270px) / 8), calc((100vw - 450px) / 16)), 50px);
+}
+
+.side h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px 26px;
+  font-size: 24px;
+}
+
+.side h3 .pill {
+  font: 800 13px / 1.2 var(--font-body);
+}
+
+/* The target board lights up while I can fire. */
+.side.active .water {
+  box-shadow: 5px 5px 0 var(--ink), 0 0 0 6px var(--sun);
+}
+
+.mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+.timer {
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 5px 5px 0 var(--ink);
+  transition: transform 0.2s;
+}
+
+.timer > div {
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+}
+
+.timer b {
+  font: 800 42px / 0.9 var(--font-display);
+}
+
+.timer span {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+/* The last 3 seconds: bigger, red, and each second pops. */
+.timer.urgent {
+  transform: scale(1.1);
+}
+
+.timer.urgent b {
+  color: var(--coral-text);
+  animation: tick 0.45s ease-out;
+}
+
+@keyframes tick {
+  from { transform: scale(1.6); }
+  to { transform: scale(1); }
+}
+
+.log {
+  width: 250px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.log h4 {
+  margin-bottom: 6px;
+  font-size: 19px;
+}
+
+.log p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-top: 2px dashed var(--rule);
+}
+
+.log .empty {
+  color: var(--muted);
+}
+
+.tag {
+  flex: none;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+.tag.h { background: var(--color-hit); color: #fff; }
+.tag.m { background: #fff; }
+.tag.s { background: var(--ink); color: #fff; }
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sw {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  font: normal 800 12px / 1 var(--font-display);
+  color: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+}
+
+.sw.hit { background: var(--color-hit); }
+.sw.miss { background: var(--sea); border-color: #fff; box-shadow: 0 0 0 2px var(--ink); }
+
+.sw.sunk {
+  width: 34px;
+  border-radius: 999px;
+  background: var(--color-sunk)
+    repeating-linear-gradient(45deg, transparent 0 4px, rgba(20, 50, 90, 0.3) 4px 6px);
+}
+
+/* ── End (4_result_rematch) ─────────────────────────────────── */
+
+.end {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding-bottom: 60px;
+}
+
+.result {
+  position: relative;
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 34px 30px 30px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.result.win {
+  background: radial-gradient(circle at 50% 30%, #fff3c7 0 40%, #fff 41%);
+}
+
+.result > :not(.confetti) {
+  position: relative;
+}
+
+.status {
+  margin: 8px 0 4px;
+  font-size: 120px;
+  line-height: 0.95;
+  color: #fff;
+  -webkit-text-stroke: 6px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 7px 7px 0 var(--ink);
+}
+
+.win .status {
+  color: var(--sun);
+  transform: rotate(-4deg);
+}
+
+.lost .status {
+  color: var(--wreck);
+  transform: rotate(3deg);
+}
+
+.line {
+  margin-bottom: 22px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.scores,
+.score-pair {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.scores {
+  margin-bottom: 26px;
+}
+
+.sc {
+  min-width: 150px;
+  padding: 10px 22px;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.sc.lead {
+  background: var(--sun);
+}
+
+.sc .n {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.sc .v {
+  font: 800 54px / 1 var(--font-display);
+}
+
+.scores .vs {
+  font: 800 28px / 1 var(--font-display);
+}
+
+.btn.big {
+  padding: 10px 54px;
+  font-size: 28px;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.confetti {
+  position: absolute;
+  width: 14px;
+  height: 22px;
+  border: 2.5px solid var(--ink);
+  border-radius: 4px;
+  animation: fall 4s linear infinite;
+}
+
+@keyframes fall {
+  from { transform: translateY(-600px) rotate(0deg); }
+  to { transform: translateY(600px) rotate(400deg); }
+}
+
+/* ── ?preview=board ─────────────────────────────────────────── */
+
+.preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+}
+
+.preview .board {
+  --cell: 40px;
+}
+
+.preview figure {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview figcaption {
+  max-width: 440px;
+  font-weight: 800;
+}
+
+/* ── Short windows: a 1280×800 projector minus taskbar and browser bars ── */
+
+@media (max-height: 760px) {
+  .hero h1 { font-size: 90px; }
+  .hero svg { width: 340px; }
+  .home { padding-bottom: 40px; }
+  .join { padding: 20px 24px; }
+  .lobby ul { max-height: 170px; }
+  .title { font-size: 40px; }
+  .sub { margin-bottom: 8px; font-size: 16px; }
+  .panel { padding: 16px 22px; }
+  .panel h3 { margin-bottom: 8px; font-size: 22px; }
+  .fleet { gap: 6px; margin-bottom: 12px; }
+  .fl { padding: 4px 12px; }
+  .mini { height: 22px; }
+  .tools { margin-bottom: 14px; }
+  .placement-side { gap: 14px; }
+  .opp { padding: 10px 18px; }
+  .board-hint { margin-top: 8px; }
+  .banner { padding: 3px 24px; font-size: 20px; }
+  .auto-note { min-height: 30px; padding-top: 4px; }
+  .timer { width: 112px; height: 112px; }
+  .timer > div { width: 86px; height: 86px; }
+  .timer b { font-size: 36px; }
+  .mid { gap: 12px; padding-top: 0; }
+  .status { font-size: 90px; }
+  .result { padding: 24px 26px; }
+  .line, .scores { margin-bottom: 16px; }
+}
+
+/* ── Narrow windows ─────────────────────────────────────────── */
+
+@media (max-width: 1000px) {
+  .home,
+  .placement-lay {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero h1 {
+    font-size: 72px;
+  }
+  .hero svg {
+    display: none;
+  }
+  .field2 {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .mid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

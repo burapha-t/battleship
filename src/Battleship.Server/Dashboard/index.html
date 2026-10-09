@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battleship Server</title>
+<!-- Styled after docs/frontend/5_server.html. No web fonts or CDNs: the demo network may be offline. -->
+<style>
+:root{
+  --sky:#DDF0FF; --sea:#2F8FE0; --ink:#14325A; --paper:#FFFFFF;
+  --sun:#FFC83D; --coral:#FF4F5E; --kelp:#34C3A0; --lilac:#A98BFF; --peach:#FFA26B;
+  --mist:#E6F1FB; --muted:#5B7493;
+  --display:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#BFE0FA;font-family:'Nunito','Trebuchet MS',system-ui,sans-serif;color:var(--ink);padding:20px}
+.app{max-width:1280px;min-height:calc(100vh - 40px);margin:0 auto;position:relative;overflow:hidden;background:#EEF6FD;
+  border:4px solid var(--ink);border-radius:26px;padding:26px 40px 130px}
+.app > *:not(.waves){position:relative;z-index:2}
+.waves{position:absolute;left:0;right:0;bottom:0;height:110px;width:100%;z-index:0}
+h1,h2{font-family:var(--display);line-height:1.05}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--display);
+  font-weight:800;font-size:22px;background:var(--sun);color:var(--ink);border:3px solid var(--ink);border-radius:16px;
+  box-shadow:0 6px 0 var(--ink);padding:8px 28px 6px;cursor:pointer}
+.btn.coral{background:var(--coral);color:#fff}
+.btn:active,.btn.pressed{box-shadow:0 2px 0 var(--ink);transform:translateY(4px)}
+.pill{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;background:#fff;border:2.5px solid var(--ink);
+  border-radius:999px;padding:4px 14px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--kelp);border:2px solid var(--ink);flex:none}
+.dot.sun{background:var(--sun)} .dot.coral{background:var(--coral)} .dot.grey{background:#C3D3E3} .dot.lilac{background:var(--lilac)}
+.avatar{width:52px;height:52px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  font-family:var(--display);font-weight:800;font-size:24px;flex:none}
+
+.top{display:flex;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.top h1{font-size:40px;font-weight:800}
+.top .pill.ok{background:#D9F5EC}
+.top .pill.down{background:#FFE1E4}
+.top .btn{margin-left:auto}
+.grid2{display:grid;grid-template-columns:1fr 420px;gap:30px}
+@media (max-width:1000px){.grid2{grid-template-columns:1fr}.app{padding:20px 16px 130px}}
+.box{padding:20px 24px}
+.box h2{font-size:26px;margin-bottom:14px}
+.online{display:flex;align-items:center;gap:22px;padding:20px 24px;margin-bottom:24px}
+.online .num{font-family:var(--display);font-weight:800;font-size:76px;line-height:1;background:var(--kelp);border:3px solid var(--ink);
+  border-radius:20px;min-width:110px;padding:6px 10px 0;text-align:center;box-shadow:4px 4px 0 var(--ink)}
+.online b{font-size:24px;font-family:var(--display)} .online span{display:block;font-weight:700;color:var(--muted)}
+.lan{margin-top:6px;font-weight:700;color:var(--muted)} .lan code{color:var(--ink);font-weight:900;font-size:16px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-weight:800;font-size:16px}
+th{text-align:left;font-size:13px;color:var(--muted);font-weight:900;padding:0 10px 8px}
+td{padding:11px 10px;border-top:2.5px dashed #C7DCEF;vertical-align:middle}
+td .avatar{width:34px;height:34px;font-size:16px;display:inline-grid;vertical-align:middle;margin-right:10px;border-width:2.5px}
+td.score{font-family:var(--display);font-size:22px}
+.empty{color:var(--muted);font-weight:700;padding:8px 0}
+.match{margin-bottom:24px}
+.match .progress{font-weight:800;color:var(--muted);margin:-8px 0 12px}
+.match .vsrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.match .p{text-align:center;font-weight:900;min-width:110px}
+.match .p .avatar{margin:0 auto 4px}
+.match .big{font-family:var(--display);font-weight:800;font-size:50px}
+.match .vs{font-family:var(--display);font-weight:800;font-size:28px}
+.rule{display:flex;gap:12px;align-items:center;border:3px solid var(--ink);border-radius:14px;padding:10px 14px;margin-top:10px;font-weight:800;font-size:15px}
+.rule.next{background:#FFF6D9}
+.rule .ic{font-size:22px}
+.rule small{display:block;color:var(--muted);font-weight:700;font-size:13px}
+.events{padding:16px 22px}
+.events h2{font-size:22px;margin-bottom:6px}
+.ev{display:flex;gap:16px;font-weight:700;font-size:15px;padding:5px 0;border-top:2px dashed #C7DCEF}
+.ev time{color:var(--muted);font-weight:900;flex:none;width:70px}
+</style>
+</head>
+<body>
+<div class="app">
+  <svg class="waves" viewBox="0 0 1280 110" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3"/>
+    <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" stroke-width="3"/>
+  </svg>
+
+  <div class="top">
+    <div class="avatar" style="background:var(--sea);color:#fff">⚓</div>
+    <h1>Battleship Server</h1>
+    <span class="pill" id="status"><span class="dot grey"></span>Connecting…</span>
+    <button class="btn coral" id="reset" type="button">Reset game and scores</button>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="card online">
+        <div class="num" id="count">0</div>
+        <div>
+          <b>Clients online</b><span>Connected to this server right now</span>
+          <div class="lan" id="lan"></div>
+        </div>
+      </div>
+      <div class="card box">
+        <h2>Connected clients</h2>
+        <table>
+          <thead><tr><th>Nickname</th><th>Address</th><th>Status</th><th>Score</th><th>Connected</th></tr></thead>
+          <tbody id="clients"></tbody>
+        </table>
+        <div class="empty" id="no-clients">Nobody is connected yet.</div>
+      </div>
+    </div>
+    <div>
+      <div id="matches"></div>
+      <div class="card events">
+        <h2>Activity</h2>
+        <div id="activity"><div class="empty">Nothing yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = ['var(--sun)', 'var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--coral)'];
+const STATUS = {
+  connecting: ['grey', 'Connecting'],
+  idle: ['sun', 'Lobby'],
+  searching: ['', 'Searching'],
+  placing: ['lilac', 'Placing ships'],
+  'in-match': ['coral', 'In match'],
+};
+
+const $ = id => document.getElementById(id);
+const esc = text => String(text ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const clock = (iso, seconds) =>
+  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: seconds ? '2-digit' : undefined, hour12: false });
+const color = id => COLORS[(parseInt(String(id).slice(1), 10) || 0) % COLORS.length];
+const avatar = (id, name) => `<span class="avatar" style="background:${color(id)}">${esc((name || '?')[0].toUpperCase())}</span>`;
+
+function render(state) {
+  $('status').className = 'pill ok';
+  $('status').innerHTML = `<span class="dot"></span>Running on port ${esc(state.tcpPort)}`;
+  $('count').textContent = state.count;
+  $('lan').innerHTML = state.lanAddresses.length
+    ? 'Server address for client.json: ' + state.lanAddresses.map(a => `<code>${esc(a)}</code>`).join(', ')
+    : 'No LAN address found: only this machine can connect (127.0.0.1).';
+
+  const own = new Set(['127.0.0.1', '::1', ...state.lanAddresses]);
+  $('clients').innerHTML = state.clients.map(c => {
+    const [dot, label] = STATUS[c.status] || ['grey', c.status];
+    const name = c.name ? esc(c.name) : `${esc(c.id)} <span style="color:var(--muted)">(connecting)</span>`;
+    return `<tr>
+      <td>${avatar(c.id, c.name || c.id)}${name}</td>
+      <td>${esc(c.address)}${own.has(c.address) ? ' (this PC)' : ''}</td>
+      <td><span class="pill"><span class="dot ${dot}"></span>${esc(label)}</span></td>
+      <td class="score">${c.name ? esc(c.score) : '–'}</td>
+      <td>${clock(c.connectedAt, false)}</td>
+    </tr>`;
+  }).join('');
+  $('no-clients').style.display = state.clients.length ? 'none' : '';
+
+  $('matches').innerHTML = state.matches.length
+    ? state.matches.map(renderMatch).join('')
+    : '<div class="card box match"><h2>Current match</h2><div class="empty">No match running. Two players who press <b>Start game</b> are paired.</div></div>';
+
+  $('activity').innerHTML = state.activity.length
+    ? state.activity.slice(0, 10).map(e => `<div class="ev"><time>${clock(e.time, true)}</time><span>${esc(e.text)}</span></div>`).join('')
+    : '<div class="empty">Nothing yet.</div>';
+}
+
+function renderMatch(m) {
+  const name = id => esc((m.players.find(p => p.id === id) || {}).name || id);
+  const [a, b] = m.players;
+  const player = p => `<div class="p">${avatar(p.id, p.name)}${esc(p.name)}<div class="big">${esc(p.score)}</div></div>`;
+  const progress = {
+    Placing: 'Placing ships',
+    Playing: `Turn ${m.turnNumber}: ${name(m.activePlayerId)} to fire`,
+    MatchEnd: `${name(m.winnerId)} won`,
+  }[m.phase] || m.phase;
+  const opener = m.firstPickedAtRandom
+    ? `<div class="rule"><span class="ic">🎲</span><div>Match ${esc(m.id)} opener: ${name(m.firstPlayerId)}<small>Picked at random by the server</small></div></div>`
+    : `<div class="rule"><span class="ic">🏆</span><div>Match ${esc(m.id)} opener: ${name(m.firstPlayerId)}<small>Winner of the last match starts the rematch</small></div></div>`;
+  const next = m.phase === 'MatchEnd'
+    ? `<div class="rule next"><span class="ic">🏆</span><div>Next opener: ${name(m.winnerId)}<small>Winner of the last match starts the rematch</small></div></div>`
+    : '';
+  return `<div class="card box match"><h2>Match ${esc(m.id)}</h2><div class="progress">${esc(progress)}</div>
+    <div class="vsrow">${player(a)}<div class="vs">vs</div>${player(b)}</div>${opener}${next}</div>`;
+}
+
+async function poll() {
+  try {
+    const response = await fetch('/api/state', { cache: 'no-store' });
+    if (!response.ok) throw new Error(response.status);
+    render(await response.json());
+  } catch {
+    $('status').className = 'pill down';
+    $('status').innerHTML = '<span class="dot coral"></span>Server not responding';
+  }
+  setTimeout(poll, 500);
+}
+
+$('reset').addEventListener('click', async () => {
+  const button = $('reset');
+  button.classList.add('pressed');
+  try {
+    await fetch('/api/reset', { method: 'POST' });
+  } finally {
+    setTimeout(() => button.classList.remove('pressed'), 300);
+  }
+});
+
+poll();
+</script>
+</body>
+</html>

@@ -1,7 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Battleship.Core\Battleship.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The dashboard (SRV-5) is an ASP.NET minimal API inside the server. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Dashboard\index.html" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>
