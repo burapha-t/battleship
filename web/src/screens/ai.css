@@ -1,0 +1,53 @@
+.sonar-card {
+  width: 250px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.sonar-card h4 {
+  margin-bottom: 4px;
+  font-size: 18px;
+}
+
+.sonar-card p,
+.sonar-card small {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.sonar-btn {
+  width: 100%;
+  margin: 8px 0 6px;
+  padding: 5px 10px;
+  font-size: 15px;
+}
+
+.mark.sonar-signal {
+  z-index: 2;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  margin: 4px;
+  background: rgba(255, 213, 79, 0.62);
+  border: 3px dashed var(--ink);
+  border-radius: 12px;
+  animation: sonar-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.mark.sonar-signal b {
+  font: 900 18px / 1 var(--font-display);
+  color: var(--ink);
+}
+
+.sw.sonar {
+  background: var(--sun);
+  color: var(--ink);
+  border-style: dashed;
+}
+
+@keyframes sonar-pulse {
+  from { transform: scale(0.88); opacity: 0.65; }
+  to { transform: scale(1); opacity: 1; }
+}

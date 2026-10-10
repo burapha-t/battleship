@@ -23,6 +23,8 @@ type Props = {
   label: string
   ships?: BoardShip[]
   shots?: BoardShot[]
+  /** Optional AI sonar cells. Display only; they do not alter game logic. */
+  signals?: Cell[]
   /** Draws the aim marker on this cell. */
   hover?: Cell | null
   /** Darker water for the opponent's board. */
@@ -44,6 +46,7 @@ export function Board({
   label,
   ships = [],
   shots = [],
+  signals = [],
   hover = null,
   enemy = false,
   disabled = false,
@@ -90,6 +93,11 @@ export function Board({
             )
           }),
         )}
+        {signals.map(([row, col]) => (
+          <div key={`signal-${row},${col}`} className="mark sonar-signal" style={at(row, col)} aria-hidden>
+            <b>?</b>
+          </div>
+        ))}
         {ships.map((ship, i) => <ShipHull key={i} ship={ship} />)}
         {shots.map((s) => (
           <div key={`${s.row},${s.col}`} className={`mark ${s.result}`} style={at(s.row, s.col)} aria-hidden>
