@@ -50,3 +50,27 @@ The second client needs its own web port: `Battleship.Client --web-port 3001`.
 From source, with the SDK: `dotnet run --project src/Battleship.Server`, then
 `dotnet run --project src/Battleship.Client` and
 `dotnet run --project src/Battleship.Client -- --web-port 3001`.
+
+### Frontend feature demo
+
+Run `npm ci` and `npm run dev` in `web/` to explore the UI at the URL printed by
+Vite. The login, sign-up, and guest forms open a local demo profile; use made-up
+credentials. Passwords are neither stored nor transmitted, and no account is
+created. Joining an online game still requires the existing client relay and
+server described above. The offline `?replay=p1` workflow remains available.
+
+The navigation includes a searchable global leaderboard, a personal profile,
+and settings. The profile uses the current captain name and includes an overview,
+Elo progress, match history with result filters and expandable details, and
+achievement badges. Avatar colors can be customized and are remembered on this
+device per captain name. Leaderboard, history, badge, and Elo values are explicitly labeled
+sample data from `web/src/features/data.ts`; they do not track live matches.
+
+English/Thai applies to the game and the new screens. Language, effects mute,
+background music, and streak notification preferences are saved on the device.
+Music and effects are synthesized locally and start after browser interaction.
+Live hit streaks use server-confirmed shots: three or more consecutive hits
+trigger a notification, the player's miss resets it, and opponent shots do not
+interrupt it. Settings includes a notification preview.
+
+Frontend checks: `npm run build`, `npm test`, and `npm run lint` in `web/`.

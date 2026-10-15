@@ -1,3 +1,4 @@
+import { usePreferences } from '../preferences'
 // The 8×8 grid shared by the placement and game screens. It draws what it is
 // given and reports clicks and hovers; it holds no game logic. Labels are
 // display only (A–H, 1–8); every callback uses the wire's 0-based [row, col].
@@ -51,6 +52,7 @@ export function Board({
   onCellClick,
   onCellHover,
 }: Props) {
+  const { t } = usePreferences()
   const shotAt = new Map(shots.map((s) => [`${s.row},${s.col}`, s.result]))
   const shipAt = new Map(ships.filter((s) => !s.ghost).flatMap((s) => s.cells.map((c) => [`${c[0]},${c[1]}`, s])))
 
@@ -74,7 +76,7 @@ export function Board({
             const clickable = !disabled && onCellClick !== undefined && (canClick?.(cell) ?? true)
             const ship = shipAt.get(key)
             const shot = shotAt.get(key)
-            const state = [ship && (ship.sunk ? 'sunk ship' : 'ship'), shot].filter(Boolean).join(', ')
+            const state = [ship && (ship.sunk ? t('sunk ship', 'เรือจม') : t('ship', 'เรือ')), shot && (shot === 'hit' ? t('hit', 'ยิงโดน') : t('miss', 'ยิงพลาด'))].filter(Boolean).join(', ')
             return (
               <button
                 key={key}

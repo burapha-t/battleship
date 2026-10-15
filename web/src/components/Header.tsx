@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { usePreferences } from '../preferences'
 import { matchSides } from '../gameReducer'
 import type { GameState } from '../gameReducer'
-import { isMuted, setMuted } from '../sound'
 import { Avatar } from './Avatar'
 
 /**
@@ -37,14 +36,15 @@ export function Header({ state }: { state: GameState }) {
 type ChipProps = { name: string; score: number; you?: boolean; turn?: boolean }
 
 function PlayerChip({ name, score, you = false, turn = false }: ChipProps) {
+  const { t } = usePreferences()
   return (
     <div className={`chip${you ? ' me' : ''}${turn ? ' turn' : ''}`}>
       <Avatar name={name} color={you ? 'var(--sun)' : 'var(--lilac)'} />
       <span className="name">
         {name}
-        <small>{you ? 'You' : 'Opponent'}</small>
+        <small>{you ? t('You', 'คุณ') : t('Opponent', 'คู่แข่ง')}</small>
       </span>
-      <span className="score" title="Score">
+      <span className="score" title={t('Score', 'คะแนน')}>
         {score}
       </span>
     </div>
@@ -52,18 +52,15 @@ function PlayerChip({ name, score, you = false, turn = false }: ChipProps) {
 }
 
 function SoundToggle() {
-  const [muted, setMutedState] = useState(isMuted)
-  const toggle = () => {
-    setMuted(!muted)
-    setMutedState(!muted)
-  }
+  const { effects, toggleEffects, t } = usePreferences()
+  const muted = !effects
   return (
-    <button type="button" className="btn white small sound" onClick={toggle}>
+    <button type="button" className="btn white small sound" onClick={toggleEffects}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
         {muted ? <path d="M17 9l5 6M22 9l-5 6" /> : <path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12" />}
       </svg>
-      {muted ? 'Sound off' : 'Sound on'}
+      {muted ? t('Sound off', 'ปิดเสียง') : t('Sound on', 'เปิดเสียง')}
     </button>
   )
 }

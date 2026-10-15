@@ -1,3 +1,4 @@
+import { usePreferences } from '../preferences'
 import { useState } from 'react'
 import { matchSides } from '../gameReducer'
 import type { GameState } from '../gameReducer'
@@ -7,8 +8,9 @@ const CONFETTI = ['var(--coral)', 'var(--kelp)', 'var(--lilac)', 'var(--sun)']
 
 /** Win or Lost from `matchEnd.winnerId`, both scores, and the rematch handshake. */
 export function EndScreen({ state, onRematch }: { state: GameState; onRematch: () => void }) {
+  const { t } = usePreferences()
   const { me, opponent } = matchSides(state)
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('Your opponent', 'คู่แข่งของคุณ')
   const won = state.winnerId !== null && state.winnerId === state.myId
 
   const [pressed, setPressed] = useState(false)
@@ -40,9 +42,9 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
               aria-hidden
             />
           ))}
-        <h1 className="status">{won ? 'Win' : 'Lost'}</h1>
+        <h1 className="status">{won ? t('Win', 'ชนะ') : t('Lost', 'แพ้')}</h1>
         <p className="line">
-          {won ? `You sank all 4 of ${opponentName}'s ships!` : `${opponentName} sank your whole fleet this time.`}
+          {won ? t(`You sank all 4 of ${opponentName}'s ships!`, `คุณจมเรือทั้ง 4 ลำของ ${opponentName} ได้แล้ว!`) : t(`${opponentName} sank your whole fleet this time.`, `${opponentName} จมกองเรือของคุณทั้งหมดในรอบนี้`)}
         </p>
         <div className="scores">
           {sides.map((p, i) => (
@@ -51,7 +53,7 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
               <div className={`sc${p.score === top ? ' lead' : ''}`}>
                 <div className="n">
                   {p.name}
-                  {p.id === state.myId && ' (you)'}
+                  {p.id === state.myId && t(' (you)', ' (คุณ)')}
                 </div>
                 <div className="v">{p.score}</div>
               </div>
@@ -59,18 +61,18 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
           ))}
         </div>
         <button type="button" className={`btn big${iAsked ? ' pressed' : ''}`} disabled={iAsked} onClick={rematch}>
-          {iAsked ? 'Rematch requested' : 'Rematch'}
+          {iAsked ? t('Rematch requested', 'ส่งคำขอแข่งใหม่แล้ว') : t('Rematch', 'แข่งใหม่')}
         </button>
         {iAsked ? (
           <p className="note" role="status">
             <span className="dot sun" />
-            Waiting for {opponentName}…
+            {t(`Waiting for ${opponentName}…`, `กำลังรอ ${opponentName}…`)}
           </p>
         ) : (
           theyAsked && (
             <p className="note" role="status">
               <span className="dot" />
-              {opponentName} wants a rematch{won ? ". You'll fire first as the winner." : '.'}
+              {t(`${opponentName} wants a rematch${won ? ". You'll fire first as the winner." : '.'}`, `${opponentName} ต้องการแข่งใหม่${won ? ' คุณจะได้ยิงก่อนในฐานะผู้ชนะ' : ''}`)}
             </p>
           )
         )}

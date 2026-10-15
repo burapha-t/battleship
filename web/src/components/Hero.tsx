@@ -1,9 +1,11 @@
+import { usePreferences } from '../preferences'
 /** The big title and ship drawing on the nickname and lobby screens. */
 export function Hero() {
+  const { t } = usePreferences()
   return (
     <section className="hero">
       <h1>Battleship</h1>
-      <p>Hide your fleet, take a shot every 10 seconds, and sink all 4 enemy ships first.</p>
+      <p>{t('Hide your fleet, take a shot every 10 seconds, and sink all 4 enemy ships first.', 'ซ่อนกองเรือ ยิงทุก 10 วินาที แล้วจมเรือศัตรูทั้ง 4 ลำให้ได้ก่อน')}</p>
       <svg viewBox="0 0 460 300" aria-hidden>
         <g stroke="#14325A" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round">
           <circle cx="300" cy="46" r="18" fill="#fff" />

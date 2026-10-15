@@ -27,7 +27,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
-- `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
+- `web/`: complete — all five game screens plus sound, bilingual settings, demo login/leaderboard, and a personal profile containing history and badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 

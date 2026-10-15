@@ -1,3 +1,4 @@
+import { usePreferences } from '../preferences'
 import { useState } from 'react'
 import { Avatar } from '../components/Avatar'
 import { Hero } from '../components/Hero'
@@ -16,6 +17,7 @@ const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 
 export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartGame: () => void }) {
+  const { t } = usePreferences()
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
@@ -32,19 +34,19 @@ export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartG
       <Hero />
       <aside className="home-side">
         <div className="card join">
-          <h2>Welcome, {state.myName}.</h2>
+          <h2>{t(`Welcome, ${state.myName}.`, `ยินดีต้อนรับ ${state.myName}`)}</h2>
           <p className="hint">
             {searching
-              ? 'You will be paired with the next captain who presses Start game.'
-              : "Press Start game when you're ready to play."}
+              ? t('You will be paired with the next captain who presses Start game.', 'คุณจะได้จับคู่กับกัปตันคนถัดไปที่กดเริ่มเกม')
+              : t("Press Start game when you're ready to play.", "กดเริ่มเกมเมื่อคุณพร้อมเล่น")}
           </p>
           <button type="button" className="btn wide" disabled={searching} onClick={start}>
-            {searching ? 'Looking for an opponent…' : 'Start game'}
+            {searching ? t('Looking for an opponent…', 'กำลังหาคู่แข่ง…') : t('Start game', 'เริ่มเกม')}
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">
           <div className="lobby-head">
-            <h3 id="lobby-title">Captains online</h3>
+            <h3 id="lobby-title">{t('Captains online', 'กัปตันออนไลน์')}</h3>
             <span className="count">{state.lobby.length}</span>
           </div>
           <ul>
@@ -55,12 +57,12 @@ export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartG
                 <li key={client.id} className="who">
                   <Avatar name={client.name} color={you ? 'var(--sun)' : client.name ? OTHER_COLORS[i % OTHER_COLORS.length] : '#C3D3E3'} />
                   <span className="who-name">
-                    {client.name ?? <em>connecting…</em>}
-                    {you && <small>That's you</small>}
+                    {client.name ?? <em>{t('connecting…', 'กำลังเชื่อมต่อ…')}</em>}
+                    {you && <small>{t("That's you", 'นี่คือคุณ')}</small>}
                   </span>
                   <span className="pill">
                     <span className={`dot ${status.dot}`} />
-                    {status.label}
+                    {t(status.label, ({ connecting: 'กำลังเชื่อมต่อ…', idle: 'ว่าง', searching: 'กำลังค้นหา', placing: 'กำลังวางเรือ', 'in-match': 'กำลังเล่น' })[client.status])}
                   </span>
                 </li>
               )

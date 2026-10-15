@@ -1,3 +1,4 @@
+import { usePreferences } from '../preferences'
 import { useEffect, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
@@ -19,9 +20,10 @@ type Props = { state: GameState; onFire: (cell: Cell) => void }
  * come only from `fireResult`, never from my own click.
  */
 export function GameScreen({ state, onFire }: Props) {
+  const { t } = usePreferences()
   const { me, opponent } = matchSides(state)
   const myId = state.myId
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('Your opponent', 'คู่แข่งของคุณ')
   const nameOf = (id: string) => (id === me?.id ? me.name : id === opponent?.id ? opponent.name : id)
 
   // The turn I fired on: no second shot until the next `turn`.
@@ -62,12 +64,12 @@ export function GameScreen({ state, onFire }: Props) {
   return (
     <main className="game">
       <div className={`banner${myTurn ? '' : ' theirs'}`} role="status">
-        {myTurn ? `Your turn! Pick one slot in ${opponentName}'s waters` : `${opponentName}'s turn`}
+        {myTurn ? t(`Your turn! Pick one slot in ${opponentName}'s waters`, `ตาคุณ! เลือกยิงหนึ่งช่องในน่านน้ำของ ${opponentName}`) : t(`${opponentName}'s turn`, `ตาของ ${opponentName}`)}
       </div>
       <p className="auto-note" role="status">
         {last?.auto && (
           <span>
-            {nameOf(last.by)} ran out of time — the server fired at {cellName([last.row, last.col])}.
+            {t(`${nameOf(last.by)} ran out of time — the server fired at ${cellName([last.row, last.col])}.`, `${nameOf(last.by)} หมดเวลา — เซิร์ฟเวอร์ยิงที่ ${cellName([last.row, last.col])}`)}
           </span>
         )}
       </p>
@@ -75,61 +77,61 @@ export function GameScreen({ state, onFire }: Props) {
       <div className="field2">
         <section className="side">
           <h3>
-            Your fleet
+            {t('Your fleet', 'กองเรือของคุณ')}
             <span className="pill">
               <span className="dot" />
-              {SHIP_COUNT - sunkAtMe.length} of {SHIP_COUNT} afloat
+              {t(`${SHIP_COUNT - sunkAtMe.length} of ${SHIP_COUNT} afloat`, `เหลือ ${SHIP_COUNT - sunkAtMe.length} จาก ${SHIP_COUNT} ลำ`)}
             </span>
           </h3>
-          <Board label="Your fleet" ships={ownShips} shots={incoming} />
+          <Board label={t('Your fleet', 'กองเรือของคุณ')} ships={ownShips} shots={incoming} />
         </section>
 
         <div className="mid">
           {turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />}
           <div className="card log">
-            <h4>Last shots</h4>
-            {state.shots.length === 0 && <p className="empty">No shots yet</p>}
+            <h4>{t('Last shots', 'การยิงล่าสุด')}</h4>
+            {state.shots.length === 0 && <p className="empty">{t('No shots yet', 'ยังไม่มีการยิง')}</p>}
             {state.shots
               .slice(-LOG_LENGTH)
               .reverse()
               .map((s) => (
                 <p key={`${s.by}-${s.row},${s.col}`}>
                   <span className={`tag ${s.sunk ? 's' : s.result === 'hit' ? 'h' : 'm'}`}>
-                    {s.sunk ? 'Sunk' : s.result === 'hit' ? 'Hit' : 'Miss'}
+                    {s.sunk ? t('Sunk', 'จม') : s.result === 'hit' ? t('Hit', 'โดน') : t('Miss', 'พลาด')}
                   </span>
                   {s.auto
-                    ? `${nameOf(s.by)} ran out of time → ${cellName([s.row, s.col])}`
+                    ? t(`${nameOf(s.by)} ran out of time → ${cellName([s.row, s.col])}`, `${nameOf(s.by)} หมดเวลา → ${cellName([s.row, s.col])}`)
                     : s.sunk
-                      ? `${nameOf(s.by)} sank ${nameOf(s.target)}'s ship`
+                      ? t(`${nameOf(s.by)} sank ${nameOf(s.target)}'s ship`, `${nameOf(s.by)} จมเรือของ ${nameOf(s.target)}`)
                       : `${nameOf(s.by)} → ${cellName([s.row, s.col])}`}
                 </p>
               ))}
           </div>
           <div className="legend">
             <span>
-              <i className="sw hit">✕</i>Hit
+              <i className="sw hit">✕</i>{t('Hit', 'โดน')}
             </span>
             <span>
               <i className="sw miss" />
-              Miss
+              {t('Miss', 'พลาด')}
             </span>
             <span>
               <i className="sw sunk" />
-              Sunk ship
+              {t('Sunk ship', 'เรือจม')}
             </span>
           </div>
         </div>
 
         <section className={`side${canFire ? ' active' : ''}`}>
           <h3>
-            {opponentName}'s waters
+            {t(`${opponentName}'s waters`, `น่านน้ำของ ${opponentName}`)}
             <span className="pill">
               <span className="dot coral" />
-              {SHIP_COUNT - sunkByMe.length} of {SHIP_COUNT} afloat
+              {t(`${SHIP_COUNT - sunkByMe.length} of ${SHIP_COUNT} afloat`, `เหลือ ${SHIP_COUNT - sunkByMe.length} จาก ${SHIP_COUNT} ลำ`)}
             </span>
           </h3>
           <Board
-            label={`${opponentName}'s waters`}
+            label={t(`${opponentName}'s waters`, `น่านน้ำของ ${opponentName}`)}
             enemy
             ships={sunkByMe.map((cells) => ({ cells, sunk: true }))}
             shots={myShots}

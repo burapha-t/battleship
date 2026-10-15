@@ -95,3 +95,37 @@ function noise(ctx: AudioContext, at: number, seconds: number, cutoff: number, v
   source.connect(filter).connect(gain).connect(ctx.destination)
   source.start(at)
 }
+
+// A quiet looping melody, independent from the effects mute setting.
+let musicEnabled = false
+let musicTimer: ReturnType<typeof setInterval> | null = null
+let musicGain: GainNode | null = null
+let melodyStep = 0
+const melody = [262, 330, 392, 330, 294, 349, 440, 349, 262, 330, 392, 523, 440, 392, 330, 294]
+function musicNote() {
+  if (!musicEnabled || !audio || audio.state !== 'running') return
+  if (!musicGain) {
+    musicGain = audio.createGain()
+    musicGain.connect(audio.destination)
+  }
+  musicGain.gain.value = 0.035
+  const oscillator = audio.createOscillator()
+  const envelope = audio.createGain()
+  oscillator.type = 'sine'
+  oscillator.frequency.value = melody[melodyStep++ % melody.length]
+  envelope.gain.setValueAtTime(0, audio.currentTime)
+  envelope.gain.linearRampToValueAtTime(1, audio.currentTime + 0.04)
+  envelope.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.65)
+  oscillator.connect(envelope).connect(musicGain)
+  oscillator.start()
+  oscillator.stop(audio.currentTime + 0.7)
+  oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect() }
+}
+export function setMusic(enabled: boolean) {
+  musicEnabled = enabled
+  if (musicTimer) clearInterval(musicTimer)
+  musicTimer = null
+  if (!enabled) { if (musicGain) musicGain.gain.value = 0; return }
+  musicNote()
+  musicTimer = setInterval(musicNote, 450)
+}

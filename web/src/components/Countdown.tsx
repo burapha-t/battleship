@@ -1,3 +1,4 @@
+import { usePreferences } from '../preferences'
 import { useEffect, useState } from 'react'
 
 /**
@@ -5,6 +6,7 @@ import { useEffect, useState } from 'react'
  * only: the server's timer is authoritative, so nothing happens at 0.
  */
 export function Countdown({ seconds, turnNumber }: { seconds: number; turnNumber: number }) {
+  const { t } = usePreferences()
   const total = seconds * 1000
   const [tick, setTick] = useState({ turnNumber, leftMs: total })
 
@@ -27,12 +29,12 @@ export function Countdown({ seconds, turnNumber }: { seconds: number; turnNumber
       className={`timer${left <= 3 ? ' urgent' : ''}`}
       style={{ background: `conic-gradient(var(--coral) 0 ${filled}%, #fff ${filled}% 100%)` }}
       role="timer"
-      aria-label={`${left} seconds left`}
+      aria-label={t(`${left} seconds left`, `เหลือ ${left} วินาที`)}
     >
       <div>
-        <span>time left</span>
+        <span>{t('time left', 'เวลาเหลือ')}</span>
         <b key={left}>{left}</b>
-        <span>seconds</span>
+        <span>{t('seconds', 'วินาที')}</span>
       </div>
     </div>
   )

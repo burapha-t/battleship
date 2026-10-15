@@ -1,3 +1,5 @@
+import { localizeMessage } from '../localizeMessage'
+import { usePreferences } from '../preferences'
 import { useEffect, useState } from 'react'
 import { Avatar } from '../components/Avatar'
 import { Board } from '../components/Board'
@@ -22,8 +24,9 @@ type Props = { state: GameState; onReady: (ships: Cell[][]) => void }
  * ship (or its row in the fleet list) to pick it up again, R rotates.
  */
 export function PlacementScreen({ state, onReady }: Props) {
+  const { t, language } = usePreferences()
   const { opponent } = matchSides(state)
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('Your opponent', 'คู่แข่งของคุณ')
 
   const [ships, setShips] = useState<Slots>(EMPTY)
   const [held, setHeld] = useState<number | null>(0)
@@ -109,26 +112,25 @@ export function PlacementScreen({ state, onReady }: Props) {
 
   const remaining = SHIP_COUNT - placedCount
   const readyLabel = iPlaced
-    ? `Waiting for ${opponentName}…`
+    ? t(`Waiting for ${opponentName}…`, `กำลังรอ ${opponentName}…`)
     : pending
-      ? 'Sending…'
+      ? t('Sending…', 'กำลังส่ง…')
       : remaining > 0
-        ? `Place ${remaining} more ship${remaining === 1 ? '' : 's'}`
+        ? t(`Place ${remaining} more ship${remaining === 1 ? '' : 's'}`, `วางเรืออีก ${remaining} ลำ`)
         : problem
-          ? 'Fix your fleet'
-          : 'Ready!'
+          ? t('Fix your fleet', 'แก้ไขกองเรือของคุณ')
+          : t('Ready!', 'พร้อม!')
 
   return (
     <main className="placement">
-      <h1 className="title">Place your ships</h1>
+      <h1 className="title">{t('Place your ships', 'วางเรือของคุณ')}</h1>
       <p className="sub">
-        Place your 4 ships on your grid. Each ship fills 4 slots in a straight line. {opponentName} can't see where
-        you put them.
+        {t(`Place your 4 ships on your grid. Each ship fills 4 slots in a straight line. ${opponentName} can't see where you put them.`, `วางเรือ 4 ลำบนกระดาน แต่ละลำยาว 4 ช่องเป็นเส้นตรง ${opponentName} จะไม่เห็นตำแหน่งเรือของคุณ`)}
       </p>
       <div className="placement-lay">
         <div>
           <Board
-            label="Your grid"
+            label={t('Your grid', 'กระดานของคุณ')}
             ships={boardShips}
             disabled={locked}
             onCellClick={clickCell}
@@ -136,16 +138,16 @@ export function PlacementScreen({ state, onReady }: Props) {
           />
           <p className="board-hint">
             {iPlaced
-              ? 'Your fleet is locked in.'
+              ? t('Your fleet is locked in.', 'ล็อกตำแหน่งกองเรือแล้ว')
               : held !== null
-                ? `Click the grid to drop Ship ${held + 1} · R rotates · click a placed ship to move it`
-                : 'Click a placed ship to move it'}
+                ? t(`Click the grid to drop Ship ${held + 1} · R rotates · click a placed ship to move it`, `คลิกเพื่อวางเรือลำที่ ${held + 1} · กด R เพื่อหมุน · คลิกเรือที่วางแล้วเพื่อย้าย`)
+                : t('Click a placed ship to move it', 'คลิกเรือที่วางแล้วเพื่อย้าย')}
           </p>
         </div>
 
         <div className="placement-side">
           <div className="card panel">
-            <h3>Your fleet</h3>
+            <h3>{t('Your fleet', 'กองเรือของคุณ')}</h3>
             <ul className="fleet">
               {shown.map((ship, i) => {
                 const inHand = !iPlaced && held === i
@@ -163,8 +165,8 @@ export function PlacementScreen({ state, onReady }: Props) {
                         <i />
                         <i />
                       </span>
-                      Ship {i + 1}
-                      <span className="st">{ship ? '✓ Placed' : inHand ? `Placing… ${horizontal ? '↔' : '↕'}` : 'Not placed'}</span>
+                      {t(`Ship ${i + 1}`, `เรือลำที่ ${i + 1}`)}
+                      <span className="st">{ship ? t('✓ Placed', '✓ วางแล้ว') : inHand ? t(`Placing… ${horizontal ? '↔' : '↕'}`, `กำลังวาง… ${horizontal ? '↔' : '↕'}`) : t('Not placed', 'ยังไม่วาง')}</span>
                     </button>
                   </li>
                 )
@@ -172,13 +174,13 @@ export function PlacementScreen({ state, onReady }: Props) {
             </ul>
             <div className="tools">
               <button type="button" className="btn white small" onClick={rotate} disabled={locked || held === null}>
-                ↻ Rotate
+                {t('↻ Rotate', '↻ หมุน')}
               </button>
               <button type="button" className="btn white small" onClick={shuffle} disabled={locked}>
-                Shuffle
+                {t('Shuffle', 'สุ่มตำแหน่ง')}
               </button>
               <button type="button" className="btn white small" onClick={clear} disabled={locked}>
-                Clear
+                {t('Clear', 'ล้าง')}
               </button>
             </div>
             <button type="button" className={`btn wide${iPlaced ? ' pressed' : ''}`} disabled={!canReady} onClick={ready}>
@@ -186,7 +188,7 @@ export function PlacementScreen({ state, onReady }: Props) {
             </button>
             {(serverError ?? problem) && (
               <p className="field-error" role="alert">
-                {serverError ?? problem}
+                {localizeMessage((serverError ?? problem)!, language)}
               </p>
             )}
           </div>
@@ -194,8 +196,8 @@ export function PlacementScreen({ state, onReady }: Props) {
           <div className="card opp">
             <Avatar name={opponentName} color="var(--lilac)" />
             <div>
-              <b>{opponentPlaced ? `${opponentName} is ready!` : `${opponentName} is placing ships`}</b>
-              <span>The match starts when you're both ready</span>
+              <b>{opponentPlaced ? t(`${opponentName} is ready!`, `${opponentName} พร้อมแล้ว!`) : t(`${opponentName} is placing ships`, `${opponentName} กำลังวางเรือ`)}</b>
+              <span>{t("The match starts when you're both ready", 'เกมจะเริ่มเมื่อทั้งสองฝ่ายพร้อม')}</span>
             </div>
             <span className={`dot ${opponentPlaced ? '' : 'sun'}`} />
           </div>
