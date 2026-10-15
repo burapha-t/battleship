@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 // The 12 server → client events (protocol.md §4). Property order is wire order.
 namespace Battleship.Core.Protocol
@@ -20,6 +21,9 @@ namespace Battleship.Core.Protocol
 
         public string Id { get; set; } = "";
         public string Nickname { get; set; } = "";
+        public int Score { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? MatchesPlayed { get; set; }
     }
 
     /// <summary>
@@ -68,6 +72,8 @@ namespace Battleship.Core.Protocol
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
         public int Score { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? MatchesPlayed { get; set; }
     }
 
     /// <summary>A placement was accepted. Carries only the id, never the cells.</summary>

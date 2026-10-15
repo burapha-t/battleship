@@ -15,7 +15,7 @@ public sealed record DashboardSnapshot(
 
 /// <summary>One connected client; <see cref="Name"/> is null until it joins.</summary>
 public sealed record DashboardClient(
-    string Id, string? Name, string Address, string Status, int Score, DateTimeOffset ConnectedAt);
+    string Id, string? Name, string Address, string Status, int Score, DateTimeOffset ConnectedAt, string? AccountId = null, int MatchesPlayed = 0);
 
 /// <summary>One running or just-finished match.</summary>
 public sealed record DashboardMatch(

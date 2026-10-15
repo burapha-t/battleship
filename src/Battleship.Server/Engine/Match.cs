@@ -174,6 +174,7 @@ public sealed class Match
         Phase = MatchPhase.MatchEnd;
         WinnerId = by;
         _players[IndexOf(by)].Score++;
+        foreach (var player in _players) player.MatchesPlayed++;
         outbounds.Add(ToBoth(new MatchEnd { MatchId = Id, WinnerId = by, Players = PlayerInfos() }));
         return outbounds;
     }
@@ -192,7 +193,7 @@ public sealed class Match
     private Board BoardOf(string playerId) => _boards[IndexOf(playerId)]!;
 
     private IReadOnlyList<PlayerInfo> PlayerInfos() =>
-        _players.Select(player => new PlayerInfo { Id = player.Id, Name = player.Name ?? player.Id, Score = player.Score }).ToList();
+        _players.Select(player => new PlayerInfo { Id = player.Id, Name = player.Name ?? player.Id, Score = player.Score, MatchesPlayed = player.AccountId is null ? null : player.MatchesPlayed }).ToList();
 
     private Outbound ToBoth(ProtocolMessage message) => new(new[] { _players[0].Id, _players[1].Id }, message);
 

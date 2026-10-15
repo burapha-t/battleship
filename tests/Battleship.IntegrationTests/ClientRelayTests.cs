@@ -9,8 +9,19 @@ using Microsoft.AspNetCore.Builder;
 namespace Battleship.IntegrationTests;
 
 // CLI-2 / CLI-3: the client's web host and its WebSocket ↔ TCP relay, against the real server.
-public class ClientRelayTests
+public class ClientRelayTests : IAsyncLifetime
 {
+    private readonly TestAccounts accounts = new();
+    private readonly TestCookieJar cookies = new();
+    public async Task InitializeAsync()
+    {
+        await accounts.StartAsync();
+        using var http = accounts.Client(cookies);
+        await TestAccounts.RegisterAsync(http);
+        await TestAccounts.LoginAsync(http);
+    }
+    public async Task DisposeAsync() => await accounts.DisposeAsync();
+
     private static int FreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -20,16 +31,17 @@ public class ClientRelayTests
         return port;
     }
 
-    private static async Task<WebApplication> StartClientAsync(int serverPort)
+    private async Task<WebApplication> StartClientAsync(int serverPort)
     {
-        var app = WebHost.Build(new ClientConfig { ServerHost = "127.0.0.1", ServerPort = serverPort, WebPort = FreePort() });
+        var app = WebHost.Build(new ClientConfig { ServerHost = "127.0.0.1", ServerPort = serverPort, WebPort = FreePort(), AuthPort = accounts.Port });
         await app.StartAsync();
         return app;
     }
 
-    private static async Task<ClientWebSocket> OpenAsync(WebApplication client)
+    private async Task<ClientWebSocket> OpenAsync(WebApplication client)
     {
         var socket = new ClientWebSocket();
+        socket.Options.SetRequestHeader("Cookie", cookies.Value);
         var http = new Uri(client.Urls.First());
         await socket.ConnectAsync(new Uri($"ws://127.0.0.1:{http.Port}/ws"), CancellationToken.None);
         return socket;
@@ -57,7 +69,7 @@ public class ClientRelayTests
     [Fact]
     public async Task Relay_PassesFramesUnchanged_OneFramePerMessage_WithoutNewline()
     {
-        await using var server = await TestServer.StartAsync();
+        await using var server = await TestServer.StartAsync(tickets: accounts.Tickets, scores: accounts.Scores);
         await using var client = await StartClientAsync(server.Port);
         using var browser = await OpenAsync(client);
 
@@ -67,7 +79,7 @@ public class ClientRelayTests
         await SendAsync(browser, "{\"type\":\"join\",", endOfMessage: false);
         await SendAsync(browser, "\"nickname\":\"Alice\"}");
 
-        Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await ReceiveAsync(browser));
+        Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\",\"score\":0,\"matchesPlayed\":0}", await ReceiveAsync(browser));
         Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}]}",
             await ReceiveAsync(browser));
     }
@@ -75,7 +87,7 @@ public class ClientRelayTests
     [Fact]
     public async Task ClosingTheBrowser_ClosesItsTcpConnection_AndTheLobbyDropsIt()
     {
-        await using var server = await TestServer.StartAsync();
+        await using var server = await TestServer.StartAsync(tickets: accounts.Tickets, scores: accounts.Scores);
         await using var client = await StartClientAsync(server.Port);
         await using var alice = await server.JoinAsync("Alice");
         var browser = await OpenAsync(client);
@@ -91,7 +103,7 @@ public class ClientRelayTests
     [Fact]
     public async Task StoppingTheServer_ClosesTheWebSocket()
     {
-        var server = await TestServer.StartAsync();
+        var server = await TestServer.StartAsync(tickets: accounts.Tickets, scores: accounts.Scores);
         await using var client = await StartClientAsync(server.Port);
         using var browser = await OpenAsync(client);
         await ReceiveAsync(browser);
@@ -114,7 +126,7 @@ public class ClientRelayTests
     public async Task RootPage_IsServed()
     {
         await using var client = await StartClientAsync(serverPort: FreePort());
-        using var http = new HttpClient { BaseAddress = new Uri(client.Urls.First()) };
+        using var http = new HttpClient(new HttpClientHandler { UseCookies = false }) { BaseAddress = new Uri(client.Urls.First()) };
 
         var response = await http.GetAsync("/");
 

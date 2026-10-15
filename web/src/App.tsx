@@ -1,4 +1,7 @@
-import { useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
+import { accountRequest } from './auth'
+import type { Account } from './auth'
+import { AuthScreen } from './screens/AuthScreen'
 import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
@@ -15,6 +18,42 @@ import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
 export default function App() {
+  const [account, setAccount] = useState<Account | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const replay = new URLSearchParams(window.location.search).has('replay')
+  useEffect(() => {
+    if (replay) return
+    let active = true
+    accountRequest<Account | null>('me').then(user => { if (active) setAccount(user) })
+      .catch(() => { /* Login form provides a retry and a specific error on submit. */ })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [replay])
+  useEffect(() => {
+    if (!account) return
+    const check = () => { accountRequest<Account | null>('me').then(user => { if (!user) setAccount(null) }).catch(() => {}) }
+    const timer = window.setInterval(check, 30000)
+    window.addEventListener('focus', check)
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', check) }
+  }, [account])
+  const logout = async () => {
+    setBusy(true); setError('')
+    try { await accountRequest('logout', {}); setAccount(null) }
+    catch { setError('Could not log out. Check the server and try again.') }
+    finally { setBusy(false) }
+  }
+  if (replay) return <GameApp />
+  if (loading) return <div className="app"><p role="status">Checking your account…</p></div>
+  if (!account) return <div className="app"><header className="header"><div className="logo"><b>Battle</b>ship</div></header><AuthScreen onLogin={setAccount} /></div>
+  return <>
+    <div className="account-bar"><span>Signed in as {account.displayName}</span><button className="btn white small" disabled={busy} onClick={logout}>{busy ? 'Logging out…' : 'Log out'}</button>{error && <span role="alert">{error}</span>}</div>
+    <GameApp key={account.id} nickname={account.displayName} />
+  </>
+}
+
+function GameApp({ nickname = '' }: { nickname?: string }) {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
 
@@ -33,25 +72,27 @@ export default function App() {
           <p>{state.fatal}</p>
         </main>
       ) : (
-        <Screen state={state} send={send} placeShips={(ships) => {
+        <Screen nickname={nickname} state={state} send={send} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
         }} />
       )}
+      {state.lastError?.code === 'account-unavailable' && <p className="card" role="alert">{state.lastError.message}</p>}
       <ErrorToast error={state.lastError} />
     </div>
   )
 }
 
-type ScreenProps = { state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
+type ScreenProps = { nickname: string; state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
 
-function Screen({ state, send, placeShips }: ScreenProps) {
+function Screen({ nickname, state, send, placeShips }: ScreenProps) {
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
       return (
         <NicknameScreen
+          initialNickname={nickname}
           connected={state.screen === 'nickname'}
           lastError={state.lastError}
           onJoin={(nickname) => send({ type: 'join', nickname })}

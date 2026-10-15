@@ -21,9 +21,13 @@ public static class WebHost
     {
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory });
         builder.WebHost.UseUrls($"http://localhost:{config.WebPort}");
+        builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 16 * 1024);
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         var app = builder.Build();
 
+        var accounts = new AccountProxy(config);
+        app.Lifetime.ApplicationStopped.Register(accounts.Dispose);
+        accounts.Map(app);
         app.UseWebSockets();
         app.Map("/ws", async context =>
         {
@@ -32,8 +36,14 @@ public static class WebHost
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
+            var (status, ticket) = await accounts.TicketAsync(context);
+            if (status != 200)
+            {
+                context.Response.StatusCode = status;
+                return;
+            }
             using var browser = await context.WebSockets.AcceptWebSocketAsync();
-            await Relay.RunAsync(browser, config, context.RequestAborted);
+            await Relay.RunAsync(browser, config, context.RequestAborted, ticket);
         });
 
         if (File.Exists(Path.Combine(AppContext.BaseDirectory, "wwwroot", "index.html")))

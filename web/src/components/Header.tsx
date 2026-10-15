@@ -21,12 +21,12 @@ export function Header({ state }: { state: GameState }) {
       <div className="scoreboard">
         {inMatch && me && opponent ? (
           <>
-            <PlayerChip name={me.name} score={me.score} you turn={active === me.id} />
+            <PlayerChip name={me.name} score={me.score} matchesPlayed={me.matchesPlayed} you turn={active === me.id} />
             <span className="vs">vs</span>
-            <PlayerChip name={opponent.name} score={opponent.score} turn={active === opponent.id} />
+            <PlayerChip name={opponent.name} score={opponent.score} matchesPlayed={opponent.matchesPlayed} turn={active === opponent.id} />
           </>
         ) : (
-          state.myName !== null && <PlayerChip name={state.myName} score={state.myScore} you />
+          state.myName !== null && <PlayerChip name={state.myName} score={state.myScore} matchesPlayed={state.myMatchesPlayed} you />
         )}
       </div>
       <SoundToggle />
@@ -34,15 +34,15 @@ export function Header({ state }: { state: GameState }) {
   )
 }
 
-type ChipProps = { name: string; score: number; you?: boolean; turn?: boolean }
+type ChipProps = { name: string; score: number; matchesPlayed?: number; you?: boolean; turn?: boolean }
 
-function PlayerChip({ name, score, you = false, turn = false }: ChipProps) {
+function PlayerChip({ name, score, matchesPlayed, you = false, turn = false }: ChipProps) {
   return (
     <div className={`chip${you ? ' me' : ''}${turn ? ' turn' : ''}`}>
       <Avatar name={name} color={you ? 'var(--sun)' : 'var(--lilac)'} />
       <span className="name">
         {name}
-        <small>{you ? 'You' : 'Opponent'}</small>
+        <small>{you ? 'You' : 'Opponent'}{matchesPlayed !== undefined ? ` · Matches played: ${matchesPlayed}` : ''}</small>
       </span>
       <span className="score" title="Score">
         {score}

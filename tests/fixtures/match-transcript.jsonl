@@ -1,20 +1,20 @@
 {"from":"server","to":"p1","frame":{"type":"connected","id":"p1","protocolVersion":1}}
 {"from":"p1","to":"server","frame":{"type":"join","nickname":"Alice"}}
-{"from":"server","to":"p1","frame":{"type":"welcome","id":"p1","nickname":"Alice"}}
+{"from":"server","to":"p1","frame":{"type":"welcome","id":"p1","nickname":"Alice","score":0}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":1,"clients":[{"id":"p1","name":"Alice","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"connected","id":"p2","protocolVersion":1}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":null,"status":"connecting"}]}}
 {"from":"p2","to":"server","frame":{"type":"join","nickname":"   "}}
 {"from":"server","to":"p2","frame":{"type":"error","code":"bad-nickname","message":"Nickname must be 1-16 characters."}}
 {"from":"p2","to":"server","frame":{"type":"join","nickname":"Bob"}}
-{"from":"server","to":"p2","frame":{"type":"welcome","id":"p2","nickname":"Bob"}}
+{"from":"server","to":"p2","frame":{"type":"welcome","id":"p2","nickname":"Bob","score":0}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
 {"from":"server","to":"p3","frame":{"type":"connected","id":"p3","protocolVersion":1}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
 {"from":"p3","to":"server","frame":{"type":"join","nickname":"Alice"}}
-{"from":"server","to":"p3","frame":{"type":"welcome","id":"p3","nickname":"Alice (2)"}}
+{"from":"server","to":"p3","frame":{"type":"welcome","id":"p3","nickname":"Alice (2)","score":0}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

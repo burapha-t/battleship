@@ -28,7 +28,13 @@ public sealed class PlayerRecord
     /// <summary>One of the <see cref="LobbyStatus"/> values.</summary>
     public string Status { get; set; } = LobbyStatus.Connecting;
 
+    public string? AccountId { get; set; }
+
+    public bool AuthenticationRejected { get; set; }
+
     public int Score { get; set; }
+
+    public int MatchesPlayed { get; set; }
 
     public bool HasJoined => Name != null;
 }

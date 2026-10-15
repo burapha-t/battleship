@@ -20,7 +20,8 @@ export type GameState = {
   myId: string | null
   /** From `welcome`, which may differ from what I typed. */
   myName: string | null
-  /** My last known score; `lobby` carries none. */
+  /** Last known account statistics; `lobby` carries neither. */
+  myMatchesPlayed: number
   myScore: number
   lobby: LobbyClient[]
   /** Both players of the current (or last) match, in the server's order. */
@@ -54,6 +55,7 @@ export const initialState: GameState = {
   fatal: null,
   myId: null,
   myName: null,
+  myMatchesPlayed: 0,
   myScore: 0,
   lobby: [],
   players: [],
@@ -75,7 +77,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, myId: event.id, screen: 'nickname' }
 
     case 'welcome':
-      return { ...state, myName: event.nickname, screen: 'lobby' }
+      return { ...state, myName: event.nickname, myScore: event.score ?? 0, myMatchesPlayed: event.matchesPlayed ?? 0, screen: 'lobby' }
 
     case 'lobby':
       return { ...state, lobby: event.clients }
@@ -87,6 +89,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         screen: 'placement',
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
+        myMatchesPlayed: event.players.find(p => p.id === state.myId)?.matchesPlayed ?? state.myMatchesPlayed,
         notice: null,
       }
 
@@ -109,6 +112,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         screen: 'end',
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
+        myMatchesPlayed: event.players.find(p => p.id === state.myId)?.matchesPlayed ?? state.myMatchesPlayed,
         winnerId: event.winnerId,
       }
 

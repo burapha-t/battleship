@@ -7,14 +7,15 @@ import './screens.css'
 const MAX_NICKNAME = 16
 
 type Props = {
+  initialNickname?: string
   /** False until `connected` arrives. */
   connected: boolean
   lastError: GameState['lastError']
   onJoin: (nickname: string) => void
 }
 
-export function NicknameScreen({ connected, lastError, onJoin }: Props) {
-  const [nickname, setNickname] = useState('')
+export function NicknameScreen({ initialNickname = '', connected, lastError, onJoin }: Props) {
+  const [nickname, setNickname] = useState(initialNickname)
   // The lastError at the moment I pressed Join: until it changes, the join is
   // still in flight (a `welcome` moves on to the lobby, an `error` comes back).
   const [sentWith, setSentWith] = useState<GameState['lastError'] | undefined>(undefined)

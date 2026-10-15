@@ -23,6 +23,9 @@ public abstract record HostInput
     /// <summary>A turn timer ran out. Dropped if that turn is no longer current.</summary>
     public sealed record TurnExpired(string MatchId, int TurnNumber) : HostInput;
 
+    /// <summary>Invalidate active game connections when the account logs out.</summary>
+    public sealed record AccountLoggedOut(string AccountId) : HostInput;
+
     /// <summary>The dashboard RESET button was pressed.</summary>
     public sealed record ResetRequested : HostInput;
 }

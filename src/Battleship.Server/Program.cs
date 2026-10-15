@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Battleship.Core;
+using Battleship.Server.Auth;
 using Battleship.Server.Dashboard;
 using Battleship.Server.Host;
 using Battleship.Server.Net;
@@ -17,7 +18,12 @@ Console.CancelKeyPress += (_, e) =>
     stop.Cancel();
 };
 
-var host = new GameHost(TimeSpan.FromSeconds(GameRules.TurnSeconds), new Random());
+var accountPath = Path.Combine(AppContext.BaseDirectory, "data", "battleship-accounts.db");
+var tickets = new GameTickets();
+var scores = new AccountScores(accountPath);
+var host = new GameHost(TimeSpan.FromSeconds(GameRules.TurnSeconds), new Random(), tickets, scores);
+await using var accounts = AuthServer.Create("http://localhost:5080", accountPath, tickets,
+    id => host.Post(new HostInput.AccountLoggedOut(id)));
 var acceptLoop = new TcpAcceptLoop(new IPEndPoint(IPAddress.Any, TcpPort), host);
 try
 {
@@ -37,6 +43,10 @@ if (lan.Count == 0) Console.WriteLine("    (no LAN address found; a client on th
 Console.WriteLine($"  Dashboard: {DashboardUrl}");
 Console.WriteLine("  Ctrl+C stops the server.");
 
+await accounts.StartAsync();
+Console.WriteLine("  Accounts: http://localhost:5080");
+Console.WriteLine($"  Database: {accountPath}");
+
 var dashboard = DashboardServer.Create(host, DashboardUrl, TcpPort);
 try
 {
@@ -49,4 +59,5 @@ catch (IOException ex)
 
 await Task.WhenAll(host.RunAsync(stop.Token), acceptLoop.RunAsync(stop.Token));
 await dashboard.StopAsync();
+await accounts.StopAsync();
 return 0;

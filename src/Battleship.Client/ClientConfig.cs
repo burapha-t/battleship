@@ -10,6 +10,7 @@ public sealed class ClientConfig
 {
     public string ServerHost { get; set; } = "127.0.0.1";
     public int ServerPort { get; set; } = 5050;
+    public int AuthPort { get; set; } = 5080;
     public int WebPort { get; set; } = 3000;
 
     /// <summary>

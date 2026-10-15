@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using Battleship.Core;
+using Battleship.Server.Auth;
 using Battleship.Core.Protocol;
 using Battleship.Server.Dashboard;
 using Battleship.Server.Engine;
@@ -16,6 +17,9 @@ namespace Battleship.Server.Host;
 /// </summary>
 public sealed class GameHost
 {
+    private readonly GameTickets? _tickets;
+    private readonly AccountScores? _scores;
+    private readonly string _runId = Guid.NewGuid().ToString("N");
     private const int ActivityKept = 30;
 
     private readonly Channel<HostInput> _inputs =
@@ -32,8 +36,10 @@ public sealed class GameHost
     /// <c>GameRules.TurnSeconds</c>.
     /// </param>
     /// <param name="random">First player and auto-fire cell; tests pass a seeded one.</param>
-    public GameHost(TimeSpan turnDuration, Random random)
+    public GameHost(TimeSpan turnDuration, Random random, GameTickets? tickets = null, AccountScores? scores = null)
     {
+        _tickets = tickets;
+        _scores = scores;
         _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random);
     }
 
@@ -56,7 +62,7 @@ public sealed class GameHost
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error handling {input}: {ex}");
+                    Console.WriteLine($"Error handling {input.GetType().Name}: {ex}");
                 }
                 Volatile.Write(ref _snapshot, BuildSnapshot());
             }
@@ -87,6 +93,14 @@ public sealed class GameHost
             case HostInput.TurnExpired expired:
                 Send(_engine.TurnExpired(expired.MatchId, expired.TurnNumber));
                 break;
+            case HostInput.AccountLoggedOut loggedOut:
+                foreach (var player in _roster.Players.Where(p => p.AccountId == loggedOut.AccountId).ToList())
+                {
+                    player.AuthenticationRejected = true;
+                    _sessions[player.Id].Close();
+                    OnDisconnected(player.Id);
+                }
+                break;
             case HostInput.ResetRequested:
                 OnReset();
                 break;
@@ -110,10 +124,13 @@ public sealed class GameHost
     private void OnMessage(string playerId, ProtocolMessage message)
     {
         var player = _roster.Find(playerId);
-        if (player == null) return; // its Disconnected was already handled
+        if (player == null || player.AuthenticationRejected) return; // its Disconnected was already handled
 
         switch (message)
         {
+            case Authenticate auth:
+                OnAuthenticate(player, auth.Ticket);
+                break;
             case Join join:
                 OnJoin(player, join.Nickname);
                 break;
@@ -133,6 +150,21 @@ public sealed class GameHost
         }
     }
 
+    private void OnAuthenticate(PlayerRecord player, string ticket)
+    {
+        var account = _tickets?.Consume(ticket);
+        if (player.HasJoined || player.AccountId is not null || account is null || _scores is null || !_scores.IsValid(account)
+            || _roster.Players.Any(other => other.AccountId == account.AccountId))
+        {
+            player.AuthenticationRejected = true;
+            Send(new[] { Outbound.Error(player.Id, "account-unavailable", "Account connection rejected. Close other game tabs and log in again.") });
+            return; // No fallback to guest and no later commands on this connection.
+        }
+        player.Score = _scores.Load(account.AccountId);
+        player.MatchesPlayed = _scores.LoadMatchesPlayed(account.AccountId);
+        player.AccountId = account.AccountId;
+    }
+
     private void OnJoin(PlayerRecord player, string nickname)
     {
         if (player.HasJoined)
@@ -150,7 +182,7 @@ public sealed class GameHost
 
         player.Name = name;
         player.Status = LobbyStatus.Idle;
-        Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = name }) });
+        Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = name, Score = player.Score, MatchesPlayed = player.AccountId is null ? null : player.MatchesPlayed }) });
         Log($"{player.Id} joined as {name}");
     }
 
@@ -166,6 +198,7 @@ public sealed class GameHost
 
     private void OnReset()
     {
+        _scores?.Reset(_roster.Players.Where(p => p.AccountId != null).Select(p => p.AccountId!));
         _engine.Reset();
         Send(new[] { new Outbound(_roster.Joined.Select(player => player.Id).ToList(), new Reset()) });
         Log("RESET from the dashboard: matches ended, scores set to 0");
@@ -175,6 +208,9 @@ public sealed class GameHost
     {
         foreach (var outbound in outbounds)
         {
+            if (outbound.Message is MatchEnd end && _scores is not null)
+                _scores.RecordMatch($"{_runId}:{end.MatchId}", _roster.Find(end.WinnerId)?.AccountId,
+                    end.Players.Select(p => _roster.Find(p.Id)?.AccountId).OfType<string>());
             SendLine(outbound.To, ProtocolJson.Serialize(outbound.Message));
             Note(outbound.Message);
         }
@@ -221,7 +257,7 @@ public sealed class GameHost
     private DashboardSnapshot BuildSnapshot() => new(
         _roster.Players.Count,
         _roster.Players
-            .Select(p => new DashboardClient(p.Id, p.Name, p.Address, p.Status, p.Score, p.ConnectedAt))
+            .Select(p => new DashboardClient(p.Id, p.Name, p.Address, p.Status, p.Score, p.ConnectedAt, p.AccountId, p.MatchesPlayed))
             .ToList(),
         _engine.Matches
             .Select(m => new DashboardMatch(

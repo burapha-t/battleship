@@ -11,7 +11,7 @@ export type Cell = [row: number, col: number]
  * A player in `matchStart` and `matchEnd`, which always list 2. The order isn't
  * fixed, so find yourself by `id`.
  */
-export type PlayerInfo = { id: string; name: string; score: number }
+export type PlayerInfo = { id: string; name: string; score: number; matchesPlayed?: number }
 
 export type LobbyStatus = 'connecting' | 'idle' | 'searching' | 'placing' | 'in-match'
 
@@ -19,6 +19,7 @@ export type LobbyStatus = 'connecting' | 'idle' | 'searching' | 'placing' | 'in-
 export type LobbyClient = { id: string; name: string | null; status: LobbyStatus }
 
 export type ErrorCode =
+  | 'account-unavailable'
   | 'bad-nickname'
   | 'invalid-placement'
   | 'not-your-turn'
@@ -30,7 +31,7 @@ export type ErrorCode =
 /** The 12 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
-  | { type: 'welcome'; id: string; nickname: string }
+  | { type: 'welcome'; id: string; nickname: string; score?: number; matchesPlayed?: number }
   | { type: 'lobby'; count: number; clients: LobbyClient[] }
   | { type: 'matchStart'; matchId: string; players: PlayerInfo[]; firstPlayerId: string }
   | { type: 'placed'; id: string }
@@ -54,6 +55,9 @@ export type ServerEvent =
   | { type: 'error'; code: ErrorCode; message: string }
 
 /** The 5 client → server verbs (§5). */
+// authenticate is injected by the local relay; tickets never enter browser JavaScript.
+export type RelayAuthenticate = { type: 'authenticate'; ticket: string }
+
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }

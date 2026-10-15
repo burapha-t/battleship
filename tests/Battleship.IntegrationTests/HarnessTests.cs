@@ -14,7 +14,7 @@ public class HarnessTests
         await using var alice = await server.ConnectAsync();
         Assert.Equal("p1", alice.Id);
         await alice.SendAsync(new Join { Nickname = "Alice" });
-        Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await alice.NextRawAsync());
+        Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\",\"score\":0}", await alice.NextRawAsync());
         Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}]}",
             await alice.NextRawAsync());
 

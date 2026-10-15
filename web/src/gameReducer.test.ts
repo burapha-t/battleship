@@ -124,3 +124,37 @@ describe('parseServerEvent', () => {
     warn.mockRestore()
   })
 })
+
+describe('saved account scores', () => {
+  it('restores score in the lobby and keeps it after an opponent disconnects', () => {
+    const state = fold([
+      { type: 'connected', id: 'p1', protocolVersion: 1 },
+      { type: 'welcome', id: 'p1', nickname: 'Changed name', score: 7, matchesPlayed: 12 },
+      { type: 'opponentLeft', id: 'p2' },
+    ])
+    expect(state.myName).toBe('Changed name')
+    expect(state.myScore).toBe(7)
+    expect(state.myMatchesPlayed).toBe(12)
+    expect(gameReducer(state, { type: 'reset' }).myMatchesPlayed).toBe(12)
+    expect(state.screen).toBe('lobby')
+    expect(gameReducer(state, { type: 'reset' }).myScore).toBe(0)
+  })
+
+  it('accepts a legacy welcome without a score as zero', () => {
+    expect(gameReducer(initialState, { type: 'welcome', id: 'p1', nickname: 'Guest' }).myScore).toBe(0)
+  })
+})
+
+
+it('updates the match count from matchEnd for the loser as well as the winner', () => {
+  const state = fold([
+    { type: 'connected', id: 'p1', protocolVersion: 1 },
+    { type: 'welcome', id: 'p1', nickname: 'Alice', score: 2, matchesPlayed: 5 },
+    { type: 'matchEnd', matchId: 'm1', winnerId: 'p2', players: [
+      { id: 'p1', name: 'Alice', score: 2, matchesPlayed: 6 },
+      { id: 'p2', name: 'Bob', score: 1, matchesPlayed: 1 },
+    ] },
+  ])
+  expect(state.myScore).toBe(2)
+  expect(state.myMatchesPlayed).toBe(6)
+})

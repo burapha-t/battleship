@@ -50,3 +50,31 @@ The second client needs its own web port: `Battleship.Client --web-port 3001`.
 From source, with the SDK: `dotnet run --project src/Battleship.Server`, then
 `dotnet run --project src/Battleship.Client` and
 `dotnet run --project src/Battleship.Client -- --web-port 3001`.
+
+## Local accounts (Register / Login)
+
+Start the server and client as above, then open http://localhost:3000.
+Choose **Create an account**, enter your nickname, email and password, then log in.
+Your nickname is filled in on the Join screen; you can change it before joining.
+**Log out** leaves the game and returns to the login form.
+
+The account service runs on **localhost:5080**. SQLite is created automatically at
+`src/Battleship.Server/bin/Debug/net8.0/data/battleship-accounts.db` for a normal
+Debug build; the server prints the actual absolute path at startup. Accounts remain
+after restarting. Open this file with a SQLite viewer to inspect `AspNetUsers`.
+Passwords are stored as Identity password hashes. Database files and keys are ignored by Git.
+
+This account service is currently for **same-machine testing**. It does not listen
+on the LAN. Existing direct TCP clients keep their nickname-only protocol.
+See [account implementation notes](docs/implement/accounts.md) for scope and testing.
+
+Account scores persist in SQLite (`AccountScores`). Each completed win adds one
+point. Logging in again restores the score even with a different nickname. The
+dashboard marks these players `(account)`. One game connection per account is
+allowed. RESET clears saved scores of connected accounts, leaving offline accounts
+untouched. Existing session-only points are not imported.
+
+**Matches played** is also saved per account and shown in the game header and server
+dashboard. A completed game counts for both players; leaving mid-game does not.
+Resetting scores keeps lifetime matches played. Counts begin with this version;
+existing accounts and previously saved points are preserved.

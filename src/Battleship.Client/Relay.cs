@@ -5,7 +5,7 @@ namespace Battleship.Client;
 
 /// <summary>
 /// Joins one browser WebSocket to its own TCP connection to the server and
-/// passes bytes both ways without reading them (zero game logic). One
+/// prepends an account credential, then passes gameplay bytes both ways (zero game logic). One
 /// WebSocket text message is one frame without <c>\n</c>; on TCP each frame
 /// ends in <c>\n</c>. When either side closes, the other is closed too.
 /// </summary>
@@ -13,7 +13,7 @@ public static class Relay
 {
     private const int BufferSize = 8192;
 
-    public static async Task RunAsync(WebSocket browser, ClientConfig config, CancellationToken aborted)
+    public static async Task RunAsync(WebSocket browser, ClientConfig config, CancellationToken aborted, string? accountTicket = null)
     {
         string server = $"{config.ServerHost}:{config.ServerPort}";
         using var tcp = new TcpClient { NoDelay = true };
@@ -30,6 +30,11 @@ public static class Relay
 
         Console.WriteLine($"Browser connected; relaying to {server}.");
         var stream = tcp.GetStream();
+        if (accountTicket is not null)
+        {
+            var frame = System.Text.Json.JsonSerializer.Serialize(new { type = "authenticate", ticket = accountTicket });
+            await stream.WriteAsync(System.Text.Encoding.UTF8.GetBytes(frame + "\n"), aborted);
+        }
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(aborted);
         var toServer = BrowserToServerAsync(browser, stream, stop.Token);
         var toBrowser = ServerToBrowserAsync(stream, browser, stop.Token);

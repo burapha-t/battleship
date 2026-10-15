@@ -1,5 +1,6 @@
 using System.Net;
 using Battleship.Core;
+using Battleship.Server.Auth;
 using Battleship.Server.Dashboard;
 using Battleship.Server.Host;
 using Battleship.Server.Net;
@@ -24,7 +25,7 @@ public sealed class TestServer : IAsyncDisposable
         _dashboard = dashboard;
         _stop = stop;
         _running = running;
-        Dashboard = new HttpClient { BaseAddress = new Uri(dashboard.Urls.First()) };
+        Dashboard = new HttpClient(new HttpClientHandler { UseCookies = false }) { BaseAddress = new Uri(dashboard.Urls.First()) };
     }
 
     public GameHost Host { get; }
@@ -39,9 +40,9 @@ public sealed class TestServer : IAsyncDisposable
     /// How long the server's turn timer really waits; defaults to 10 s. The
     /// wire still says <c>seconds: 10</c>.
     /// </param>
-    public static async Task<TestServer> StartAsync(TimeSpan? turnDuration = null, Random? random = null)
+    public static async Task<TestServer> StartAsync(TimeSpan? turnDuration = null, Random? random = null, GameTickets? tickets = null, AccountScores? scores = null)
     {
-        var host = new GameHost(turnDuration ?? TimeSpan.FromSeconds(GameRules.TurnSeconds), random ?? new Random());
+        var host = new GameHost(turnDuration ?? TimeSpan.FromSeconds(GameRules.TurnSeconds), random ?? new Random(), tickets, scores);
         var acceptLoop = new TcpAcceptLoop(new IPEndPoint(IPAddress.Loopback, 0), host);
         int port = acceptLoop.Start();
         var dashboard = DashboardServer.Create(host, "http://127.0.0.1:0", port);

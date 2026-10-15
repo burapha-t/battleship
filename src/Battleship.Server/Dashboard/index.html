@@ -95,7 +95,7 @@ td.score{font-family:var(--display);font-size:22px}
       <div class="card box">
         <h2>Connected clients</h2>
         <table>
-          <thead><tr><th>Nickname</th><th>Address</th><th>Status</th><th>Score</th><th>Connected</th></tr></thead>
+          <thead><tr><th>Nickname</th><th>Address</th><th>Status</th><th>Score</th><th>Matches played</th><th>Connected</th></tr></thead>
           <tbody id="clients"></tbody>
         </table>
         <div class="empty" id="no-clients">Nobody is connected yet.</div>
@@ -141,10 +141,11 @@ function render(state) {
     const [dot, label] = STATUS[c.status] || ['grey', c.status];
     const name = c.name ? esc(c.name) : `${esc(c.id)} <span style="color:var(--muted)">(connecting)</span>`;
     return `<tr>
-      <td>${avatar(c.id, c.name || c.id)}${name}</td>
+      <td>${avatar(c.id, c.name || c.id)}${name}${c.accountId ? ` <small title="Account ${esc(c.accountId)}">(account)</small>` : ""}</td>
       <td>${esc(c.address)}${own.has(c.address) ? ' (this PC)' : ''}</td>
       <td><span class="pill"><span class="dot ${dot}"></span>${esc(label)}</span></td>
       <td class="score">${c.name ? esc(c.score) : '–'}</td>
+      <td class="score">${c.name ? esc(c.matchesPlayed ?? 0) : '–'}</td>
       <td>${clock(c.connectedAt, false)}</td>
     </tr>`;
   }).join('');

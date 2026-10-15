@@ -150,7 +150,7 @@ and stop, rather than proceeding and failing confusingly later.
 ### `welcome`
 
 ```json
-{"type":"welcome","id":"p1","nickname":"Alice"}
+{"type":"welcome","id":"p1","nickname":"Alice","score":0}
 ```
 
 The UI renders `"Welcome, Alice."` from this. The server may have altered the
@@ -512,3 +512,49 @@ the team picks its extra features:
 - **Placement time limit.** Only the 10-second turn timer is specified.
 - **Cancelling a search.** Once `findMatch` is sent the player stays searching.
   A cancel verb can be added later under the ignore-unknown rules.
+
+
+## Account scoring extension (v1, additive)
+
+The local authenticated relay sends `{"type":"authenticate","ticket":"<single-use ticket>"}`
+before forwarding browser frames. The HTTP account service issues tickets only
+for authenticated sessions. Tickets expire in 30 seconds, can be consumed once,
+and are checked against the account security stamp when bound. Account IDs supplied
+by clients and nicknames are never accepted as proof of account ownership.
+
+`authenticate` is accepted only before joining and once per connection. One active
+game connection per account is allowed. Invalid/replayed/revoked tickets, late
+authentication and duplicate accounts produce `account-unavailable`; that connection
+cannot join as a guest or send further game commands. Close it and log in again
+after closing other game tabs. Direct clients that never send `authenticate`
+retain guest behavior and cannot modify account scores.
+
+`welcome` now includes `score`: stored score for an account, zero for a guest.
+Older clients ignore the additive field; newer clients treat an absent field as
+zero. Match start/end keep their existing score fields. The golden transcript is
+a guest session and uses `score:0` in welcome frames.
+
+A completed win awards one point, committed to SQLite before `matchEnd` is sent.
+Disconnects, losses and abandoned matches add no points. A rematch is a new match.
+Repeated persistence of a match cannot add another point. Match keys include a
+server-run UUID so restarting does not collide with an earlier `m1`.
+
+Dashboard RESET cancels matches and zeroes scores of currently connected players.
+For account players the zero is persisted. Offline accounts are unaffected.
+Scores survive nickname changes, logout, reconnect and server restart. Older
+per-connection scores cannot be attributed retroactively and are not imported.
+
+
+### Completed-match count
+
+Authenticated `welcome` frames additionally include `matchesPlayed` (integer >= 0).
+Authenticated players in `matchStart.players` and `matchEnd.players` carry the same
+optional field. It is omitted for guests; clients accept an absent count as zero
+on welcome and retain their previous count when legacy match frames omit it.
+Example: `{"type":"welcome","id":"p1","nickname":"Alice","score":3,"matchesPlayed":8}`.
+
+Both players gain one completed match on `matchEnd`; the winner alone gains one
+point. Rematches count independently. Disconnects and abandoned games do not count.
+Dashboard RESET preserves matches played while clearing scores. The account match
+counts and score changes commit in one SQLite transaction, with per-account/match
+deduplication. The guest golden transcript stays valid without the optional field.

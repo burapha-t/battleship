@@ -42,7 +42,9 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 5. **Match `m3`.** Its `matchStart` shows both scores back at 0. Alice places,
    then Bob disconnects → `opponentLeft` to Alice, who ends idle in the lobby.
 
-All 17 message types and all five lobby statuses appear. The `unknown` error
+All 17 original gameplay types and all five lobby statuses appear. This is a guest
+transcript: `welcome.score` is zero. Relay-only `authenticate` is covered by account
+integration tests. The `unknown` error
 code does not, because `protocol.md` gives no trigger for it.
 
 ### Don't depend on

@@ -705,3 +705,9 @@
     justify-content: center;
   }
 }
+
+/* Account forms use the same visual language as the nickname screen. */
+.auth-form label { display: block; font-weight: 800; }
+.auth-form .field { font-size: 18px; height: 48px; margin: 6px 0 12px; }
+.auth-form .auth-switch { margin-top: 12px; font-size: 16px; }
+.account-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; padding: 12px 32px 0; font-weight: 800; }

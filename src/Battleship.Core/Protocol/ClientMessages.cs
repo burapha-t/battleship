@@ -2,9 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 5 client → server verbs (protocol.md §5). Property order is wire order.
+// The 5 gameplay verbs plus relay-only account authentication (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
+    /// <summary>Relay-only account binding, sent before join. Ticket is single-use.</summary>
+    public sealed class Authenticate : ProtocolMessage
+    {
+        public Authenticate() : base("authenticate") { }
+        public string Ticket { get; set; } = "";
+    }
+
     /// <summary><c>join</c>: the player submits a nickname.</summary>
     public sealed class Join : ProtocolMessage
     {

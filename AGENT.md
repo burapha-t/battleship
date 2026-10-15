@@ -8,6 +8,7 @@ bot. 7 people, 4 weeks, graded.
 | Doc | Decides |
 |---|---|
 | `docs/instruction.md` | Requirements and grading criteria |
+| `docs/implement/accounts.md` | Local login, account database, session behavior and verification |
 | `docs/setup.md` | Installing .NET 8, Node and Python; the firewall prompt |
 | `docs/convention.md` | Branch, commit and PR names — every one must follow it |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
@@ -22,12 +23,13 @@ bot. 7 people, 4 weeks, graded.
 
 Everything but the bot is built, and `IntegrationTests` plays full matches end to end.
 
-- Protocol: frozen.
+- Protocol: v1 with additive account authentication and welcome score; see `protocol.md`.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
 - `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
+- Accounts: local ASP.NET Identity + SQLite service on :5080; single-use tickets bind connections to Account IDs; scores and completed-match counts persist atomically in SQLite. See `docs/implement/accounts.md`.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 
