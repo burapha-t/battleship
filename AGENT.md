@@ -14,22 +14,23 @@ bot. 7 people, 4 weeks, graded.
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
+| `docs/demo/ai-demo.md` | AI demo flow, talking points and cross-machine note |
 | `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard) — the visual direction |
 | `tests/fixtures/README.md` | Golden transcript `match-transcript.jsonl`: format, story, what not to depend on |
 | `README.md` | Building `publish/` and running the demo on machines with nothing installed |
 
 ## Stage
 
-Everything but the bot is built, and `IntegrationTests` plays full matches end to end.
+Core game and the AI demo path are implemented.
 
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
-- `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
-- `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
-- Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
-- `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
+- `Battleship.Client`: complete — `client.json` plus runtime server-host override, serves `web/dist`, `/ws` ↔ TCP relay, local AI proxy/launcher, opens the browser.
+- `web/`: complete — all five screens plus sound, AI Sonar, and lobby Ghost Fleet controls.
+- `bot/`: Ghost Fleet + Sonar/Decoy + local history/ML models are implemented; the client can launch the local helper and Ghost process.
+- Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64. Python AI packaging is still a separate release concern.
 
 ## Invariants
 
@@ -38,6 +39,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - The server never sends a player's ship positions to their opponent.
 - Only the `GameHost` loop touches server state; sessions, the turn timer and the dashboard `Post` a `HostInput` to it.
 - `Engine/` and `Lobby/` stay socket-free, so `Battleship.Server.Tests` drives them directly.
+- AI extras must fail safely without breaking base gameplay.
 - A protocol change updates `protocol.md`, `web/src/protocol.ts`, the C# DTOs and
   `tests/fixtures/match-transcript.jsonl` in one PR — otherwise it is not a protocol change.
 
@@ -46,13 +48,13 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`).
 
 - `dotnet build` — build the whole solution
-- `dotnet test` — every test project: `Battleship.Core.Tests` (rules, protocol), `Battleship.Server.Tests`
-  (engine, no sockets), `Battleship.IntegrationTests` (real server + client relay on loopback ports)
-- `dotnet test tests/<project>` — one test project only
+- `dotnet test` — every test project
 - `dotnet run --project src/Battleship.Server` — game server (all interfaces :5050) + dashboard http://localhost:8080
-- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser]` — a player's client; UI on http://localhost:3000
+- `dotnet run --project src/Battleship.Client -- [--server-host 192.168.1.20] [--server-port 5050] [--web-port 3001] [--no-browser]` — player's client; UI on http://localhost:3000
+- `python bot/main.py --server 127.0.0.1 --ghost-of Prae` — optional manual Ghost launch; normal demo uses the lobby button
+- `python bot/ai_service.py` — optional manual helper launch; normal client starts it best-effort
 - `powershell -ExecutionPolicy Bypass -File scripts/publish.ps1 [-Rids win-x64]` / `sh scripts/publish.sh [osx-arm64]` —
-  self-contained server + client into `publish/<rid>/`
+  self-contained C# server + client into `publish/<rid>/`
 
 The client copies `web/dist` when it builds: run `npm run build` first, then rebuild the client.
 `web/dist/` and `publish/` are gitignored build output. CI runs `dotnet test`, `npm test` and `npm run build` — not lint.

@@ -1,4 +1,5 @@
-import { useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
+import { saveMatchHistory } from './aiClient'
 import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
@@ -17,6 +18,37 @@ import { useGameSocket } from './useGameSocket'
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
+  const savedMatches = useRef(new Set<string>())
+
+  // AI training data stays local. We save only this player's own placement and
+  // shots after a completed match; hidden opponent coordinates are never read.
+  useEffect(() => {
+    if (
+      state.screen !== 'end' ||
+      !state.matchId ||
+      !state.myName ||
+      !state.myId ||
+      !state.myShips ||
+      savedMatches.current.has(state.matchId)
+    ) return
+
+    savedMatches.current.add(state.matchId)
+    const myShots = state.shots
+      .filter((shot) => shot.by === state.myId)
+      .map((shot) => ({ row: shot.row, col: shot.col, result: shot.result }))
+
+    void saveMatchHistory({
+      playerName: state.myName,
+      matchId: state.matchId,
+      ships: state.myShips,
+      shots: myShots,
+      won: state.winnerId === state.myId,
+    }).catch((error) => {
+      // AI extras must never break the base game.
+      console.warn(error)
+      savedMatches.current.delete(state.matchId!)
+    })
+  }, [state])
 
   return (
     <div className="app">

@@ -20,6 +20,8 @@ export type GameState = {
   myId: string | null
   /** From `welcome`, which may differ from what I typed. */
   myName: string | null
+  /** Current match id, used by local AI history recording. */
+  matchId: string | null
   /** My last known score; `lobby` carries none. */
   myScore: number
   lobby: LobbyClient[]
@@ -41,6 +43,7 @@ export type GameState = {
 }
 
 const noMatch = {
+  matchId: null,
   myShips: null,
   placed: [],
   turn: null,
@@ -84,6 +87,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return {
         ...state,
         ...noMatch,
+        matchId: event.matchId,
         screen: 'placement',
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
@@ -107,6 +111,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return {
         ...state,
         screen: 'end',
+        matchId: event.matchId,
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
         winnerId: event.winnerId,
