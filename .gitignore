@@ -14,3 +14,7 @@ obj/
 
 # Demo builds from scripts/publish.ps1 and scripts/publish.sh
 publish/
+
+# Python cache
+__pycache__/
+*.pyc
