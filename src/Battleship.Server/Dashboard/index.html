@@ -142,7 +142,7 @@ function render(state) {
     const name = c.name ? esc(c.name) : `${esc(c.id)} <span style="color:var(--muted)">(connecting)</span>`;
     return `<tr>
       <td>${avatar(c.id, c.name || c.id)}${name}</td>
-      <td>${esc(c.address)}${own.has(c.address) ? ' (this PC)' : ''}</td>
+      <td>${esc(c.address)}${own.has(c.address) ? ' (client on this PC)' : ''}</td>
       <td><span class="pill"><span class="dot ${dot}"></span>${esc(label)}</span></td>
       <td class="score">${c.name ? esc(c.score) : '–'}</td>
       <td>${clock(c.connectedAt, false)}</td>
