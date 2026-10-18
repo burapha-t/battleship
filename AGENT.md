@@ -26,7 +26,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
-- `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
+- `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
 - `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
@@ -50,7 +50,7 @@ Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`
   (engine, no sockets), `Battleship.IntegrationTests` (real server + client relay on loopback ports)
 - `dotnet test tests/<project>` — one test project only
 - `dotnet run --project src/Battleship.Server` — game server (all interfaces :5050) + dashboard http://localhost:8080
-- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser]` — a player's client; UI on http://localhost:3000
+- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser] [--lan]` — a player's client; UI on http://localhost:3000 (`--lan`: also on this machine's LAN address)
 - `powershell -ExecutionPolicy Bypass -File scripts/publish.ps1 [-Rids win-x64]` / `sh scripts/publish.sh [osx-arm64]` —
   self-contained server + client into `publish/<rid>/`
 
