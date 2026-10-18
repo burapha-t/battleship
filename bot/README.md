@@ -1,29 +1,30 @@
 # Battleship AI — Ghost Fleet + Sonar/Decoy
 
-This folder is intentionally separate from the C# server. The existing raw-TCP game protocol stays unchanged.
+This folder stays separate from the C# game server. The existing raw-TCP game protocol remains unchanged.
 
-## Install
+## First-time setup
 
 ```bash
 cd bot
 python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\\Scripts\\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## 1) Start the local AI helper (for Sonar + history recording)
+After this setup, the normal `Battleship.Client` automatically starts the local Sonar/history helper when it can find `bot/`.
 
-```bash
-python ai_service.py
-```
+## Play vs Ghost Fleet — no Ghost terminal needed
 
-It listens only on `127.0.0.1:8091`. The React UI calls it directly. If it is not running, normal Battleship still works; only the AI Sonar button shows an error.
+1. Start the normal Battleship server.
+2. Start the normal Battleship client.
+3. Enter your nickname.
+4. In the lobby press **Play vs Ghost Fleet**.
 
-Each completed human match is saved in `bot/data/player-history.jsonl`. The record contains the player's own ship placement and shot sequence. No opponent hidden board is read from the C# server.
+The local C# client starts `bot/main.py` for you and the Ghost connects to the configured game server over TCP `5050`, exactly like a normal player.
 
-## 2) Start Ghost Fleet
+The lobby also has **Stop Ghost Fleet** if you want to return to human matchmaking.
 
-Start the normal C# server first, then:
+### Manual Ghost command (still supported)
 
 ```bash
 python main.py --server 127.0.0.1 --ghost-of Prae
@@ -35,16 +36,23 @@ For a server on another laptop:
 python main.py --server 192.168.1.20 --ghost-of Prae
 ```
 
-The bot connects to TCP `5050` exactly like a normal client, sends `join`, `findMatch`, `place`, and `fire`, and learns from the recorded history of `Prae`.
+## Sonar + history
 
-### Cold start
+The helper listens on `127.0.0.1:8091`. If it is unavailable, normal Battleship still works; only AI Sonar/history recording is unavailable.
 
-With little/no history, the bot uses a safe fallback. After enough matches are recorded, the Random Forest models are used automatically. The console prints whether each model is ready.
+Each completed human match is saved locally in:
+
+```text
+bot/data/player-history.jsonl
+```
+
+Records are grouped by player nickname and contain the player's own ship placement, shot sequence, and result. The AI never reads the current opponent's hidden board.
 
 ## AI used
 
-- **Ghost placement:** RandomForestClassifier learns which board cells the player tends to use, then chooses a valid 4-ship fleet with high learned score.
-- **Ghost shooting:** two RandomForestClassifier models learn the player's next row/column from their previous shot, hit/miss result, turn number, and running hit/miss counts.
-- **Sonar:** RandomForestClassifier learns ship-cell patterns from recorded placements. Current observed hit/miss cells modify the score. The service returns two visually identical regions: a high-likelihood signal and a plausible AI-generated decoy.
+- **Ghost placement:** RandomForestClassifier learns which board cells the player tends to use, then scores valid fleets.
+- **Ghost shooting:** RandomForestClassifier models learn next-row/next-column tendencies from prior shots and outcomes.
+- **Sonar:** RandomForestClassifier learns ship-cell patterns from recorded placements.
+- **Decoy:** the service returns a plausible false signal beside the learned signal so the player cannot blindly trust Sonar.
 
-The fallback rules are only for cold start; the demo should show several recorded matches so the ML path is active.
+Cold-start fallback is used when there is not enough history. The console reports when the ML models are ready.

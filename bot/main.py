@@ -73,6 +73,9 @@ class GhostFleetBot:
         elif t == "matchEnd":
             won = msg.get("winnerId") == self.my_id
             print("[ghost] " + ("won" if won else "lost"))
+            # Keep the AI opponent ready for the player's Rematch button.
+            self.client.send({"type": "rematch"})
+            print("[ghost] rematch requested")
 
         elif t == "opponentLeft":
             print("[ghost] opponent left; searching again")
