@@ -121,4 +121,47 @@ public class ClientRelayTests
         response.EnsureSuccessStatusCode();
         Assert.Equal("text/html", response.Content.Headers.ContentType!.MediaType);
     }
+
+    // CLI-1: --lan lets another device on the Wi-Fi play through this computer's client.
+    [Fact]
+    public async Task Lan_AnotherDeviceCanPlayThroughTheLanAddress()
+    {
+        var lan = LanAddresses.Get().FirstOrDefault();
+        if (lan is null) return; // machine has no network: nothing to test
+
+        await using var server = await TestServer.StartAsync();
+        int webPort = FreePort();
+        await using var client = WebHost.Build(new ClientConfig
+        {
+            ServerHost = "127.0.0.1", ServerPort = server.Port, WebPort = webPort, Lan = true,
+        });
+        await client.StartAsync();
+
+        using var device = new ClientWebSocket();
+        await device.ConnectAsync(new Uri($"ws://{lan}:{webPort}/ws"), CancellationToken.None);
+
+        Assert.Equal("{\"type\":\"connected\",\"id\":\"p1\",\"protocolVersion\":1}", await ReceiveAsync(device));
+    }
+
+    [Fact]
+    public async Task WithoutLan_TheLanAddressIsRefused()
+    {
+        var lan = LanAddresses.Get().FirstOrDefault();
+        if (lan is null) return;
+
+        int webPort = FreePort();
+        await using var client = WebHost.Build(new ClientConfig { ServerPort = FreePort(), WebPort = webPort });
+        await client.StartAsync();
+
+        using var device = new ClientWebSocket();
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            device.ConnectAsync(new Uri($"ws://{lan}:{webPort}/ws"), CancellationToken.None));
+    }
+
+    [Fact]
+    public void LanFlag_TurnsLanOn_AndItIsOffByDefault()
+    {
+        Assert.False(ClientConfig.Load([]).Lan);
+        Assert.True(ClientConfig.Load(["--lan"]).Lan);
+    }
 }

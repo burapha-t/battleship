@@ -13,9 +13,15 @@ public sealed class ClientConfig
     public int WebPort { get; set; } = 3000;
 
     /// <summary>
+    /// Also serve the UI to other devices on the network, not just
+    /// this computer. Off unless <c>--lan</c> or <c>"lan": true</c>.
+    /// </summary>
+    public bool Lan { get; set; }
+
+    /// <summary>
     /// Reads <c>client.json</c> from the program's folder, then applies
-    /// <c>--web-port &lt;n&gt;</c>. A missing or broken file prints why and
-    /// falls back to the defaults.
+    /// <c>--web-port &lt;n&gt;</c> and <c>--lan</c>. A missing or broken file
+    /// prints why and falls back to the defaults.
     /// </summary>
     public static ClientConfig Load(string[] args)
     {
@@ -39,6 +45,8 @@ public sealed class ClientConfig
             else
                 Console.WriteLine("--web-port needs a number, e.g. --web-port 3001. Ignoring it.");
         }
+
+        if (args.Contains("--lan")) config.Lan = true;
 
         return config;
     }
