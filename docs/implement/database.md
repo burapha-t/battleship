@@ -125,7 +125,7 @@ Each badge at most once per player. The badge codes are not decided yet; they co
 | Login | users | Find by username, check the password hash |
 | Match history: stats | match_players | Matches = count, wins = sum of won, win rate = wins / matches, accuracy = hits / shots |
 | Match history: list | match_players, matches | My rows, newest first: win/lose, opponent, date and time, accuracy |
-| Leaderboard | match_players, users | Rank players by points, then accuracy (rules still open, see section 8) |
+| Leaderboard | match_players, users | All-time. Points = wins. Rank by points, then accuracy (hits / shots, timeout shots included), then name A–Z; ties on both share a rank. Top 50, accounts with a saved match only |
 | Badges: wins | match_players | Count of won = 1 reaches 5, 10, 20, 50, 100 |
 | Badges: accuracy | match_players | hits / shots in one match above 40, 50, 60, 70, 80% |
 | Badges: hit streak | match_players | best_streak in one match reaches the tier |
@@ -164,8 +164,9 @@ ORDER BY m.ended_at DESC;
 - FindUser(username): the account, or null. Ignores case.
 - SaveMatch(match): saves one finished match in one transaction and returns its id.
 - GetHistory(userId, page): one player's stats and 20 matches, newest first (HIST-1). The server calls it on DatabaseWorker and sends the result as `history`.
+- GetLeaderboard(): the top 50 accounts, ranked (LB-1). The server calls it on DatabaseWorker and sends the result as `leaderboard`.
 
-Read methods for history, the leaderboard and badges come with their own issues.
+Read methods for badges come with their own issue.
 
 How a match gets saved (DB-2):
 
@@ -183,14 +184,13 @@ Issue codes after DB-1 are proposals until the issues are created.
 | LOGIN-1 (#46) | Signup and login over the game connection, password hashing | Not started. Sets PlayerRecord.UserId |
 | DB-2 (#48) | Save each finished match with SaveMatch | Built. Saves nothing until LOGIN-1 sets UserId |
 | HIST-1 (#49) | History request and reply (`historyList` / `history`, protocol.md) | Built |
-| Leaderboard (server) | Leaderboard request and reply | Not started (needs DB-2) |
+| LB-1 (#44) | Leaderboard request and reply (`leaderboardGet` / `leaderboard`, protocol.md) | Built |
 | Achievements (server) | Check badges at match end, tell the player | Not started (needs DB-2) |
 | Profile picture (server) | Save the chosen avatar | Not started (needs AUTH-1) |
 
 ## 8. Open questions
 
 - Do timeout (auto) shots count toward accuracy?
-- Leaderboard: all-time or only this server session (the planning doc's Description tab says both "global" and "in the session")? And what is "point": total wins, or something else?
 - Password length: the planning doc's Description tab says 4–16 characters; older drafts used 8–64 and 8–128. Pick one.
 - Hit-streak badge tiers are listed as 5, 7, 6, 8, 9. Probably meant 5, 6, 7, 8, 9?
 - Badge codes (names) for the achievements table.
