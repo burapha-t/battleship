@@ -1,4 +1,4 @@
-import { useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
 import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
@@ -12,6 +12,7 @@ import { GameScreen } from './screens/GameScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
+import { setScene } from './sound'
 import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
@@ -19,6 +20,11 @@ export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
   const screen = useEndDelay(state.screen)
+
+  // Full music on the nickname and home screens, lowered once a match begins.
+  useEffect(() => {
+    setScene(screen === 'end' ? 'result' : screen === 'placement' || screen === 'game' ? 'match' : 'menu')
+  }, [screen])
 
   return (
     <div className="app">
