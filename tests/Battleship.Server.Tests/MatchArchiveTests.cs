@@ -209,5 +209,10 @@ public class MatchArchiveTests : IDisposable
         await worker.CompleteAsync();
 
         Assert.True(ranAfter);
+        using var connection = new SqliteConnection($"Data Source={database.Path}");
+        connection.Open();
+        using var count = connection.CreateCommand();
+        count.CommandText = "SELECT COUNT(*) FROM matches";
+        Assert.Equal(0L, (long)count.ExecuteScalar()!);
     }
 }
