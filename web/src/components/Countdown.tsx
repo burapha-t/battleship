@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
  * Counts `seconds` → 0 and restarts whenever `turnNumber` changes. Display
  * only: the server's timer is authoritative, so nothing happens at 0.
  */
-export function Countdown({ seconds, turnNumber }: { seconds: number; turnNumber: number }) {
+export function Countdown({
+  seconds,
+  turnNumber,
+  label = 'time left',
+}: {
+  seconds: number
+  turnNumber: number
+  label?: string
+}) {
   const total = seconds * 1000
   const [tick, setTick] = useState({ turnNumber, leftMs: total })
 
@@ -27,10 +35,10 @@ export function Countdown({ seconds, turnNumber }: { seconds: number; turnNumber
       className={`timer${left <= 3 ? ' urgent' : ''}`}
       style={{ background: `conic-gradient(var(--coral) 0 ${filled}%, #fff ${filled}% 100%)` }}
       role="timer"
-      aria-label={`${left} seconds left`}
+      aria-label={`${label}: ${left} seconds`}
     >
       <div>
-        <span>time left</span>
+        <span>{label}</span>
         <b key={left}>{left}</b>
         <span>seconds</span>
       </div>

@@ -47,10 +47,6 @@ runtime and the built web UI.
 The second client needs its own web port: `Battleship.Client --web-port 3001`.
 `--no-browser` skips opening the browser.
 
-From source, with the SDK: `dotnet run --project src/Battleship.Server`, then
-`dotnet run --project src/Battleship.Client` and
-`dotnet run --project src/Battleship.Client -- --web-port 3001`.
-
 ## Local accounts (Register / Login)
 
 Start the server and client as above, then open http://localhost:3000.
@@ -64,8 +60,10 @@ Debug build; the server prints the actual absolute path at startup. Accounts rem
 after restarting. Open this file with a SQLite viewer to inspect `AspNetUsers`.
 Passwords are stored as Identity password hashes. Database files and keys are ignored by Git.
 
-This account service is currently for **same-machine testing**. It does not listen
-on the LAN. Existing direct TCP clients keep their nickname-only protocol.
+The account service listens only on the server’s localhost. Run the client on
+that same computer; `--lan` can serve browsers on other devices through its account
+proxy. A client on a separate computer cannot reach this loopback account service.
+Existing direct TCP clients keep their nickname-only protocol.
 See [account implementation notes](docs/implement/accounts.md) for scope and testing.
 
 Account scores persist in SQLite (`AccountScores`). Each completed win adds one
@@ -78,3 +76,86 @@ untouched. Existing session-only points are not imported.
 dashboard. A completed game counts for both players; leaving mid-game does not.
 Resetting scores keeps lifetime matches played. Counts begin with this version;
 existing accounts and previously saved points are preserved.
+### Playing from another device
+
+1. Start the client with `--lan`: `Battleship.Client --lan`.
+2. Find the link the client prints, e.g. `http://192.168.1.20:3000`. The number
+   after the colon is the port: `3000` by default, or whatever `--web-port` or
+   `"webPort"` in `client.json` sets.
+3. On the other device, connect to the same Wi-Fi.
+4. Open that link in its browser.
+
+This is for casual games only. For the graded demo, the second computer runs
+`Battleship.Client` itself (step 3 above), since browser players type the
+address by hand.
+
+## Run from source
+
+### 1. Install the tools (once)
+
+Follow [docs/setup.md](docs/setup.md). Run every command below from the repo root.
+
+### 2. Build the UI (first time, and after changing `web/`)
+
+```sh
+cd web && npm ci && npm run build && cd ..
+```
+
+### 3. Start the server
+
+Open a terminal and run:
+
+```sh
+dotnet run --project src/Battleship.Server
+```
+
+Leave it open.
+
+### 4. Start your client
+
+Open a second terminal and run:
+
+```sh
+dotnet run --project src/Battleship.Client -- --lan
+```
+
+The game opens in your browser. The terminal prints a link like
+`Other devices on the same Wi-Fi: http://192.168.1.20:3000`.
+
+How to read that link:
+
+- `192.168.1.20` is your computer's address on the Wi-Fi. Yours will be different.
+- `3000` is the port. It's `3000` unless you changed it, either with
+  `--web-port <n>` or with `"webPort"` in `src/Battleship.Client/client.json`.
+- The terminal always prints the right address and port, so just copy the whole link.
+
+Friends only need this link. The server's port (`5050`) is used by the client
+behind the scenes, and nobody types it.
+
+### 5. Let friends join
+
+1. Send them the link from step 4.
+2. They connect to the same Wi-Fi as you.
+3. They open the link in a browser, starting with `http://`.
+
+### 6. Play
+
+1. Each player registers or logs in, then enters a nickname.
+2. Each player clicks **Start game**.
+3. The server pairs two waiting players and the match starts.
+
+### 7. Stop
+
+Press Ctrl+C in each terminal.
+
+### Notes
+
+- `dotnet` not found on macOS? Use `~/.dotnet/dotnet` instead.
+- Playing against yourself: in a third terminal, run
+  `dotnet run --project src/Battleship.Client -- --web-port 3001`, then open
+  <http://localhost:3001>.
+- A friend can't open the link:
+  1. Check they're on the same Wi-Fi, not mobile data or a guest network.
+  2. Check they typed `http://`, not `https://`.
+  3. Check you clicked Allow when your computer asked about incoming connections.
+  4. Still nothing? Some networks (campus, guest Wi-Fi) block this. Use a hotspot instead.

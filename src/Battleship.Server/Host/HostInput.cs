@@ -28,4 +28,7 @@ public abstract record HostInput
 
     /// <summary>The dashboard RESET button was pressed.</summary>
     public sealed record ResetRequested : HostInput;
+
+    /// <summary>A database job finished and has a reply for one player (e.g. <c>history</c>).</summary>
+    public sealed record DatabaseReply(string PlayerId, ProtocolMessage Reply) : HostInput;
 }

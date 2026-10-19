@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
 import { Countdown } from '../components/Countdown'
+import { END_DELAY_MS } from '../endDelay'
 import { matchSides } from '../gameReducer'
 import type { GameState, Shot } from '../gameReducer'
 import { SHIP_COUNT, cellName } from '../placement'
@@ -30,7 +31,10 @@ export function GameScreen({ state, onFire }: Props) {
 
   const turn = state.turn
   const myTurn = turn !== null && turn.activePlayerId === myId
-  const canFire = myTurn && firedOn !== turn.turnNumber
+  // Set while the final board stays up, before the end screen.
+  const over = state.winnerId !== null
+  const iWon = over && state.winnerId === myId
+  const canFire = !over && myTurn && firedOn !== turn.turnNumber
 
   const myShots = state.shots.filter((s) => s.by === myId)
   const incoming = state.shots.filter((s) => s.target === myId)
@@ -61,8 +65,14 @@ export function GameScreen({ state, onFire }: Props) {
 
   return (
     <main className="game">
-      <div className={`banner${myTurn ? '' : ' theirs'}`} role="status">
-        {myTurn ? `Your turn! Pick one slot in ${opponentName}'s waters` : `${opponentName}'s turn`}
+      <div className={`banner${(over ? iWon : myTurn) ? '' : ' theirs'}`} role="status">
+        {over
+          ? iWon
+            ? `You sank ${opponentName}'s last ship!`
+            : `${opponentName} sank your last ship`
+          : myTurn
+            ? `Your turn! Pick one slot in ${opponentName}'s waters`
+            : `${opponentName}'s turn`}
       </div>
       <p className="auto-note" role="status">
         {last?.auto && (
@@ -85,7 +95,12 @@ export function GameScreen({ state, onFire }: Props) {
         </section>
 
         <div className="mid">
-          {turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />}
+          {over ? (
+            // Counts down the pause before the Win/Lost screen.
+            <Countdown seconds={END_DELAY_MS / 1000} turnNumber={-1} label="results in" />
+          ) : (
+            turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />
+          )}
           <div className="card log">
             <h4>Last shots</h4>
             {state.shots.length === 0 && <p className="empty">No shots yet</p>}

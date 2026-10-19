@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 5 gameplay verbs plus relay-only account authentication (protocol.md §5). Property order is wire order.
+// Gameplay verbs plus relay-only account authentication (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary>Relay-only account binding, sent before join. Ticket is single-use.</summary>
@@ -53,5 +53,22 @@ namespace Battleship.Core.Protocol
     public sealed class Rematch : ProtocolMessage
     {
         public Rematch() : base("rematch") { }
+    }
+
+    /// <summary><c>leave</c>: the player pressed Home after a match ended.</summary>
+    public sealed class Leave : ProtocolMessage
+    {
+        public Leave() : base("leave") { }
+    }
+
+    /// <summary>
+    /// <c>historyList</c>: one page of my match history, 1 = newest. A missing
+    /// or smaller page is page 1.
+    /// </summary>
+    public sealed class HistoryList : ProtocolMessage
+    {
+        public HistoryList() : base("historyList") { }
+
+        public int Page { get; set; } = 1;
     }
 }

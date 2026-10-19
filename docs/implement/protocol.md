@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (5 verbs) · `S→C` server to client (12 events)
+`C→S` client to server (7 verbs) · `S→C` server to client (13 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -90,8 +90,11 @@ either side.
 | `matchEnd` | S→C | All 4 of one player's ships are sunk |
 | `rematch` | C→S | Player presses Rematch |
 | `rematchPending` | S→C | One player has asked for a rematch |
-| `opponentLeft` | S→C | The other player's socket closed |
+| `leave` | C→S | Player presses Home after a match ends |
+| `opponentLeft` | S→C | The other player's socket closed, or they went back to the lobby |
 | `reset` | S→C | The dashboard RESET button was pressed |
+| `historyList` | C→S | Player opens Match history, or scrolls to the next page |
+| `history` | S→C | Reply to `historyList` |
 | `error` | S→C | A client message was rejected |
 
 ---
@@ -122,6 +125,7 @@ either side.
                                   └───────────────────│ MATCHEND │
                                        matchStart     └──────────┘
                                     (both rematched)     rematch
+                                    leave / opponentLeft → IDLE
 ```
 
 `PLACING` is entered on every `matchStart`, including rematches — boards are
@@ -129,7 +133,7 @@ cleared and both players place again. A rematch goes straight from `MATCHEND` to
 `PLACING`; it never passes through `SEARCHING`.
 
 `IDLE` means "in the lobby, not looking for a match". The server never pairs an
-`IDLE` player. Every return to `IDLE` (`opponentLeft`, `reset`) needs a new
+`IDLE` player. Every return to `IDLE` (`leave`, `opponentLeft`, `reset`) needs a new
 `findMatch` before the player is paired again.
 
 ---
@@ -178,10 +182,10 @@ joined yet: its `name` is `null` until its `welcome`.
 | `status` | From | Until |
 |---|---|---|
 | `"connecting"` | TCP accept — socket open, no nickname yet | `welcome` |
-| `"idle"` | `welcome`, `opponentLeft` or `reset` | `findMatch` |
+| `"idle"` | `welcome`, `leave`, `opponentLeft` or `reset` | `findMatch` |
 | `"searching"` | `findMatch` — pressed *Start game*, waiting for an opponent | `matchStart` or `reset` |
 | `"placing"` | `matchStart`, rematches included | the match's first `turn`, `opponentLeft` or `reset` |
-| `"in-match"` | the match's first `turn` | a rematch's `matchStart`, `opponentLeft` or `reset` |
+| `"in-match"` | the match's first `turn` | a rematch's `matchStart`, `leave`, `opponentLeft` or `reset` |
 
 Both players in a match change status together. A player stays `"in-match"`
 after `matchEnd`; there is no match-over status. A client that disconnects
@@ -290,7 +294,7 @@ sends a fresh `matchStart` instead of another `rematchPending`.
 {"type":"opponentLeft","id":"p2"}
 ```
 
-The surviving player returns to `IDLE` and must send `findMatch` again to be
+Sent when the other player's socket closes, or when they send `leave`. The remaining player returns to `IDLE` and must send `findMatch` again to be
 paired. Scores are retained — a disconnect is not a loss, and awarding a win for
 it would be trivially exploitable in a demo.
 
@@ -304,6 +308,38 @@ Triggered by the dashboard RESET button. Every client abandons any match, clears
 its board, zeroes both scores, and returns to `IDLE`. A fresh `lobby` follows.
 Searching players stop searching too — after a reset nobody is paired until
 they send `findMatch` again.
+
+### `history`
+
+The reply to `historyList`, sent only to the player who asked, and only ever
+about that player. Added with HIST-1, under the ignore-unknown rules (§1).
+
+```json
+{"type":"history","page":1,
+ "stats":{"matchCount":12,"winCount":8,"loseCount":4,"winRate":66.7,"accuracy":50.4},
+ "matches":[
+  {"won":true,"opponent":"Bob","endedAt":"2026-10-19T07:00:00Z","accuracy":57.1},
+  {"won":false,"opponent":"Carol","endedAt":"2026-10-18T19:42:00Z","accuracy":38.5}
+ ],"more":false}
+```
+
+| Field | Meaning |
+|---|---|
+| `page` | The page this is, from 1 (the newest) |
+| `stats` | Totals over all of the player's saved matches, whatever the page |
+| `stats.winRate` | wins ÷ matches, as a percentage with one decimal; `0` with no matches |
+| `stats.accuracy` | hits ÷ shots over all matches, as a percentage with one decimal |
+| `matches` | Up to 20 matches, newest first |
+| `won` | `true` if this player won that match |
+| `opponent` | The opponent's username at the time |
+| `endedAt` | When the match ended, UTC, ISO 8601 (`…Z`). The UI shows it in local time |
+| `accuracy` | This player's hits ÷ shots in that match, a percentage with one decimal |
+| `more` | `true` if an older page exists |
+
+Only finished matches between two logged-in players are saved
+(`docs/implement/database.md`), so a guest always gets zeros, no matches and
+`more: false`. For now every shot counts toward accuracy, timeout auto-shots
+included; whether they should is an open question (`database.md` §8).
 
 ### `error`
 
@@ -321,8 +357,8 @@ Errors never change client state — the client stays where it was.
 | `not-your-turn` | `fire` from the player who is not active |
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
-| `not-in-match` | `findMatch`, `place`, `fire`, or `rematch` sent in the wrong state |
-| `unknown` | Anything else |
+| `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
+| `unknown` | Anything else, e.g. the match history couldn't be read |
 
 ---
 
@@ -381,6 +417,32 @@ always fire at your opponent.
 
 Valid only in `MATCHEND`. Sending it twice is idempotent — the second is ignored,
 not an error.
+
+### `leave`
+
+```json
+{"type":"leave"}
+```
+
+The player pressed **Home** on the end screen instead of Rematch. Valid in
+`MATCHEND`, and in `PLACING` for the race where the opponent's rematch starts a
+new match just as the player presses Home. The match and any pending rematch are
+dropped, both players return to `IDLE` and keep their scores, and the other
+player gets `opponentLeft`. The sender gets no reply beyond the `lobby` update;
+its UI goes home on its own and ignores a `matchStart` until a `lobby` lists it
+`idle`. From `PLAYING` or `SEARCHING` it is `not-in-match`. From `IDLE` (both
+players pressed Home) it is ignored.
+
+### `historyList`
+
+```json
+{"type":"historyList","page":1}
+```
+
+Asks for one page of the sender's own match history; the server replies with
+`history`. `page` starts at 1 (the newest 20 matches); a missing `page`, or one
+below 1, means 1. Valid in any state and changes none. There is no way to ask
+for another player's history.
 
 ---
 
@@ -471,7 +533,9 @@ export type ClientVerb =
   | { type: "findMatch" }
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
-  | { type: "rematch" };
+  | { type: "rematch" }
+  | { type: "leave" }
+  | { type: "historyList"; page: number };
 ```
 
 ### C# — `Battleship.Core`
@@ -494,7 +558,7 @@ while chunk := sock.recv(4096).decode("utf-8"):
 ```
 
 The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
-`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest. It must send
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history` included. It must send
 `findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
 will never be paired.
 

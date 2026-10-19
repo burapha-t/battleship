@@ -6,14 +6,17 @@ import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
+import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { GameState } from './gameReducer'
+import type { GameState, HistoryAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
+import { HistoryScreen } from './screens/HistoryScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
+import { setScene } from './sound'
 import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
@@ -56,6 +59,12 @@ export default function App() {
 function GameApp({ nickname = '' }: { nickname?: string }) {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
+  const screen = useEndDelay(state.screen)
+
+  // Full music on the nickname and home screens, lowered once a match begins.
+  useEffect(() => {
+    setScene(screen === 'end' ? 'result' : screen === 'placement' || screen === 'game' ? 'match' : 'menu')
+  }, [screen])
 
   return (
     <div className="app">
@@ -72,10 +81,14 @@ function GameApp({ nickname = '' }: { nickname?: string }) {
           <p>{state.fatal}</p>
         </main>
       ) : (
-        <Screen nickname={nickname} state={state} send={send} placeShips={(ships) => {
+        <Screen nickname={nickname} state={{ ...state, screen }} send={send} dispatch={dispatch} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
+        }} goHome={() => {
+          // The server answers `leave` with no event of its own; go home locally.
+          send({ type: 'leave' })
+          dispatch({ type: 'wentHome' })
         }} />
       )}
       {state.lastError?.code === 'account-unavailable' && <p className="card" role="alert">{state.lastError.message}</p>}
@@ -84,9 +97,26 @@ function GameApp({ nickname = '' }: { nickname?: string }) {
   )
 }
 
-type ScreenProps = { nickname: string; state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
+type ScreenProps = {
+  nickname: string
+  state: GameState
+  send: (verb: ClientVerb) => void
+  dispatch: (action: HistoryAction) => void
+  placeShips: (ships: Cell[][]) => void
+  goHome: () => void
+}
 
-function Screen({ nickname, state, send, placeShips }: ScreenProps) {
+function Screen({ nickname, state, send, dispatch, placeShips, goHome }: ScreenProps) {
+  const openHistory = () => {
+    dispatch({ type: 'openHistory' })
+    send({ type: 'historyList', page: 1 })
+  }
+  const loadMore = () => {
+    if (!state.history?.more || state.history.loadingMore) return
+    dispatch({ type: 'loadMoreHistory' })
+    send({ type: 'historyList', page: state.history.page + 1 })
+  }
+
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
@@ -99,12 +129,28 @@ function Screen({ nickname, state, send, placeShips }: ScreenProps) {
         />
       )
     case 'lobby':
-      return <LobbyScreen state={state} onStartGame={() => send({ type: 'findMatch' })} />
+      return <LobbyScreen state={state} onStartGame={() => send({ type: 'findMatch' })} onOpenHistory={openHistory} />
+    case 'history':
+      return (
+        <HistoryScreen
+          history={state.history}
+          failed={state.historyFailed}
+          onBack={() => dispatch({ type: 'closeHistory' })}
+          onLoadMore={loadMore}
+          onRetry={state.history ? loadMore : openHistory}
+        />
+      )
     case 'placement':
       return <PlacementScreen state={state} onReady={placeShips} />
     case 'game':
       return <GameScreen state={state} onFire={([row, col]) => send({ type: 'fire', row, col })} />
     case 'end':
-      return <EndScreen state={state} onRematch={() => send({ type: 'rematch' })} />
+      return (
+        <EndScreen
+          state={state}
+          onRematch={() => send({ type: 'rematch' })}
+          onHome={goHome}
+        />
+      )
   }
 }

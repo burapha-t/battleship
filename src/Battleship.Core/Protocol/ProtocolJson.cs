@@ -27,6 +27,8 @@ namespace Battleship.Core.Protocol
             ["place"] = typeof(Place),
             ["fire"] = typeof(Fire),
             ["rematch"] = typeof(Rematch),
+            ["leave"] = typeof(Leave),
+            ["historyList"] = typeof(HistoryList),
             ["connected"] = typeof(Connected),
             ["welcome"] = typeof(Welcome),
             ["lobby"] = typeof(LobbyUpdate),
@@ -38,6 +40,7 @@ namespace Battleship.Core.Protocol
             ["rematchPending"] = typeof(RematchPending),
             ["opponentLeft"] = typeof(OpponentLeft),
             ["reset"] = typeof(Reset),
+            ["history"] = typeof(History),
             ["error"] = typeof(Error),
         };
 

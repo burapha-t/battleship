@@ -35,6 +35,11 @@ public sealed class PlayerRecord
     public int Score { get; set; }
 
     public int MatchesPlayed { get; set; }
+    /// <summary>
+    /// The archive user (users.id) mapped from the authenticated account; null
+    /// for a guest. Only matches between two accounts are saved (DB-2).
+    /// </summary>
+    public long? UserId { get; set; }
 
     public bool HasJoined => Name != null;
 }

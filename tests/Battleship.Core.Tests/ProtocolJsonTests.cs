@@ -31,12 +31,50 @@ public class ProtocolJsonTests
         }
     }
 
+    // leave came after the transcript was recorded.
     [Fact]
-    public void Transcript_CoversAll17Types()
+    public void Leave_RoundTrips()
+    {
+        const string frame = "{\"type\":\"leave\"}";
+
+        var message = Assert.IsType<Leave>(ProtocolJson.Parse(frame));
+
+        Assert.Equal(frame, ProtocolJson.Serialize(message));
+    }
+
+    [Fact]
+    public void Transcript_CoversEveryTypeButLeave()
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(17, types.Count);
+        Assert.Equal(19, types.Count);
+        Assert.DoesNotContain(typeof(Leave), types);
+    }
+
+    [Fact]
+    public void HistoryList_WithoutAPage_IsPageOne()
+    {
+        Assert.Equal(1, Assert.IsType<HistoryList>(ProtocolJson.Parse("{\"type\":\"historyList\"}")).Page);
+    }
+
+    [Fact]
+    public void History_WritesStatsAndMatchesInWireOrder()
+    {
+        var history = new History
+        {
+            Page = 2,
+            Stats = new HistoryStats { MatchCount = 3, WinCount = 2, LoseCount = 1, WinRate = 66.7, Accuracy = 52.5 },
+            Matches = new[] { new HistoryMatch { Won = true, Opponent = "Bob", EndedAt = "2026-10-19T07:00:00Z", Accuracy = 57.1 } },
+            More = true,
+        };
+
+        const string frame =
+            "{\"type\":\"history\",\"page\":2," +
+            "\"stats\":{\"matchCount\":3,\"winCount\":2,\"loseCount\":1,\"winRate\":66.7,\"accuracy\":52.5}," +
+            "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1}]," +
+            "\"more\":true}";
+        Assert.Equal(frame, ProtocolJson.Serialize(history));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
     }
 
     [Fact]

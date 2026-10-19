@@ -51,7 +51,8 @@ are forwarded per request, never shared through a server-side HttpClient cookie 
 ## Scope
 
 This is a local account feature for the existing assignment architecture. The account
-API binds only to localhost. Remote LAN clients cannot use it yet. Deploying account
+API binds only to localhost. A client process on another computer cannot reach it.
+With `--lan`, browsers on the same Wi-Fi can use the client running beside the server. Deploying account
 authentication across machines requires an explicitly configured HTTPS endpoint and
 transport security; do not simply expose this HTTP account service publicly.
 
@@ -74,8 +75,9 @@ accounts unchanged. Reconnecting cannot undo a reset.
 
 Raw TCP clients/bots may join as guests; their scores are not saved. Game rules and
 per-match wire messages are unchanged except for the additive `authenticate` verb
-and `welcome.score`; see `protocol.md`. There is no public hosting, persistent
-win/loss history UI or password recovery. Replay and preview need no account.
+and `welcome.score`; see `protocol.md`. There is no public hosting or password recovery. Match history is available from
+the lobby when the archive database is enabled; completed matches between two
+authenticated accounts are saved. Replay and preview need no account.
 
 ## Verification
 
@@ -106,3 +108,13 @@ RESET clears points but preserves lifetime matches played. Upgrading a score-onl
 database preserves its accounts and points and adds tables automatically. Match
 counts start at zero because historical losses cannot be reconstructed reliably.
 The legacy `RecordedWins` table, if present, is left intact and is no longer written.
+
+## Match archive integration
+
+Identity accounts and scores remain in the account database. The separate
+`GameDatabase.DefaultPath()` file stores match history. Its additive `identity_users`
+table maps each Identity account ID to a stable archive user ID; nicknames are display
+names and never identify accounts. Archive user rows have empty credential fields
+and cannot authenticate through Identity. The latest joined nickname is copied into
+opponents’ history when each match is saved. Keep both databases when backing up.
+A history database failure is logged without blocking login or gameplay.

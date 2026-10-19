@@ -8,7 +8,8 @@ namespace Battleship.Client;
 /// <summary>
 /// The local web host on <c>http://localhost:&lt;webPort&gt;</c>: the built UI
 /// from <c>wwwroot/</c> and the <c>/ws</c> endpoint, which hands each
-/// WebSocket to <see cref="Relay"/>. Listens on localhost only.
+/// WebSocket to <see cref="Relay"/>. Listens on localhost only, unless
+/// <see cref="ClientConfig.Lan"/> opens it to the network.
 /// </summary>
 public static class WebHost
 {
@@ -20,7 +21,9 @@ public static class WebHost
     public static WebApplication Build(ClientConfig config)
     {
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory });
-        builder.WebHost.UseUrls($"http://localhost:{config.WebPort}");
+        // 0.0.0.0 = every network interface, so other devices on the Wi-Fi can open it.
+        string host = config.Lan ? "0.0.0.0" : "localhost";
+        builder.WebHost.UseUrls($"http://{host}:{config.WebPort}");
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 16 * 1024);
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         var app = builder.Build();

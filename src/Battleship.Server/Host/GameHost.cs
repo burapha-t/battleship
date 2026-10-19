@@ -3,6 +3,7 @@ using Battleship.Core;
 using Battleship.Server.Auth;
 using Battleship.Core.Protocol;
 using Battleship.Server.Dashboard;
+using Battleship.Server.Data;
 using Battleship.Server.Engine;
 using Battleship.Server.Lobby;
 using Battleship.Server.Net;
@@ -27,6 +28,8 @@ public sealed class GameHost
     private readonly Dictionary<string, ClientSession> _sessions = new();
     private readonly Roster _roster = new();
     private readonly MatchEngine _engine;
+    private readonly DatabaseWorker? _database;
+    private readonly GameDatabase? _historyDatabase;
     private readonly List<DashboardEvent> _activity = new();
     private DashboardSnapshot _snapshot = DashboardSnapshot.Empty;
 
@@ -36,11 +39,14 @@ public sealed class GameHost
     /// <c>GameRules.TurnSeconds</c>.
     /// </param>
     /// <param name="random">First player and auto-fire cell; tests pass a seeded one.</param>
-    public GameHost(TimeSpan turnDuration, Random random, GameTickets? tickets = null, AccountScores? scores = null)
+    /// <param name="database">Match history storage; null disables archiving.</param>
+    public GameHost(TimeSpan turnDuration, Random random, GameTickets? tickets = null, AccountScores? scores = null, GameDatabase? database = null)
     {
         _tickets = tickets;
         _scores = scores;
-        _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random);
+        _historyDatabase = database;
+        _database = database == null ? null : new DatabaseWorker(database);
+        _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random, _database);
     }
 
     /// <summary>The latest state for the dashboard, replaced after every input.</summary>
@@ -69,8 +75,9 @@ public sealed class GameHost
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Shutting down.
+            // Shutting down: let queued saves finish.
         }
+        if (_database != null) await _database.CompleteAsync();
     }
 
     // Whatever changes the roster produces one lobby, sent after the input's
@@ -103,6 +110,9 @@ public sealed class GameHost
                 break;
             case HostInput.ResetRequested:
                 OnReset();
+                break;
+            case HostInput.DatabaseReply reply:
+                Send(new[] { Outbound.ToPlayer(reply.PlayerId, reply.Reply) });
                 break;
         }
 
@@ -146,6 +156,12 @@ public sealed class GameHost
             case Rematch:
                 Send(_engine.Rematch(playerId));
                 break;
+            case Leave:
+                OnLeave(player);
+                break;
+            case HistoryList list:
+                OnHistoryList(player, list.Page);
+                break;
             // A server event sent by a client is ignored, like an unknown type.
         }
     }
@@ -180,10 +196,50 @@ public sealed class GameHost
             return;
         }
 
+        if (player.AccountId is not null && _historyDatabase is not null)
+        {
+            try { player.UserId = _historyDatabase.GetOrCreateAccountUser(player.AccountId, name); }
+            catch (Exception ex) { Console.WriteLine($"Could not bind match history: {ex.Message}"); }
+        }
         player.Name = name;
         player.Status = LobbyStatus.Idle;
         Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = name, Score = player.Score, MatchesPlayed = player.AccountId is null ? null : player.MatchesPlayed }) });
         Log($"{player.Id} joined as {name}");
+    }
+
+    private void OnLeave(PlayerRecord player)
+    {
+        var match = _engine.Matches.FirstOrDefault(m => m.Has(player.Id) && m.Phase != MatchPhase.Playing);
+        Send(_engine.Leave(player.Id));
+        if (match != null) Log($"{player.Name} left match {match.Id} for the lobby");
+    }
+
+    // Only ever the asking player's own history. A guest (or a server with no
+    // database) has none, so gets zeros at once; an account's is read off the loop.
+    private void OnHistoryList(PlayerRecord player, int page)
+    {
+        page = Math.Max(1, page);
+        if (player.UserId is not long userId || _database == null)
+        {
+            Send(new[] { Outbound.ToPlayer(player.Id, new History { Page = page }) });
+            return;
+        }
+
+        string playerId = player.Id;
+        _database.Enqueue(database =>
+        {
+            ProtocolMessage reply;
+            try
+            {
+                reply = database.GetHistory(userId, page);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not read match history for {playerId}: {ex.Message}");
+                reply = new Error { Code = ErrorCodes.Unknown, Message = "Match history couldn't be loaded. Try again." };
+            }
+            Post(new HostInput.DatabaseReply(playerId, reply));
+        });
     }
 
     private void OnDisconnected(string playerId)

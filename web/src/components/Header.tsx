@@ -5,8 +5,9 @@ import { isMuted, setMuted } from '../sound'
 import { Avatar } from './Avatar'
 
 /**
- * Logo, names and scores, and the mute toggle. In a match it shows both
- * players; outside one, my name and last known score (`lobby` carries none).
+ * Logo, names and scores, and the mute toggle (music and sound effects). In a
+ * match it shows both players; outside one, my name and last known score
+ * (`lobby` carries none).
  */
 export function Header({ state }: { state: GameState }) {
   const { me, opponent } = matchSides(state)

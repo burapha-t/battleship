@@ -15,9 +15,10 @@ obj/
 # Demo builds from scripts/publish.ps1 and scripts/publish.sh
 publish/
 
-# Local account database and data-protection keys
+# Local SQLite databases and account data-protection keys
 **/data/
 *.db
-*.db-shm
+*.db-journal
 *.db-wal
+*.db-shm
 TestResults/

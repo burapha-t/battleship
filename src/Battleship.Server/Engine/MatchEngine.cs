@@ -17,15 +17,18 @@ public sealed class MatchEngine
     private readonly Roster _roster;
     private readonly ITurnTimer _timer;
     private readonly Random _random;
+    private readonly IMatchArchive? _archive;
     private readonly List<string> _searching = new();
     private readonly Dictionary<string, Match> _matches = new();
     private int _matchCount;
 
-    public MatchEngine(Roster roster, ITurnTimer timer, Random random)
+    /// <param name="archive">Gets every finished match between two accounts; null saves nothing.</param>
+    public MatchEngine(Roster roster, ITurnTimer timer, Random random, IMatchArchive? archive = null)
     {
         _roster = roster;
         _timer = timer;
         _random = random;
+        _archive = archive;
     }
 
     /// <summary>Running matches, finished ones included until a rematch, leave or reset.</summary>
@@ -75,6 +78,27 @@ public sealed class MatchEngine
 
         _matches.Remove(match.Id);
         return StartMatch(match.Players[0], match.Players[1], match.WinnerId);
+    }
+
+    /// <summary>
+    /// The player pressed Home. Works after a match ends, and while placing
+    /// for the race where the opponent's rematch starts a new match just as
+    /// the player leaves. The match and any pending rematch are dropped, both
+    /// players go idle and keep their scores, and the other player gets
+    /// <c>opponentLeft</c>. A repeat from an idle player (both pressed Home)
+    /// is ignored.
+    /// </summary>
+    public IReadOnlyList<Outbound> Leave(string playerId)
+    {
+        var match = MatchOf(playerId);
+        if (match == null && _roster.Find(playerId)?.Status == LobbyStatus.Idle) return None;
+        if (match == null || match.Phase == MatchPhase.Playing)
+            return new[] { Outbound.Error(playerId, ErrorCodes.NotInMatch, "You can only go home after a match ends.") };
+
+        End(match);
+        foreach (var player in match.Players) player.Status = LobbyStatus.Idle;
+        var other = match.Players.First(player => player.Id != playerId);
+        return new[] { Outbound.ToPlayer(other.Id, new OpponentLeft { Id = playerId }) };
     }
 
     /// <summary>Auto-fires if that turn is still current; a stale expiry is dropped.</summary>
@@ -129,11 +153,27 @@ public sealed class MatchEngine
     private Match? MatchOf(string playerId) => _matches.Values.FirstOrDefault(match => match.Has(playerId));
 
     // Every turn sent starts that turn's timer; a finished match has none.
+    // The matchEnd frame is sent once per match, so the match is saved once.
     private IReadOnlyList<Outbound> Track(Match match, IReadOnlyList<Outbound> outbounds)
     {
         if (outbounds.Any(outbound => outbound.Message is Turn)) _timer.Start(match.Id, match.TurnNumber);
         else if (match.Phase == MatchPhase.MatchEnd) _timer.Cancel(match.Id);
+        if (outbounds.Any(outbound => outbound.Message is MatchEnd)) Archive(match);
         return outbounds;
+    }
+
+    // Saving must never stop the game: a failure is logged and matchEnd still goes out.
+    private void Archive(Match match)
+    {
+        if (_archive == null || match.ToRecord(DateTimeOffset.UtcNow) is not { } record) return;
+        try
+        {
+            _archive.Save(record);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not save match {match.Id}: {ex.Message}");
+        }
     }
 
     private static IReadOnlyList<Outbound> NotInMatch(string playerId) =>

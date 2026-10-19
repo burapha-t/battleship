@@ -13,6 +13,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/convention.md` | Branch, commit and PR names — every one must follow it |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
+| `docs/implement/database.md` | SQLite tables, where the file lives, rules for saving matches, which feature uses what |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
 | `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard) — the visual direction |
@@ -27,9 +28,10 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
-- `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
-- `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
+- `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
+- `web/`: complete — all five screens plus sound, and a match history screen (HIST-2) opened from the lobby. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history` (also `history-empty`, `history-loading`) shows the match history screen with sample data.
 - Accounts: local ASP.NET Identity + SQLite service on :5080; single-use tickets bind connections to Account IDs; scores and completed-match counts persist atomically in SQLite. See `docs/implement/accounts.md`.
+- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); authenticated accounts map to stable `PlayerRecord.UserId` values for history. HIST-1 answers `historyList` from it (guests get zeros).
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 
@@ -52,7 +54,7 @@ Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`
   (engine, no sockets), `Battleship.IntegrationTests` (real server + client relay on loopback ports)
 - `dotnet test tests/<project>` — one test project only
 - `dotnet run --project src/Battleship.Server` — game server (all interfaces :5050) + dashboard http://localhost:8080
-- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser]` — a player's client; UI on http://localhost:3000
+- `dotnet run --project src/Battleship.Client -- [--web-port 3001] [--no-browser] [--lan]` — a player's client; UI on http://localhost:3000 (`--lan`: also on this machine's LAN address)
 - `powershell -ExecutionPolicy Bypass -File scripts/publish.ps1 [-Rids win-x64]` / `sh scripts/publish.sh [osx-arm64]` —
   self-contained server + client into `publish/<rid>/`
 
