@@ -69,10 +69,12 @@ export function GameScreen({ state, onFire }: Props) {
     else playSound(last.sunk ? 'sunk' : last.result)
   }, [last, myId])
 
-  // Only the shooter hears it, like the pop-up.
+  // Only the shooter hears it, like the pop-up. A streak shot that sank a ship
+  // keeps the sunk (or win) clip instead; the pop-up still shows.
+  const streakShotSank = myLast?.sunk ?? false
   useEffect(() => {
-    if (myStreak) playSound('streak')
-  }, [myStreak])
+    if (myStreak && !streakShotSank) playSound('streak')
+  }, [myStreak, streakShotSank])
 
   return (
     <main className="game">

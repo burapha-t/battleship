@@ -26,6 +26,9 @@ const CLIPS: Record<Sound | 'music', string> = {
 // The music starts at full volume, then ducks under the effects in a match.
 const MUSIC_VOLUME: Record<Scene, number> = { menu: 1, match: 0.1, result: 0.08 }
 const EFFECTS_VOLUME = 0.8
+// A hit waits this long, in seconds, so a `streakUpdate` right behind its
+// `fireResult` can replace it with the streak sound.
+const HIT_DELAY = 0.06
 
 type Engine = { ctx: AudioContext; master: GainNode; music: GainNode; effects: GainNode }
 
@@ -35,6 +38,8 @@ let engine: Engine | null = null
 const buffers = new Map<Sound | 'music', AudioBuffer>()
 // The win or lose clip, cut short when the player leaves the result screen.
 let ending: AudioBufferSourceNode | null = null
+// The latest hit, until it ends; the streak sound cancels it before it starts.
+let lastHit: { source: AudioBufferSourceNode; startAt: number } | null = null
 
 // Browsers block audio until the player interacts with the page, so the
 // context is only created, and the clips loaded, on the first click or key press.
@@ -117,12 +122,31 @@ export function setScene(next: Scene): void {
 export function playSound(sound: Sound): void {
   const buffer = buffers.get(sound)
   if (muted || !engine || !buffer) return
-  const source = engine.ctx.createBufferSource()
+  if (sound === 'streak') cancelHit()
+  const { ctx, effects } = engine
+  const source = ctx.createBufferSource()
   source.buffer = buffer
-  source.connect(engine.effects)
+  source.connect(effects)
+  if (sound === 'hit') {
+    const hit = { source, startAt: ctx.currentTime + HIT_DELAY }
+    source.onended = () => {
+      if (lastHit === hit) lastHit = null
+    }
+    lastHit = hit
+    source.start(hit.startAt)
+    return
+  }
   source.start()
   if (sound === 'win' || sound === 'lose') {
     ending?.stop()
     ending = source
   }
+}
+
+// The streak sound replaces the normal hit sound of the same shot, which is
+// still waiting out HIT_DELAY. A hit already playing is an earlier shot's.
+function cancelHit(): void {
+  if (!engine || !lastHit || engine.ctx.currentTime >= lastHit.startAt) return
+  lastHit.source.stop()
+  lastHit = null
 }
