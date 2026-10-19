@@ -46,7 +46,8 @@ try
     new GameDatabase(databasePath);
     Console.WriteLine($"  Database: {databasePath}");
 }
-catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or InvalidOperationException)
+catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or InvalidOperationException
+                                 or ArgumentException or NotSupportedException)
 {
     Console.WriteLine($"  Database: could not open {databasePath} ({ex.Message}). The game server keeps running.");
 }

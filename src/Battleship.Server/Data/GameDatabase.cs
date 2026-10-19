@@ -99,14 +99,17 @@ public sealed class GameDatabase
 
         using var connection = Open();
         using var transaction = connection.BeginTransaction();
+        long found;
         using (var version = Command(connection, transaction, "PRAGMA user_version;"))
-        {
-            long found = (long)version.ExecuteScalar()!;
-            if (found > SchemaVersion)
-                throw new InvalidOperationException(
-                    $"{path} was made by a newer server (schema {found}; this one knows {SchemaVersion}).");
-        }
-        Execute(connection, transaction, Schema);
+            found = (long)version.ExecuteScalar()!;
+        if (found > SchemaVersion)
+            throw new InvalidOperationException(
+                $"{path} was made by a newer server (schema {found}; this one knows {SchemaVersion}).");
+
+        // One step per version, oldest first; a new file runs them all. Schema is
+        // version 1, so leave it as is: to change a table, raise SchemaVersion and
+        // add "if (found < N) { ALTER ... }" below.
+        if (found < 1) Execute(connection, transaction, Schema);
         Execute(connection, transaction, $"PRAGMA user_version = {SchemaVersion};");
         transaction.Commit();
     }
