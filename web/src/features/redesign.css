@@ -103,3 +103,30 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--sea); outli
   .redesign .result .scores, .redesign .result .score-pair { gap: 12px; }
   .redesign .result .sc .n { font-size: 13px; }
 }
+
+/* Home navigation occupies a real row so taller cards cannot slide beneath it. */
+.redesign:is(.stage-connecting, .stage-nickname, .stage-lobby) > .utility-nav {
+  position: relative !important;
+  top: auto;
+  right: auto;
+  align-self: flex-end;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-bottom: 24px;
+}
+.redesign:is(.stage-connecting, .stage-nickname, .stage-lobby) .home {
+  min-height: 0;
+  padding-top: 0;
+}
+@media (max-width: 1000px) {
+  .redesign:is(.stage-connecting, .stage-nickname, .stage-lobby) .home {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .redesign:is(.stage-connecting, .stage-nickname, .stage-lobby) .home > * {
+    width: 100%;
+    max-width: 600px;
+    justify-self: center;
+  }
+}
