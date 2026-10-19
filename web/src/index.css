@@ -278,6 +278,22 @@ h4 {
   height: 20px;
 }
 
+/* The login screen has no header, but the music already plays there. */
+.login-sound {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+}
+
+/* Too narrow to sit beside the link banner, so it drops to the waves. */
+@media (max-width: 720px) {
+  .login-sound {
+    top: auto;
+    bottom: 16px;
+  }
+}
+
 /* Link status, notices and error toasts float over the screen. */
 .link-banner,
 .notice,

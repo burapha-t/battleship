@@ -1,6 +1,6 @@
-import { useReducer, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { ErrorToast } from './components/ErrorToast'
-import { Header } from './components/Header'
+import { Header, SoundToggle } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
 import { gameReducer, initialState } from './gameReducer'
@@ -11,6 +11,7 @@ import { GameScreen } from './screens/GameScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { LoginScreen } from './screens/LoginScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
+import { setScene } from './sound'
 import { useGameSocket } from './useGameSocket'
 import type { Link } from './useGameSocket'
 
@@ -22,13 +23,24 @@ export default function App() {
   const [boarded, setBoarded] = useState(false)
   const atLogin = state.screen === 'connecting' || state.screen === 'login' || (state.screen === 'lobby' && !boarded)
 
+  // Full music on the login and home screens, lowered once a match begins.
+  useEffect(() => {
+    setScene(state.screen === 'end' ? 'result' : state.screen === 'placement' || state.screen === 'game' ? 'match' : 'menu')
+  }, [state.screen])
+
   return (
     <div className="app">
       <svg className="waves" viewBox="0 0 1280 110" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3" />
         <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" strokeWidth="3" />
       </svg>
-      {(!atLogin || state.fatal) && <Header state={state} />}
+      {!atLogin || state.fatal ? (
+        <Header state={state} />
+      ) : (
+        <div className="login-sound">
+          <SoundToggle />
+        </div>
+      )}
       <LinkBanner link={link} connected={state.myId !== null} />
       <Notice notice={state.notice} />
       {state.fatal ? (
