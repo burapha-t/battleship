@@ -3,8 +3,10 @@ using System.Net.Sockets;
 using System.Text;
 using Battleship.Core;
 using Battleship.Server.Dashboard;
+using Battleship.Server.Data;
 using Battleship.Server.Host;
 using Battleship.Server.Net;
+using Microsoft.Data.Sqlite;
 
 const int TcpPort = 5050;
 const string DashboardUrl = "http://localhost:8080";
@@ -35,6 +37,20 @@ Console.WriteLine($"  Listening on TCP port {TcpPort}. Put one of these in each 
 foreach (var address in lan) Console.WriteLine($"    {address}");
 if (lan.Count == 0) Console.WriteLine("    (no LAN address found; a client on this machine can use 127.0.0.1)");
 Console.WriteLine($"  Dashboard: {DashboardUrl}");
+
+// Accounts and match history (DB-1). Nothing in the game uses it yet, so a
+// failure here only prints a warning.
+var databasePath = GameDatabase.DefaultPath();
+try
+{
+    new GameDatabase(databasePath);
+    Console.WriteLine($"  Database: {databasePath}");
+}
+catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or InvalidOperationException)
+{
+    Console.WriteLine($"  Database: could not open {databasePath} ({ex.Message}). The game server keeps running.");
+}
+
 Console.WriteLine("  Ctrl+C stops the server.");
 
 var dashboard = DashboardServer.Create(host, DashboardUrl, TcpPort);
