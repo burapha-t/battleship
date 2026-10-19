@@ -2,7 +2,7 @@
 // given and reports clicks and hovers; it holds no game logic. Labels are
 // display only (A–H, 1–8); every callback uses the wire's 0-based [row, col].
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { GRID_SIZE, cellName, colName } from '../placement'
 import type { Cell } from '../protocol'
 import './Board.css'
@@ -25,6 +25,10 @@ type Props = {
   shots?: BoardShot[]
   /** Draws the aim marker on this cell. */
   hover?: Cell | null
+  /** Rings this cell in yellow: the newest hit. */
+  fresh?: Cell | null
+  /** Drawn over the water on the same 8×8 grid, unclipped; takes no clicks. */
+  children?: ReactNode
   /** Darker water for the opponent's board. */
   enemy?: boolean
   /** No cell is clickable. */
@@ -45,6 +49,8 @@ export function Board({
   ships = [],
   shots = [],
   hover = null,
+  fresh = null,
+  children,
   enemy = false,
   disabled = false,
   canClick,
@@ -102,6 +108,12 @@ export function Board({
           </div>
         )}
       </div>
+      {(fresh || children) && (
+        <div className="water-over" style={{ gridTemplateColumns: tracks, gridTemplateRows: tracks }}>
+          {fresh && <div className="fresh" style={at(fresh[0], fresh[1])} aria-hidden />}
+          {children}
+        </div>
+      )}
     </div>
   )
 }

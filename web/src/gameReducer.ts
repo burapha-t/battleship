@@ -9,6 +9,7 @@ export type Screen = 'connecting' | 'nickname' | 'lobby' | 'placement' | 'game' 
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
+export type Streak = Omit<Extract<ServerEvent, { type: 'streakUpdate' }>, 'type'>
 
 export type MyShipsAction = { type: 'myShips'; ships: Cell[][] }
 /** I pressed Home on the end screen. */
@@ -33,6 +34,12 @@ export type GameState = {
   turn: Turn | null
   /** Every `fireResult` of this match, oldest first. Both boards derive from it. */
   shots: Shot[]
+  /**
+   * The last `streakUpdate` of this match, for either player. The server keeps
+   * the count; the UI only shows it. A new object per event, so the same count
+   * twice still shows twice.
+   */
+  streak: Streak | null
   winnerId: string | null
   /** Ids that have a `rematchPending`. */
   rematchFrom: string[]
@@ -53,6 +60,7 @@ const noMatch = {
   placed: [],
   turn: null,
   shots: [],
+  streak: null,
   winnerId: null,
   rematchFrom: [],
 } satisfies Partial<GameState>
@@ -114,7 +122,15 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       }
 
     case 'fireResult':
-      return { ...state, shots: [...state.shots, event] }
+      return {
+        ...state,
+        shots: [...state.shots, event],
+        // The shooter's old streak is stale now; a `streakUpdate` follows if it goes on.
+        streak: state.streak?.player === event.by ? null : state.streak,
+      }
+
+    case 'streakUpdate':
+      return { ...state, streak: { player: event.player, count: event.count } }
 
     case 'matchEnd':
       return {

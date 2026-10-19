@@ -15,7 +15,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/implement/database.md` | SQLite tables, where the file lives, rules for saving matches, which feature uses what |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
-| `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard) — the visual direction |
+| `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard, hot streak) — the visual direction |
 | `tests/fixtures/README.md` | Golden transcript `match-transcript.jsonl`: format, story, what not to depend on |
 | `README.md` | Building `publish/` and running the demo on machines with nothing installed |
 

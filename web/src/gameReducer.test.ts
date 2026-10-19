@@ -112,6 +112,66 @@ describe('gameReducer', () => {
     expect(state).toMatchObject({ myShips: null, placed: [], turn: null, shots: [], rematchFrom: [] })
   })
 
+  describe('streakUpdate', () => {
+    const players = [
+      { id: 'p1', name: 'Alice', score: 0 },
+      { id: 'p2', name: 'Bob', score: 0 },
+    ]
+    const playing = fold(
+      [
+        { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
+        { type: 'turn', activePlayerId: 'p1', seconds: 10, turnNumber: 1 },
+      ],
+      joined,
+    )
+
+    it("stores the server's count as is, for either player", () => {
+      const mine = gameReducer(playing, { type: 'streakUpdate', player: 'p1', count: 5 })
+      expect(mine.streak).toEqual({ player: 'p1', count: 5 })
+      const theirs = gameReducer(mine, { type: 'streakUpdate', player: 'p2', count: 2 })
+      expect(theirs.streak).toEqual({ player: 'p2', count: 2 })
+    })
+
+    it('makes a new object per event, so the same count twice shows twice', () => {
+      const first = gameReducer(playing, { type: 'streakUpdate', player: 'p1', count: 2 })
+      const again = gameReducer(first, { type: 'streakUpdate', player: 'p1', count: 2 })
+      expect(again.streak).not.toBe(first.streak)
+    })
+
+    it('a shot alone never changes it: the client does not count', () => {
+      const state = fold(
+        [
+          { type: 'fireResult', by: 'p1', target: 'p2', row: 0, col: 0, result: 'hit', sunk: false, sunkCells: null, allSunk: false, auto: false },
+          { type: 'fireResult', by: 'p1', target: 'p2', row: 0, col: 1, result: 'hit', sunk: false, sunkCells: null, allSunk: false, auto: false },
+        ],
+        playing,
+      )
+      expect(state.streak).toBeNull()
+    })
+
+    it("the same player's next shot hides the old count, so a miss doesn't leave it up", () => {
+      const hot = gameReducer(playing, { type: 'streakUpdate', player: 'p1', count: 5 })
+      const theirShot = gameReducer(hot, { type: 'fireResult', by: 'p2', target: 'p1', row: 0, col: 0, result: 'miss', sunk: false, sunkCells: null, allSunk: false, auto: false })
+      expect(theirShot.streak).toBe(hot.streak)
+      const myMiss = gameReducer(theirShot, { type: 'fireResult', by: 'p1', target: 'p2', row: 7, col: 7, result: 'miss', sunk: false, sunkCells: null, allSunk: false, auto: false })
+      expect(myMiss.streak).toBeNull()
+    })
+
+    it.each<[string, GameAction]>([
+      ['a new match', { type: 'matchStart', matchId: 'm2', players, firstPlayerId: 'p1' }],
+      ['reset', { type: 'reset' }],
+      ['opponentLeft', { type: 'opponentLeft', id: 'p2' }],
+    ])('is cleared by %s', (_, action) => {
+      const hot = gameReducer(playing, { type: 'streakUpdate', player: 'p1', count: 3 })
+      expect(gameReducer(hot, action).streak).toBeNull()
+    })
+
+    it("follows the golden transcript's counts", () => {
+      const counts = replayActions('p2').flatMap((a) => (a.type === 'streakUpdate' && a.player === 'p1' ? [a.count] : []))
+      expect(counts).toEqual([2, 3, 4, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    })
+  })
+
   describe('Home', () => {
     const players = [
       { id: 'p1', name: 'Alice', score: 2 },
@@ -185,6 +245,11 @@ describe('parseServerEvent', () => {
     expect(parseServerEvent('{"type":"chat"}')).toBeNull()
     expect(parseServerEvent('null')).toBeNull()
     expect(parseServerEvent('{"type":"reset","extra":1}')).toEqual({ type: 'reset', extra: 1 })
+    expect(parseServerEvent('{"type":"streakUpdate","player":"p1","count":2}')).toEqual({
+      type: 'streakUpdate',
+      player: 'p1',
+      count: 2,
+    })
     expect(warn).toHaveBeenCalledTimes(3)
     warn.mockRestore()
   })

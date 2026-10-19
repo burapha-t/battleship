@@ -27,7 +27,7 @@ export type ErrorCode =
   | 'not-in-match'
   | 'unknown'
 
-/** The 12 server → client events (§4). */
+/** The 13 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -47,6 +47,8 @@ export type ServerEvent =
       allSunk: boolean
       auto: boolean
     }
+  // `player` has hit `count` (2 or more) times in a row; sent right after that `fireResult`.
+  | { type: 'streakUpdate'; player: string; count: number }
   | { type: 'matchEnd'; matchId: string; winnerId: string; players: PlayerInfo[] }
   | { type: 'rematchPending'; from: string }
   | { type: 'opponentLeft'; id: string }

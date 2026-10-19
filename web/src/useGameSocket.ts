@@ -18,6 +18,7 @@ const EVENT_TYPES: Record<ServerEvent['type'], true> = {
   placed: true,
   turn: true,
   fireResult: true,
+  streakUpdate: true,
   matchEnd: true,
   rematchPending: true,
   opponentLeft: true,

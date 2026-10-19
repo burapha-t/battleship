@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
 import { Countdown } from '../components/Countdown'
+import { HotStreak, StreakLevels } from '../components/HotStreak'
 import { END_DELAY_MS } from '../endDelay'
 import { matchSides } from '../gameReducer'
 import type { GameState, Shot } from '../gameReducer'
@@ -41,6 +42,11 @@ export function GameScreen({ state, onFire }: Props) {
   const sunkByMe = sunkShips(myShots)
   const sunkAtMe = sunkShips(incoming)
   const alreadyShot = new Set(myShots.map((s) => `${s.row},${s.col}`))
+  // My newest shot, if it hit, gets the yellow ring until my next shot.
+  const myLast = myShots.at(-1)
+  const freshHit: Cell | null = myLast?.result === 'hit' ? [myLast.row, myLast.col] : null
+  // Only the shooter sees the pop-up; the opponent just sees the hits in the log.
+  const myStreak = state.streak?.player === myId ? state.streak : null
 
   const ownShips: BoardShip[] = state.myShips
     ? state.myShips.map((cells, i) => ({
@@ -120,6 +126,7 @@ export function GameScreen({ state, onFire }: Props) {
                 </p>
               ))}
           </div>
+          <StreakLevels />
           <div className="legend">
             <span>
               <i className="sw hit">✕</i>Hit
@@ -149,11 +156,15 @@ export function GameScreen({ state, onFire }: Props) {
             ships={sunkByMe.map((cells) => ({ cells, sunk: true }))}
             shots={myShots}
             hover={canFire && aim && !alreadyShot.has(`${aim[0]},${aim[1]}`) ? aim : null}
+            fresh={freshHit}
             disabled={!canFire}
             canClick={([r, c]) => !alreadyShot.has(`${r},${c}`)}
             onCellClick={fire}
             onCellHover={setAim}
-          />
+          >
+            {/* Over the half of the board away from the newest hit. */}
+            <HotStreak streak={myStreak} half={freshHit && freshHit[0] < 4 ? 'bottom' : 'top'} />
+          </Board>
         </section>
       </div>
     </main>

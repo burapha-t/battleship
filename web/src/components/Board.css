@@ -197,6 +197,23 @@
   border: 2.5px solid var(--ink);
 }
 
+/* Above the water and outside its clipping, on the same grid: the 3px
+   padding matches the water's border. */
+.water-over {
+  grid-column: 2;
+  grid-row: 2;
+  z-index: 4;
+  display: grid;
+  padding: 3px;
+  pointer-events: none;
+}
+
+/* The newest hit (7_hot_streak). */
+.fresh {
+  border-radius: 12px;
+  box-shadow: 0 0 0 4px var(--sun), 0 0 0 7px var(--ink);
+}
+
 @keyframes pop {
   0% { transform: scale(0.2); opacity: 0; }
   60% { transform: scale(1.25); opacity: 1; }
