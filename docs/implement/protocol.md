@@ -338,7 +338,8 @@ about that player. Added with HIST-1, under the ignore-unknown rules (§1).
 
 Only finished matches between two logged-in players are saved
 (`docs/implement/database.md`), so a guest always gets zeros, no matches and
-`more: false`. Timeout auto-shots count toward accuracy.
+`more: false`. For now every shot counts toward accuracy, timeout auto-shots
+included; whether they should is an open question (`database.md` §8).
 
 ### `error`
 
