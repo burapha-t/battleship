@@ -53,13 +53,15 @@ export type ServerEvent =
   | { type: 'reset' }
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 5 client → server verbs (§5). */
+/** The 6 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
   | { type: 'place'; ships: Cell[][] }
   | { type: 'fire'; row: number; col: number }
   | { type: 'rematch' }
+  // Leave a finished match; the opponent gets `opponentLeft`.
+  | { type: 'leave' }
 
 /**
  * Call in the `default` of a `switch (event.type)`. If a case is missing,

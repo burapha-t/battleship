@@ -111,6 +111,71 @@ describe('gameReducer', () => {
     expect(state.myScore).toBe(3)
     expect(state).toMatchObject({ myShips: null, placed: [], turn: null, shots: [], rematchFrom: [] })
   })
+
+  describe('Home', () => {
+    const players = [
+      { id: 'p1', name: 'Alice', score: 2 },
+      { id: 'p2', name: 'Bob', score: 1 },
+    ]
+    const ended = fold(
+      [
+        { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
+        { type: 'myShips', ships: [[[0, 0], [0, 1], [0, 2], [0, 3]]] },
+        { type: 'turn', activePlayerId: 'p1', seconds: 10, turnNumber: 1 },
+        { type: 'fireResult', by: 'p1', target: 'p2', row: 1, col: 1, result: 'hit', sunk: false, sunkCells: null, allSunk: false, auto: false },
+        { type: 'matchEnd', matchId: 'm1', winnerId: 'p1', players },
+        { type: 'rematchPending', from: 'p2' },
+      ],
+      joined,
+    )
+
+    it('wentHome takes me to the lobby, keeps my score and clears the match', () => {
+      const state = gameReducer(ended, { type: 'wentHome' })
+      expect(state.screen).toBe('lobby')
+      expect(state.myScore).toBe(2)
+      expect(state.leaving).toBe(true)
+      expect(state).toMatchObject({ myShips: null, shots: [], turn: null, winnerId: null, rematchFrom: [], notice: null })
+    })
+
+    it('wentHome does nothing off the end screen', () => {
+      const playing = fold([{ type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' }], joined)
+      expect(gameReducer(playing, { type: 'wentHome' })).toBe(playing)
+    })
+
+    it("ignores a rematch's matchStart that crossed my leave, until a lobby lists me idle", () => {
+      const home = gameReducer(ended, { type: 'wentHome' })
+      const crossed = gameReducer(home, { type: 'matchStart', matchId: 'm2', players, firstPlayerId: 'p1' })
+      expect(crossed).toBe(home)
+
+      const placing = gameReducer(crossed, {
+        type: 'lobby',
+        count: 2,
+        clients: [
+          { id: 'p1', name: 'Alice', status: 'placing' },
+          { id: 'p2', name: 'Bob', status: 'placing' },
+        ],
+      })
+      expect(placing.leaving).toBe(true)
+
+      const idle = gameReducer(placing, {
+        type: 'lobby',
+        count: 2,
+        clients: [
+          { id: 'p1', name: 'Alice', status: 'idle' },
+          { id: 'p2', name: 'Bob', status: 'idle' },
+        ],
+      })
+      expect(idle.leaving).toBe(false)
+      expect(gameReducer(idle, { type: 'matchStart', matchId: 'm3', players, firstPlayerId: 'p2' }).screen).toBe('placement')
+    })
+
+    it('the other player goes to the lobby on opponentLeft, with a notice', () => {
+      const state = gameReducer(ended, { type: 'opponentLeft', id: 'p2' })
+      expect(state.screen).toBe('lobby')
+      expect(state.myScore).toBe(2)
+      expect(state.notice?.text).toBe('Bob left the game')
+    })
+  })
 })
 
 describe('parseServerEvent', () => {

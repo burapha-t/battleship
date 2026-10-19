@@ -1,6 +1,6 @@
 // The UI's single source of truth: a pure fold over the server's events. The
-// server is authoritative, so the only local action is `myShips` — the ships I
-// sent in `place`, which the server never sends back.
+// server is authoritative, so the only local actions are `myShips` — the ships I
+// sent in `place`, which the server never sends back — and `wentHome`.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
 import type { Cell, ErrorCode, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
@@ -11,7 +11,9 @@ export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
 
 export type MyShipsAction = { type: 'myShips'; ships: Cell[][] }
-export type GameAction = ServerEvent | MyShipsAction
+/** I pressed Home on the end screen. */
+export type WentHomeAction = { type: 'wentHome' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction
 
 export type GameState = {
   screen: Screen
@@ -34,6 +36,12 @@ export type GameState = {
   winnerId: string | null
   /** Ids that have a `rematchPending`. */
   rematchFrom: string[]
+  /**
+   * Set by Home. While true a `matchStart` is ignored (the opponent's rematch
+   * can start a new match just as I leave). Cleared by the first `lobby` that
+   * lists me as `idle` or `searching`.
+   */
+  leaving: boolean
   /** `seq` grows on every error, so the same message twice still shows twice. */
   lastError: { code: ErrorCode; message: string; seq: number } | null
   /** A new object per notice, so the same text twice still shows twice. */
@@ -58,6 +66,7 @@ export const initialState: GameState = {
   lobby: [],
   players: [],
   ...noMatch,
+  leaving: false,
   lastError: null,
   notice: null,
 }
@@ -77,10 +86,14 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
     case 'welcome':
       return { ...state, myName: event.nickname, screen: 'lobby' }
 
-    case 'lobby':
-      return { ...state, lobby: event.clients }
+    case 'lobby': {
+      const me = event.clients.find((c) => c.id === state.myId)
+      const back = me?.status === 'idle' || me?.status === 'searching'
+      return { ...state, lobby: event.clients, leaving: back ? false : state.leaving }
+    }
 
     case 'matchStart':
+      if (state.leaving) return state
       return {
         ...state,
         ...noMatch,
@@ -144,6 +157,9 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'myShips':
       return { ...state, myShips: event.ships }
+
+    case 'wentHome':
+      return state.screen === 'end' ? { ...state, ...noMatch, screen: 'lobby', leaving: true, notice: null } : state
 
     default:
       assertNever(event)

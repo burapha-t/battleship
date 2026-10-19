@@ -26,6 +26,7 @@ namespace Battleship.Core.Protocol
             ["place"] = typeof(Place),
             ["fire"] = typeof(Fire),
             ["rematch"] = typeof(Rematch),
+            ["leave"] = typeof(Leave),
             ["connected"] = typeof(Connected),
             ["welcome"] = typeof(Welcome),
             ["lobby"] = typeof(LobbyUpdate),
