@@ -20,6 +20,10 @@ export type LobbyClient = { id: string; name: string | null; status: LobbyStatus
 
 export type ErrorCode =
   | 'bad-nickname'
+  | 'bad-credentials'
+  | 'username-taken'
+  | 'invalid-input'
+  | 'already-logged-in'
   | 'invalid-placement'
   | 'not-your-turn'
   | 'already-fired'
@@ -53,9 +57,17 @@ export type ServerEvent =
   | { type: 'reset' }
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 5 client → server verbs (§5). */
+/**
+ * The 5 client → server verbs (§5), plus `login`, `signup` and `leave`, which
+ * are specified in /backend_requirements.md and not yet in protocol.md.
+ */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
+  // `signup` also logs in; the server answers both with `welcome`.
+  | { type: 'login'; username: string; password: string }
+  | { type: 'signup'; username: string; password: string }
+  // Leave a finished match; the opponent gets `opponentLeft`.
+  | { type: 'leave' }
   | { type: 'findMatch' }
   | { type: 'place'; ships: Cell[][] }
   | { type: 'fire'; row: number; col: number }

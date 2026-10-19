@@ -6,7 +6,9 @@ import './screens.css'
 const CONFETTI = ['var(--coral)', 'var(--kelp)', 'var(--lilac)', 'var(--sun)']
 
 /** Win or Lost from `matchEnd.winnerId`, both scores, and the rematch handshake. */
-export function EndScreen({ state, onRematch }: { state: GameState; onRematch: () => void }) {
+type Props = { state: GameState; onRematch: () => void; onHome: () => void }
+
+export function EndScreen({ state, onRematch, onHome }: Props) {
   const { me, opponent } = matchSides(state)
   const opponentName = opponent?.name ?? 'Your opponent'
   const won = state.winnerId !== null && state.winnerId === state.myId
@@ -58,9 +60,19 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
             </div>
           ))}
         </div>
-        <button type="button" className={`btn big${iAsked ? ' pressed' : ''}`} disabled={iAsked} onClick={rematch}>
-          {iAsked ? 'Rematch requested' : 'Rematch'}
-        </button>
+        <div className="actions">
+          <button type="button" className="btn white go-home" onClick={onHome}>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 11.5 12 4l9 7.5" fill="none" stroke="#14325A" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" strokeWidth="2.8" strokeLinejoin="round" />
+              <rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" strokeWidth="2" />
+            </svg>
+            Home
+          </button>
+          <button type="button" className={`btn big rm${iAsked ? ' pressed' : ''}`} disabled={iAsked} onClick={rematch}>
+            {iAsked ? 'Rematch requested' : 'Rematch'}
+          </button>
+        </div>
         {iAsked ? (
           <p className="note" role="status">
             <span className="dot sun" />

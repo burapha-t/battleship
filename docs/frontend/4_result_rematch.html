@@ -84,6 +84,10 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .sc.lead{background:var(--sun)}
 .vs{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px}
 .screen .btn{font-size:28px;padding:10px 54px}
+.actions{display:flex;gap:16px;align-items:center}
+.screen .btn.home{font-size:22px;padding:10px 22px;height:62px}
+.screen .btn.rm{height:62px;white-space:nowrap}
+.screen .btn.pressed.rm{font-size:23px;padding:10px 26px}
 .note{margin-top:22px;font-size:15px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:8px}
 .conf{position:absolute;width:14px;height:22px;border:2.5px solid var(--ink);border-radius:4px}
 </style></head>
@@ -97,14 +101,14 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
   <div class="status">Win</div>
   <div class="line">You sank all 4 of Bob's ships!</div>
   <div class="scores"><div class="sc lead"><div class="n">Alice</div><div class="v">2</div></div><div class="vs">vs</div><div class="sc"><div class="n">Bob</div><div class="v">1</div></div></div>
-  <a class="btn">Rematch</a>
+  <div class="actions"><a class="btn white home"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="#14325A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" stroke-width="2.8" stroke-linejoin="round"/><rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" stroke-width="2"/></svg>Home</a><a class="btn rm">Rematch</a></div>
   <div class="note"><span class="dot"></span>Bob wants a rematch. You'll fire first as the winner.</div>
  </div></div>
  <div class="card screen lost"><div class="cap"><i></i><i></i><i></i>&nbsp;Bob's screen</div><div class="in">
   <div class="status">Lost</div>
   <div class="line">Alice sank your whole fleet this time.</div>
   <div class="scores"><div class="sc lead"><div class="n">Alice</div><div class="v">2</div></div><div class="vs">vs</div><div class="sc"><div class="n">Bob</div><div class="v">1</div></div></div>
-  <a class="btn pressed">Rematch requested</a>
+  <div class="actions"><a class="btn white home"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="#14325A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" stroke-width="2.8" stroke-linejoin="round"/><rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" stroke-width="2"/></svg>Home</a><a class="btn pressed rm">Rematch requested</a></div>
   <div class="note"><span class="dot sun"></span>Waiting for Alice to accept…</div>
  </div></div>
 </div></div></body></html>

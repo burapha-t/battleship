@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { gameReducer, initialState, matchSides } from './gameReducer'
 import type { GameAction, GameState } from './gameReducer'
-import type { ServerEvent } from './protocol'
+import type { LobbyStatus, ServerEvent } from './protocol'
 import { replayActions } from './replay'
 import { parseServerEvent } from './useGameSocket'
 
@@ -46,7 +46,7 @@ describe("replaying p1's side of the golden transcript", () => {
       return next
     }, initialState)
     expect(screens).toEqual([
-      'nickname', 'lobby', 'placement', 'game', 'end', // m1
+      'login', 'lobby', 'placement', 'game', 'end', // m1
       'placement', 'game', // rematch m2
       'lobby', // reset
       'placement', 'lobby', // m3, then Bob leaves
@@ -85,9 +85,9 @@ describe('gameReducer', () => {
     expect(gameReducer(joined, unknown)).toBe(joined)
   })
 
-  it('a reset before joining stays on the nickname screen', () => {
+  it('a reset before joining stays on the login screen', () => {
     const state = fold([{ type: 'connected', id: 'p1', protocolVersion: 1 }, { type: 'reset' }])
-    expect(state.screen).toBe('nickname')
+    expect(state.screen).toBe('login')
   })
 
   it('a rematch clears both boards and my ships', () => {
@@ -110,6 +110,64 @@ describe('gameReducer', () => {
     expect(state.screen).toBe('placement')
     expect(state.myScore).toBe(3)
     expect(state).toMatchObject({ myShips: null, placed: [], turn: null, shots: [], rematchFrom: [] })
+  })
+})
+
+describe('wentHome', () => {
+  const players = [
+    { id: 'p1', name: 'Alice', score: 1 },
+    { id: 'p2', name: 'Bob', score: 0 },
+  ]
+  const lobbyOf = (status: LobbyStatus): ServerEvent => ({
+    type: 'lobby',
+    count: 2,
+    clients: [
+      { id: 'p1', name: 'Alice', status },
+      { id: 'p2', name: 'Bob', status: 'idle' },
+    ],
+  })
+  const matchStart: ServerEvent = { type: 'matchStart', matchId: 'm2', players, firstPlayerId: 'p1' }
+
+  const ended = fold([
+    { type: 'connected', id: 'p1', protocolVersion: 1 },
+    { type: 'welcome', id: 'p1', nickname: 'Alice' },
+    { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
+    { type: 'myShips', ships: [[[0, 0], [0, 1], [0, 2], [0, 3]]] },
+    { type: 'turn', activePlayerId: 'p1', seconds: 10, turnNumber: 1 },
+    { type: 'fireResult', by: 'p1', target: 'p2', row: 1, col: 1, result: 'miss', sunk: false, sunkCells: null, allSunk: false, auto: false },
+    { type: 'matchEnd', matchId: 'm1', winnerId: 'p1', players },
+    { type: 'rematchPending', from: 'p2' },
+  ])
+  const home = gameReducer(ended, { type: 'wentHome' })
+
+  it('goes to the lobby and clears the match', () => {
+    expect(ended.screen).toBe('end')
+    expect(ended.leaving).toBe(false)
+    expect(home.screen).toBe('lobby')
+    expect(home).toMatchObject({ myShips: null, shots: [], winnerId: null, rematchFrom: [], leaving: true })
+  })
+
+  it('ignores a matchStart while leaving', () => {
+    expect(gameReducer(home, matchStart)).toBe(home)
+  })
+
+  it('keeps leaving while the lobby lists me as placing or in-match', () => {
+    for (const status of ['placing', 'in-match'] as const) {
+      const state = gameReducer(home, lobbyOf(status))
+      expect(state.leaving).toBe(true)
+      expect(gameReducer(state, matchStart)).toBe(state)
+    }
+  })
+
+  it.each(['idle', 'searching'] as const)('stops leaving once the lobby lists me as %s', (status) => {
+    const state = gameReducer(home, lobbyOf(status))
+    expect(state.leaving).toBe(false)
+    expect(gameReducer(state, matchStart).screen).toBe('placement')
+  })
+
+  it('keeps leaving when the lobby does not list me', () => {
+    const state = gameReducer(home, { type: 'lobby', count: 1, clients: [{ id: 'p2', name: 'Bob', status: 'idle' }] })
+    expect(state.leaving).toBe(true)
   })
 })
 
