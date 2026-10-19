@@ -12,6 +12,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/convention.md` | Branch, commit and PR names — every one must follow it |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
+| `docs/implement/database.md` | SQLite tables, where the file lives, rules for saving matches, which feature uses what |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
 | `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard) — the visual direction |
@@ -28,7 +29,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
 - `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
-- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file in the host's app-data folder (the server prints the path); only the server opens it. Not used by the game yet.
+- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). Not used by the game yet.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 

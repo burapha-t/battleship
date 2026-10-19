@@ -26,7 +26,8 @@ public sealed record MatchRecord(
 /// The SQLite file that holds accounts and finished matches. Only the server
 /// opens it. It stores raw facts (matches, shots, fleets); stats such as win
 /// rate and accuracy are worked out with queries. Each call opens its own
-/// connection, so the class keeps no open handle.
+/// connection, so the class keeps no open handle. Tables and rules:
+/// docs/implement/database.md.
 /// </summary>
 public sealed class GameDatabase
 {
