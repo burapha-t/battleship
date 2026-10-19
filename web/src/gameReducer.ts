@@ -1,12 +1,13 @@
 // The UI's single source of truth: a pure fold over the server's events. The
 // server is authoritative, so the only local actions are `myShips` — the ships I
-// sent in `place`, which the server never sends back — `wentHome`, and opening,
-// paging and closing the match history screen.
+// sent in `place`, which the server never sends back — `wentHome`, opening,
+// paging and closing the match history screen, and opening and closing the
+// leaderboard.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { Cell, ErrorCode, HistoryMatch, HistoryStats, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
+import type { Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
@@ -16,7 +17,9 @@ export type MyShipsAction = { type: 'myShips'; ships: Cell[][] }
 export type WentHomeAction = { type: 'wentHome' }
 /** Match history: open it from the lobby (I send `historyList` page 1), ask for the next page, go back. */
 export type HistoryAction = { type: 'openHistory' } | { type: 'loadMoreHistory' } | { type: 'closeHistory' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction
+/** Leaderboard: open it from the lobby (I send `leaderboardGet`), or again to retry; go back. */
+export type LeaderboardAction = { type: 'openLeaderboard' } | { type: 'closeLeaderboard' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction
 
 /** The pages of `history` received so far, joined into one list. */
 export type HistoryView = {
@@ -66,6 +69,10 @@ export type GameState = {
   history: HistoryView | null
   /** An `error` came while a history page was loading. */
   historyFailed: boolean
+  /** Null until the `leaderboard` reply after opening the screen. Best first. */
+  leaderboard: LeaderboardRow[] | null
+  /** An `error` came while the leaderboard was loading. */
+  leaderboardFailed: boolean
 }
 
 const noMatch = {
@@ -91,6 +98,8 @@ export const initialState: GameState = {
   notice: null,
   history: null,
   historyFailed: false,
+  leaderboard: null,
+  leaderboardFailed: false,
 }
 
 export function gameReducer(state: GameState, event: GameAction): GameState {
@@ -181,12 +190,15 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, history: { stats, matches: [...shown.matches, ...matches], page, more, loadingMore: false } }
     }
 
-    // Shown by the leaderboard screen (LB-2).
     case 'leaderboard':
-      return state
+      return { ...state, leaderboard: event.rows }
 
     case 'error': {
       const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
+      // Likewise the leaderboard screen sends nothing but leaderboardGet.
+      if (state.screen === 'leaderboard' && state.leaderboard === null) {
+        return { ...state, lastError, leaderboardFailed: true }
+      }
       // The history screen sends nothing but historyList, so an error there is its answer.
       const loading = state.screen === 'history' && (state.history === null || state.history.loadingMore)
       if (!loading) return { ...state, lastError }
@@ -212,6 +224,15 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'closeHistory':
       return state.screen === 'history' ? { ...state, screen: 'lobby' } : state
+
+    // From the lobby, or again from the leaderboard to retry a failed load.
+    case 'openLeaderboard':
+      return state.screen === 'lobby' || state.screen === 'leaderboard'
+        ? { ...state, screen: 'leaderboard', leaderboard: null, leaderboardFailed: false, notice: null }
+        : state
+
+    case 'closeLeaderboard':
+      return state.screen === 'leaderboard' ? { ...state, screen: 'lobby' } : state
 
     case 'myShips':
       return { ...state, myShips: event.ships }
