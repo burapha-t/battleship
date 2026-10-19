@@ -95,6 +95,9 @@ public sealed class GameHost
             case HostInput.ResetRequested:
                 OnReset();
                 break;
+            case HostInput.DatabaseReply reply:
+                Send(new[] { Outbound.ToPlayer(reply.PlayerId, reply.Reply) });
+                break;
         }
 
         string lobbyAfter = ProtocolJson.Serialize(_roster.BuildLobby());
@@ -137,6 +140,9 @@ public sealed class GameHost
             case Leave:
                 OnLeave(player);
                 break;
+            case HistoryList list:
+                OnHistoryList(player, list.Page);
+                break;
             // A server event sent by a client is ignored, like an unknown type.
         }
     }
@@ -167,6 +173,34 @@ public sealed class GameHost
         var match = _engine.Matches.FirstOrDefault(m => m.Has(player.Id) && m.Phase != MatchPhase.Playing);
         Send(_engine.Leave(player.Id));
         if (match != null) Log($"{player.Name} left match {match.Id} for the lobby");
+    }
+
+    // Only ever the asking player's own history. A guest (or a server with no
+    // database) has none, so gets zeros at once; an account's is read off the loop.
+    private void OnHistoryList(PlayerRecord player, int page)
+    {
+        page = Math.Max(1, page);
+        if (player.UserId is not long userId || _database == null)
+        {
+            Send(new[] { Outbound.ToPlayer(player.Id, new History { Page = page }) });
+            return;
+        }
+
+        string playerId = player.Id;
+        _database.Enqueue(database =>
+        {
+            ProtocolMessage reply;
+            try
+            {
+                reply = database.GetHistory(userId, page);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not read match history for {playerId}: {ex.Message}");
+                reply = new Error { Code = ErrorCodes.Unknown, Message = "Match history couldn't be loaded. Try again." };
+            }
+            Post(new HostInput.DatabaseReply(playerId, reply));
+        });
     }
 
     private void OnDisconnected(string playerId)

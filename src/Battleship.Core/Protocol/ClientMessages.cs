@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 6 client → server verbs (protocol.md §5). Property order is wire order.
+// The 7 client → server verbs (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary><c>join</c>: the player submits a nickname.</summary>
@@ -52,5 +52,16 @@ namespace Battleship.Core.Protocol
     public sealed class Leave : ProtocolMessage
     {
         public Leave() : base("leave") { }
+    }
+
+    /// <summary>
+    /// <c>historyList</c>: one page of my match history, 1 = newest. A missing
+    /// or smaller page is page 1.
+    /// </summary>
+    public sealed class HistoryList : ProtocolMessage
+    {
+        public HistoryList() : base("historyList") { }
+
+        public int Page { get; set; } = 1;
     }
 }

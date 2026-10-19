@@ -22,6 +22,7 @@ const EVENT_TYPES: Record<ServerEvent['type'], true> = {
   rematchPending: true,
   opponentLeft: true,
   reset: true,
+  history: true,
   error: true,
 }
 

@@ -149,6 +149,10 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         notice: { text: 'The server was reset' },
       }
 
+    // The match history screen (HIST-2) isn't built yet.
+    case 'history':
+      return state
+
     case 'error':
       return {
         ...state,
