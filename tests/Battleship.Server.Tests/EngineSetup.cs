@@ -30,9 +30,9 @@ internal sealed class EngineSetup
     // Rows 1, 3, 5, 7, columns 4-7.
     public static readonly IReadOnlyList<IReadOnlyList<Coord>> FleetB = Fleet(startRow: 1, startCol: 4);
 
-    public EngineSetup(int seed = 1)
+    public EngineSetup(int seed = 1, IMatchArchive? archive = null)
     {
-        Engine = new MatchEngine(Roster, Timer, new Random(seed));
+        Engine = new MatchEngine(Roster, Timer, new Random(seed), archive);
     }
 
     public Roster Roster { get; } = new();

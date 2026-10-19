@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Battleship.Core;
 using Battleship.Core.Protocol;
 using Battleship.Server.Dashboard;
+using Battleship.Server.Data;
 using Battleship.Server.Engine;
 using Battleship.Server.Lobby;
 using Battleship.Server.Net;
@@ -23,6 +24,7 @@ public sealed class GameHost
     private readonly Dictionary<string, ClientSession> _sessions = new();
     private readonly Roster _roster = new();
     private readonly MatchEngine _engine;
+    private readonly DatabaseWorker? _database;
     private readonly List<DashboardEvent> _activity = new();
     private DashboardSnapshot _snapshot = DashboardSnapshot.Empty;
 
@@ -32,9 +34,11 @@ public sealed class GameHost
     /// <c>GameRules.TurnSeconds</c>.
     /// </param>
     /// <param name="random">First player and auto-fire cell; tests pass a seeded one.</param>
-    public GameHost(TimeSpan turnDuration, Random random)
+    /// <param name="database">Accounts and match history; null keeps nothing (tests, or a file that failed to open).</param>
+    public GameHost(TimeSpan turnDuration, Random random, GameDatabase? database = null)
     {
-        _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random);
+        _database = database == null ? null : new DatabaseWorker(database);
+        _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random, _database);
     }
 
     /// <summary>The latest state for the dashboard, replaced after every input.</summary>
@@ -63,8 +67,9 @@ public sealed class GameHost
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Shutting down.
+            // Shutting down: let queued saves finish.
         }
+        if (_database != null) await _database.CompleteAsync();
     }
 
     // Whatever changes the roster produces one lobby, sent after the input's
