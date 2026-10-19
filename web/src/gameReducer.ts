@@ -194,10 +194,11 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       }
     }
 
-    // From the lobby, or again from the history screen to retry a failed first page.
+    // From the lobby, or again from the history screen to retry a failed first
+    // page. A lobby notice ("Bob left the game") is done with by now.
     case 'openHistory':
       return state.screen === 'lobby' || state.screen === 'history'
-        ? { ...state, screen: 'history', history: null, historyFailed: false }
+        ? { ...state, screen: 'history', history: null, historyFailed: false, notice: null }
         : state
 
     case 'loadMoreHistory':

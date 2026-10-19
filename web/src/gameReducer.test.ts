@@ -211,6 +211,11 @@ describe('match history', () => {
     expect(open.history).toBeNull()
   })
 
+  it('opening it clears an old lobby notice', () => {
+    const left = { ...lobby, notice: { text: 'Bob left the game' } }
+    expect(gameReducer(left, { type: 'openHistory' }).notice).toBeNull()
+  })
+
   it('a history message fills the screen', () => {
     const state = gameReducer(open, page1)
     expect(state.history?.stats).toEqual(stats)
