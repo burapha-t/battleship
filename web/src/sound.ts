@@ -5,6 +5,14 @@ export type Sound = 'hit' | 'miss' | 'sunk' | 'win' | 'lose'
 
 const MUTE_KEY = 'battleship.muted'
 
+let effectsVolume = 0.85
+let backgroundVolume = 0.7
+export function setSoundVolumes(music: number, effects: number) {
+  backgroundVolume = Math.max(0, Math.min(1, music))
+  effectsVolume = Math.max(0, Math.min(1, effects))
+  if (musicGain) musicGain.gain.value = musicEnabled ? 0.05 * backgroundVolume : 0
+}
+
 let muted = readMuted()
 let audio: AudioContext | null = null
 
@@ -71,7 +79,7 @@ function tone(ctx: AudioContext, at: number, from: number, to: number, seconds: 
   osc.type = type
   osc.frequency.setValueAtTime(from, at)
   osc.frequency.exponentialRampToValueAtTime(to, at + seconds)
-  gain.gain.setValueAtTime(volume, at)
+  gain.gain.setValueAtTime(volume * effectsVolume, at)
   gain.gain.exponentialRampToValueAtTime(0.001, at + seconds)
   osc.connect(gain).connect(ctx.destination)
   osc.start(at)
@@ -90,7 +98,7 @@ function noise(ctx: AudioContext, at: number, seconds: number, cutoff: number, v
   filter.frequency.setValueAtTime(cutoff, at)
   filter.frequency.exponentialRampToValueAtTime(cutoff / 8, at + seconds)
   const gain = ctx.createGain()
-  gain.gain.setValueAtTime(volume, at)
+  gain.gain.setValueAtTime(volume * effectsVolume, at)
   gain.gain.exponentialRampToValueAtTime(0.001, at + seconds)
   source.connect(filter).connect(gain).connect(ctx.destination)
   source.start(at)
@@ -108,7 +116,7 @@ function musicNote() {
     musicGain = audio.createGain()
     musicGain.connect(audio.destination)
   }
-  musicGain.gain.value = 0.035
+  musicGain.gain.value = 0.05 * backgroundVolume
   const oscillator = audio.createOscillator()
   const envelope = audio.createGain()
   oscillator.type = 'sine'

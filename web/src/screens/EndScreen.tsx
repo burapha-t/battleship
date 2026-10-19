@@ -1,3 +1,4 @@
+import { DesignIcon } from '../components/DesignIcon'
 import { usePreferences } from '../preferences'
 import { useState } from 'react'
 import { matchSides } from '../gameReducer'
@@ -7,7 +8,7 @@ import './screens.css'
 const CONFETTI = ['var(--coral)', 'var(--kelp)', 'var(--lilac)', 'var(--sun)']
 
 /** Win or Lost from `matchEnd.winnerId`, both scores, and the rematch handshake. */
-export function EndScreen({ state, onRematch }: { state: GameState; onRematch: () => void }) {
+export function EndScreen({ state, onRematch, onHome }: { state: GameState; onRematch: () => void; onHome: () => void }) {
   const { t } = usePreferences()
   const { me, opponent } = matchSides(state)
   const opponentName = opponent?.name ?? t('Your opponent', 'คู่แข่งของคุณ')
@@ -27,7 +28,7 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
 
   return (
     <main className="end">
-      <div className={`card result ${won ? 'win' : 'lost'}`}>
+      <div className={`card result ${won ? 'win' : 'lost'}`}><div className="result-cap"><i/><i/><i/><span>{t(`${me?.name ?? 'Captain'}’s screen`, `หน้าจอของ ${me?.name ?? 'กัปตัน'}`)}</span></div>
         {won &&
           Array.from({ length: 12 }, (_, i) => (
             <span
@@ -60,9 +61,10 @@ export function EndScreen({ state, onRematch }: { state: GameState; onRematch: (
             </div>
           ))}
         </div>
+        <div className="result-actions"><button type="button" className="btn white" onClick={onHome}><DesignIcon name="home" />{t('Home', 'หน้าหลัก')}</button>
         <button type="button" className={`btn big${iAsked ? ' pressed' : ''}`} disabled={iAsked} onClick={rematch}>
           {iAsked ? t('Rematch requested', 'ส่งคำขอแข่งใหม่แล้ว') : t('Rematch', 'แข่งใหม่')}
-        </button>
+        </button></div>
         {iAsked ? (
           <p className="note" role="status">
             <span className="dot sun" />

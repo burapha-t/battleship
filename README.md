@@ -59,18 +59,21 @@ credentials. Passwords are neither stored nor transmitted, and no account is
 created. Joining an online game still requires the existing client relay and
 server described above. The offline `?replay=p1` workflow remains available.
 
-The navigation includes a searchable global leaderboard, a personal profile,
-and settings. The profile uses the current captain name and includes an overview,
-Elo progress, match history with result filters and expandable details, and
-achievement badges. Avatar colors can be customized and are remembered on this
-device per captain name. Leaderboard, history, badge, and Elo values are explicitly labeled
+The UI follows the October 19 handoff in `docs/frontend/`: captain-ID login and
+sign-up tickets, compact icon navigation, wins-based leaderboard, match-history
+table, a profile editor with eight sea-creature avatars and three badge families,
+a settings popup, and the revised gameplay HUD and result window. Choose up to
+three unlocked badges and use Save profile to remember the avatar and badges on
+this device per captain name. Rankings, history and badge progress are labeled
 sample data from `web/src/features/data.ts`; they do not track live matches.
 
-English/Thai applies to the game and the new screens. Language, effects mute,
-background music, and streak notification preferences are saved on the device.
-Music and effects are synthesized locally and start after browser interaction.
-Live hit streaks use server-confirmed shots: three or more consecutive hits
-trigger a notification, the player's miss resets it, and opponent shots do not
-interrupt it. Settings includes a notification preview.
+English/Thai applies to the game and new screens, and the server dashboard has
+its own language switch. Language, music and effects volumes, and streak
+notification preferences are saved on the device. Audio is synthesized locally
+and starts after browser interaction. Live hit streaks use server-confirmed shots:
+three or more consecutive hits trigger a notification, the player's miss resets
+it, and opponent shots do not interrupt it. Settings includes a notification
+preview. The result screen's Home button reconnects with the same demo captain
+name; the server still treats this as a fresh player session.
 
 Frontend checks: `npm run build`, `npm test`, and `npm run lint` in `web/`.

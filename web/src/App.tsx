@@ -1,13 +1,12 @@
 import { localizeMessage } from './localizeMessage'
-import { useReducer, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { usePreferences } from './preferences'
 import { PreferencesProvider } from './PreferencesProvider'
-import { LeaderboardScreen, LoginScreen, Navigation, SettingsScreen } from './features/FeatureScreens'
+import { HistoryScreen, LeaderboardScreen, LoginScreen, SettingsModal, UtilityNavigation } from './features/FeatureScreens'
 import { ProfileScreen } from './features/ProfileScreen'
 import type { Page } from './features/FeatureScreens'
 import { StreakNotification } from './features/StreakNotification'
 import { ErrorToast } from './components/ErrorToast'
-import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
 import { gameReducer, initialState } from './gameReducer'
@@ -18,6 +17,7 @@ import { GameScreen } from './screens/GameScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
+import './features/redesign.css'
 import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
@@ -26,26 +26,39 @@ export default function App() {
 }
 
 function GameApp() {
-  const { t, language, setLanguage } = usePreferences()
+  const { t, language } = usePreferences()
   const [page, setPage] = useState<Page>('play')
-  const [profile, setProfile] = useState<{ name: string; guest: boolean } | null>(() => new URLSearchParams(window.location.search).has('replay') ? { name: 'Replay', guest: true } : null)
-  const [previewStreak, setPreviewStreak] = useState(0)
+  const [profile, setProfile] = useState<{ name: string; guest: boolean } | null>(() => {
+    if (new URLSearchParams(window.location.search).has('replay')) return { name: 'Replay', guest: true }
+    try {
+      const raw = sessionStorage.getItem('battleship.return-home')
+      const saved = raw ? JSON.parse(raw) : null
+      if (saved && typeof saved.name === 'string' && saved.name.trim() && saved.name.length <= 16 && typeof saved.guest === 'boolean') return saved
+    } catch { /* Returning home still works when browser storage is blocked. */ }
+    return null
+  })
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
+  useEffect(() => { try { sessionStorage.removeItem('battleship.return-home') } catch {} }, [])
+  const returnHome = () => {
+    try { sessionStorage.setItem('battleship.return-home', JSON.stringify({ name: state.myName ?? profile?.name ?? 'Captain', guest: profile?.guest ?? true })) } catch {}
+    window.location.reload()
+  }
 
   return (
-    <div className="app">
+    <div className={`app redesign ${!profile ? 'auth-view' : page === 'play' ? `stage-${state.screen}` : `page-${page}`}`}>
       <svg className="waves" viewBox="0 0 1280 110" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3" />
         <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" strokeWidth="3" />
       </svg>
-      <Header state={state} />
-      <div className="account-tools"><span>{profile ? `${profile.name} · ${profile.guest ? t('Guest', 'ผู้เยี่ยมชม') : t('Demo profile', 'โปรไฟล์ตัวอย่าง')}` : t('Welcome to the fleet', 'ยินดีต้อนรับสู่กองเรือ')}</span><button type="button" className="btn white small" onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}>{language === 'en' ? 'ไทย' : 'English'}</button>{profile && state.myName === null && <button type="button" className="text-button" onClick={() => { setProfile(null); setPage('play') }}>{t('Leave profile', 'ออกจากโปรไฟล์')}</button>}</div>
-      <Navigation page={page} onNavigate={setPage} />
+      <div className="bubbles" aria-hidden><span /><span /><span /><span /><span /></div>
+      <UtilityNavigation page={page} stage={state.screen} authenticated={profile !== null} online={state.lobby.length} onNavigate={setPage} onSettings={() => setSettingsOpen(true)} onLogout={() => window.location.reload()} />
       {page === 'play' && profile && <LinkBanner link={link} connected={state.myId !== null} />}
-      <StreakNotification state={state} preview={page === 'settings' ? previewStreak : 0} />
+      <StreakNotification state={state} preview={0} />
       <Notice notice={state.notice} />
-      {page === 'leaderboard' ? <LeaderboardScreen /> : page === 'profile' ? <ProfileScreen key={state.myName ?? profile?.name ?? 'preview'} name={state.myName ?? profile?.name ?? null} guest={profile?.guest ?? false} onPlay={() => setPage('play')} /> : page === 'settings' ? <SettingsScreen onPreviewStreak={() => setPreviewStreak(value => value + 1)} /> : null}
+      {page === 'leaderboard' ? <LeaderboardScreen name={state.myName ?? profile?.name ?? 'Alice'} /> : page === 'profile' ? <ProfileScreen key={state.myName ?? profile?.name ?? 'preview'} name={state.myName ?? profile?.name ?? 'Alice'} /> : page === 'history' ? <HistoryScreen name={state.myName ?? profile?.name ?? 'Alice'} /> : null}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
       <div className="play-content" hidden={page !== 'play'}>
       {!profile ? <LoginScreen onEnter={(name, guest) => setProfile({ name, guest })} /> : state.fatal ? (
         <main className="card fatal" role="alert">
@@ -53,7 +66,7 @@ function GameApp() {
           <p>{localizeMessage(state.fatal, language)}</p>
         </main>
       ) : (
-        <Screen initialNickname={profile.name} state={state} send={send} placeShips={(ships) => {
+        <Screen onHome={returnHome} initialNickname={profile.name} state={state} send={send} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
@@ -65,9 +78,9 @@ function GameApp() {
   )
 }
 
-type ScreenProps = { initialNickname: string; state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
+type ScreenProps = { onHome: () => void; initialNickname: string; state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
 
-function Screen({ initialNickname, state, send, placeShips }: ScreenProps) {
+function Screen({ onHome, initialNickname, state, send, placeShips }: ScreenProps) {
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
@@ -86,6 +99,6 @@ function Screen({ initialNickname, state, send, placeShips }: ScreenProps) {
     case 'game':
       return <GameScreen state={state} onFire={([row, col]) => send({ type: 'fire', row, col })} />
     case 'end':
-      return <EndScreen state={state} onRematch={() => send({ type: 'rematch' })} />
+      return <EndScreen onHome={onHome} state={state} onRematch={() => send({ type: 'rematch' })} />
   }
 }

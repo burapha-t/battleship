@@ -64,6 +64,11 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .legend{display:flex;gap:18px;align-items:center;font-weight:800;font-size:14px}
 .legend .sw{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:inline-block;vertical-align:middle;margin-right:6px}
 
+.iconbtn{width:44px;height:44px;display:inline-grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:13px;
+  box-shadow:0 4px 0 var(--ink);flex:none;cursor:pointer}
+.iconbtn svg{width:26px;height:26px}
+.hdr-right{display:flex;gap:12px;align-items:center}
+
 .app{padding:24px 34px}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:34px}
@@ -84,6 +89,10 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .sc.lead{background:var(--sun)}
 .vs{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px}
 .screen .btn{font-size:28px;padding:10px 54px}
+.actions{display:flex;gap:16px;align-items:center}
+.screen .btn.home{font-size:22px;padding:10px 22px;height:62px}
+.screen .btn.rm{height:62px;white-space:nowrap}
+.screen .btn.pressed.rm{font-size:23px;padding:10px 26px}
 .note{margin-top:22px;font-size:15px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:8px}
 .conf{position:absolute;width:14px;height:22px;border:2.5px solid var(--ink);border-radius:4px}
 </style></head>
@@ -91,20 +100,20 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3"/>
 <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" stroke-width="3"/>
 </svg>
-<div class="top"><div class="logo"><b>Battle</b>ship</div><span class="pill">Match 3 is over</span></div>
+<div class="top"><div class="logo"><b>Battle</b>ship</div><div class="hdr-right"><span class="pill">Match 3 is over</span><a class="iconbtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(0 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(45 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(90 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(135 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(180 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(225 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(270 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="6.6" fill="#fff"/><circle cx="12" cy="12" r="2.6" fill="#FFC83D"/></svg></a></div></div>
 <div class="duo">
  <div class="card screen win"><div class="cap"><i></i><i></i><i></i>&nbsp;Alice's screen</div><div class="in"><span class="conf" style="left:60px;top:40px;background:var(--coral);transform:rotate(20deg)"></span><span class="conf" style="left:120px;top:120px;background:var(--kelp);transform:rotate(-30deg)"></span><span class="conf" style="left:470px;top:60px;background:var(--lilac);transform:rotate(40deg)"></span><span class="conf" style="left:520px;top:150px;background:var(--sun);transform:rotate(-15deg)"></span><span class="conf" style="left:40px;top:220px;background:var(--sun);transform:rotate(60deg)"></span><span class="conf" style="left:510px;top:260px;background:var(--coral);transform:rotate(-50deg)"></span><span class="conf" style="left:90px;top:330px;background:var(--lilac);transform:rotate(10deg)"></span><span class="conf" style="left:500px;top:380px;background:var(--kelp);transform:rotate(35deg)"></span>
   <div class="status">Win</div>
   <div class="line">You sank all 4 of Bob's ships!</div>
   <div class="scores"><div class="sc lead"><div class="n">Alice</div><div class="v">2</div></div><div class="vs">vs</div><div class="sc"><div class="n">Bob</div><div class="v">1</div></div></div>
-  <a class="btn">Rematch</a>
+  <div class="actions"><a class="btn white home"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="#14325A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" stroke-width="2.8" stroke-linejoin="round"/><rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" stroke-width="2"/></svg>Home</a><a class="btn rm">Rematch</a></div>
   <div class="note"><span class="dot"></span>Bob wants a rematch. You'll fire first as the winner.</div>
  </div></div>
  <div class="card screen lost"><div class="cap"><i></i><i></i><i></i>&nbsp;Bob's screen</div><div class="in">
   <div class="status">Lost</div>
   <div class="line">Alice sank your whole fleet this time.</div>
   <div class="scores"><div class="sc lead"><div class="n">Alice</div><div class="v">2</div></div><div class="vs">vs</div><div class="sc"><div class="n">Bob</div><div class="v">1</div></div></div>
-  <a class="btn pressed">Rematch requested</a>
+  <div class="actions"><a class="btn white home"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="#14325A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" stroke-width="2.8" stroke-linejoin="round"/><rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" stroke-width="2"/></svg>Home</a><a class="btn pressed rm">Rematch requested</a></div>
   <div class="note"><span class="dot sun"></span>Waiting for Alice to accept…</div>
  </div></div>
 </div></div></body></html>

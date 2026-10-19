@@ -9,9 +9,13 @@ export type PreferencesValue = {
   toggleMusic: () => void
   streaks: boolean
   toggleStreaks: () => void
+  musicVolume: number
+  effectsVolume: number
+  setMusicVolume: (value: number) => void
+  setEffectsVolume: (value: number) => void
   t: (en: string, th?: string) => string
 }
-export const Preferences = createContext<PreferencesValue>({ language: 'en', setLanguage: () => {}, effects: true, toggleEffects: () => {}, music: false, toggleMusic: () => {}, streaks: true, toggleStreaks: () => {}, t: en => en })
+export const Preferences = createContext<PreferencesValue>({ musicVolume: 0, effectsVolume: 85, setMusicVolume: () => {}, setEffectsVolume: () => {}, language: 'en', setLanguage: () => {}, effects: true, toggleEffects: () => {}, music: false, toggleMusic: () => {}, streaks: true, toggleStreaks: () => {}, t: en => en })
 export const usePreferences = () => useContext(Preferences)
 export function readPreference<T>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value === null ? fallback : JSON.parse(value) as T } catch { return fallback }

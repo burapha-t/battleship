@@ -1,25 +1,35 @@
 export const captains = [
-  { name: 'CoralQueen', elo: 1924, wins: 124, losses: 38, color: 'var(--coral)' },
-  { name: 'WaveRider', elo: 1856, wins: 112, losses: 42, color: 'var(--sea)' },
-  { name: 'AdmiralMango', elo: 1782, wins: 98, losses: 37, color: 'var(--sun)' },
-  { name: 'SeaBreeze', elo: 1640, wins: 86, losses: 44, color: 'var(--kelp)' },
-  { name: 'Captain', elo: 1480, wins: 42, losses: 26, color: 'var(--lilac)' },
-  { name: 'TinyTorpedo', elo: 1412, wins: 38, losses: 29, color: 'var(--peach)' },
-  { name: 'BlueFin', elo: 1296, wins: 25, losses: 24, color: 'var(--foam)' },
+  { name: 'Mira', wins: 11, color: 'var(--sea)' },
+  { name: 'Bob', wins: 9, color: 'var(--lilac)' },
+  { name: 'Alice', wins: 8, color: 'var(--sun)' },
+  { name: 'Ken', wins: 7, color: 'var(--lilac)' },
+  { name: 'Chloe', wins: 6, color: 'var(--peach)' },
+  { name: 'Ploy', wins: 5, color: 'var(--peach)' },
+  { name: 'Dan', wins: 4, color: 'var(--kelp)' },
+  { name: 'Tom', wins: 3, color: 'var(--kelp)' },
+  { name: 'Nina', wins: 2, color: 'var(--paper)' },
+  { name: 'Sam', wins: 1, color: 'var(--paper)' },
 ]
 export const matches = [
-  { id: 'BS-1048', opponent: 'SeaBreeze', won: true, change: 24, elo: 1480, accuracy: 64, shots: 25, date: '2026-10-15T08:40:00+07:00', duration: '06:20', streak: 4 },
-  { id: 'BS-1047', opponent: 'WaveRider', won: false, change: -16, elo: 1456, accuracy: 48, shots: 25, date: '2026-10-15T08:10:00+07:00', duration: '07:05', streak: 2 },
-  { id: 'BS-1046', opponent: 'BlueFin', won: true, change: 18, elo: 1472, accuracy: 73, shots: 22, date: '2026-10-14T19:15:00+07:00', duration: '05:40', streak: 5 },
-  { id: 'BS-1045', opponent: 'TinyTorpedo', won: true, change: 22, elo: 1454, accuracy: 59, shots: 27, date: '2026-10-14T18:30:00+07:00', duration: '06:55', streak: 3 },
-  { id: 'BS-1044', opponent: 'CoralQueen', won: false, change: -12, elo: 1432, accuracy: 44, shots: 25, date: '2026-10-13T20:00:00+07:00', duration: '07:30', streak: 2 },
+  { opponent: 'Bob', won: true, score: '2–1', hits: 16, shots: 28, date: '2026-10-09T12:31:00+07:00', color: 'var(--lilac)' },
+  { opponent: 'Bob', won: true, score: '1–1', hits: 16, shots: 34, date: '2026-10-09T12:18:00+07:00', color: 'var(--lilac)' },
+  { opponent: 'Bob', won: false, score: '0–1', hits: 12, shots: 30, date: '2026-10-09T12:07:00+07:00', color: 'var(--lilac)' },
+  { opponent: 'Chloe', won: true, score: '3–1', hits: 16, shots: 25, date: '2026-10-08T19:42:00+07:00', color: 'var(--peach)' },
+  { opponent: 'Chloe', won: true, score: '2–1', hits: 16, shots: 31, date: '2026-10-08T19:30:00+07:00', color: 'var(--peach)' },
+  { opponent: 'Chloe', won: false, score: '1–1', hits: 13, shots: 33, date: '2026-10-08T19:15:00+07:00', color: 'var(--peach)' },
+  { opponent: 'Chloe', won: true, score: '1–0', hits: 16, shots: 29, date: '2026-10-08T19:02:00+07:00', color: 'var(--peach)' },
+  { opponent: 'Dan', won: true, score: '2–0', hits: 16, shots: 22, date: '2026-10-07T21:10:00+07:00', color: 'var(--kelp)' },
+  { opponent: 'Dan', won: true, score: '1–0', hits: 16, shots: 27, date: '2026-10-07T20:58:00+07:00', color: 'var(--kelp)' },
+  { opponent: 'Bob', won: false, score: '1–2', hits: 14, shots: 35, date: '2026-10-06T18:44:00+07:00', color: 'var(--lilac)' },
+  { opponent: 'Bob', won: true, score: '1–1', hits: 16, shots: 30, date: '2026-10-06T18:30:00+07:00', color: 'var(--lilac)' },
+  { opponent: 'Bob', won: false, score: '0–1', hits: 11, shots: 32, date: '2026-10-06T18:17:00+07:00', color: 'var(--lilac)' },
 ]
-export const badges = [
-  { icon: '⚓', en: 'First command', th: 'กัปตันมือใหม่', desc: 'Finish your first match', thai: 'เล่นจบแมตช์แรก', value: 1, goal: 1, color: 'var(--foam)' },
-  { icon: '🏆', en: 'Victory at sea', th: 'ชัยชนะกลางทะเล', desc: 'Win 10 matches', thai: 'ชนะ 10 แมตช์', value: 10, goal: 10, color: 'var(--sun)' },
-  { icon: '🔥', en: 'On fire', th: 'ร้อนแรง', desc: 'Land 3 hits in a row', thai: 'ยิงโดนติดต่อกัน 3 ครั้ง', value: 3, goal: 3, color: 'var(--peach)' },
-  { icon: '🎯', en: 'Sharpshooter', th: 'มือแม่น', desc: 'Reach 70% accuracy in a match', thai: 'ยิงแม่น 70% ในหนึ่งแมตช์', value: 70, goal: 70, color: 'var(--kelp)' },
-  { icon: '🚢', en: 'Fleet legend', th: 'ตำนานกองเรือ', desc: 'Win 100 matches', thai: 'ชนะ 100 แมตช์', value: 42, goal: 100, color: 'var(--lilac)' },
-  { icon: '👑', en: 'Admiral', th: 'พลเรือเอก', desc: 'Reach 1,800 Elo', thai: 'มีคะแนน Elo ถึง 1,800', value: 1480, goal: 1800, color: 'var(--sun)' },
+export const avatarOptions = [
+  ['whale', 'Whale', 'วาฬ'], ['octopus', 'Octopus', 'หมึก'], ['crab', 'Crab', 'ปู'], ['pufferfish', 'Pufferfish', 'ปลาปักเป้า'],
+  ['turtle', 'Turtle', 'เต่า'], ['jellyfish', 'Jellyfish', 'แมงกะพรุน'], ['starfish', 'Starfish', 'ดาวทะเล'], ['shark', 'Shark', 'ฉลาม'],
 ]
-export function rank(elo: number): [string, string] { return elo >= 1800 ? ['Admiral', 'พลเรือเอก'] : elo >= 1500 ? ['Commander', 'ผู้บัญชาการ'] : elo >= 1200 ? ['Captain', 'กัปตัน'] : ['Cadet', 'นักเรียนนายเรือ'] }
+export const badgeGroups = [
+  { id: 'wins', en: 'Win count', th: 'จำนวนชัยชนะ', best: 8, values: [5, 10, 20, 50, 100], colors: ['#FFF1C2', '#FFE08A', '#FFC83D', '#F2A81D', '#D98A0B'], icon: 'trophy' as const },
+  { id: 'accuracy', en: 'Accuracy', th: 'ความแม่นยำ', best: 73, values: [40, 50, 60, 70, 80], colors: ['#CFE8FB', '#9CCDF3', '#5AAEEB', '#2F8FE0', '#1E6FBF'], icon: 'target' as const },
+  { id: 'streak', en: 'Hit streak', th: 'ยิงโดนต่อเนื่อง', best: 6, values: [4, 6, 8, 10, 12], colors: ['#FFD3CF', '#FFA9A3', '#FF7A70', '#FF4F5E', '#D9283A'], icon: 'fire' as const },
+]

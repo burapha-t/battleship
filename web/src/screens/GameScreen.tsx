@@ -1,5 +1,7 @@
 import { usePreferences } from '../preferences'
 import { useEffect, useState } from 'react'
+import { Avatar } from '../components/Avatar'
+import { DesignIcon } from '../components/DesignIcon'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
 import { Countdown } from '../components/Countdown'
@@ -63,6 +65,11 @@ export function GameScreen({ state, onFire }: Props) {
 
   return (
     <main className="game">
+      <div className="game-hud">
+        <div className={`card game-player${myTurn ? ' turn' : ''}`}><Avatar name={me?.name ?? ''} color="var(--sun)" /><div className="game-player-name">{me?.name}<small>{t('You', 'คุณ')}</small></div><b className="game-player-score">{me?.score ?? 0}</b></div>
+        {turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />}
+        <div className={`card game-player opponent${!myTurn ? ' turn' : ''}`}><Avatar name={opponentName} color="var(--lilac)" /><div className="game-player-name">{opponentName}<small>{t('Opponent', 'คู่แข่ง')}</small></div><b className="game-player-score">{opponent?.score ?? 0}</b></div>
+      </div>
       <div className={`banner${myTurn ? '' : ' theirs'}`} role="status">
         {myTurn ? t(`Your turn! Pick one slot in ${opponentName}'s waters`, `ตาคุณ! เลือกยิงหนึ่งช่องในน่านน้ำของ ${opponentName}`) : t(`${opponentName}'s turn`, `ตาของ ${opponentName}`)}
       </div>
@@ -87,7 +94,6 @@ export function GameScreen({ state, onFire }: Props) {
         </section>
 
         <div className="mid">
-          {turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />}
           <div className="card log">
             <h4>{t('Last shots', 'การยิงล่าสุด')}</h4>
             {state.shots.length === 0 && <p className="empty">{t('No shots yet', 'ยังไม่มีการยิง')}</p>}
@@ -107,6 +113,7 @@ export function GameScreen({ state, onFire }: Props) {
                 </p>
               ))}
           </div>
+          <div className="card streak-levels"><h4>{t('Hot streak', 'ยิงโดนต่อเนื่อง')}</h4><p>{t('Keep landing hits! A miss resets your streak.', 'ยิงให้โดนต่อเนื่อง! ยิงพลาดจะเริ่มนับใหม่')}</p>{[2,3,4].map(level => <div key={level}><span>{t(level === 4 ? '4 or more' : `${level} hits in a row`, level === 4 ? '4 ครั้งขึ้นไป' : `โดนต่อเนื่อง ${level} ครั้ง`)}</span><b><DesignIcon name="fire" />×{level}</b></div>)}</div>
           <div className="legend">
             <span>
               <i className="sw hit">✕</i>{t('Hit', 'โดน')}

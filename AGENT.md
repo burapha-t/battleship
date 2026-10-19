@@ -14,7 +14,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
-| `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard) — the visual direction |
+| `docs/frontend/` | October 19 HTML mockups and scope notes — the visual direction |
 | `tests/fixtures/README.md` | Golden transcript `match-transcript.jsonl`: format, story, what not to depend on |
 | `README.md` | Building `publish/` and running the demo on machines with nothing installed |
 
@@ -25,9 +25,9 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
   `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
-- `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
+- `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; bilingual dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser.
-- `web/`: complete — all five game screens plus sound, bilingual settings, demo login/leaderboard, and a personal profile containing history and badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
+- `web/`: complete — October 19 game screens, captain-ID entry, icon navigation, wins leaderboard, history table, avatar/badge profile editor and bilingual volume-settings modal. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 

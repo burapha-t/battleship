@@ -64,6 +64,11 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .legend{display:flex;gap:18px;align-items:center;font-weight:800;font-size:14px}
 .legend .sw{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:inline-block;vertical-align:middle;margin-right:6px}
 
+.iconbtn{width:44px;height:44px;display:inline-grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:13px;
+  box-shadow:0 4px 0 var(--ink);flex:none;cursor:pointer}
+.iconbtn svg{width:26px;height:26px}
+.hdr-right{display:flex;gap:12px;align-items:center}
+
 .app{background:#EEF6FD}
 .top{display:flex;align-items:center;gap:16px;margin-bottom:22px}
 .top h1{font-size:40px;font-weight:800}
@@ -98,7 +103,7 @@ td .avatar{width:34px;height:34px;font-size:16px;display:inline-grid;vertical-al
 </svg>
 <div class="top"><div class="avatar" style="background:var(--sea);color:#fff">⚓</div><h1>Battleship Server</h1>
  <span class="pill"><span class="dot"></span>Running on port 5050</span>
- <a class="btn coral">Reset game and scores</a></div>
+ <a class="btn coral">Reset game and scores</a><a class="iconbtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(0 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(45 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(90 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(135 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(180 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(225 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(270 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="6.6" fill="#fff"/><circle cx="12" cy="12" r="2.6" fill="#FFC83D"/></svg></a></div>
 <div class="grid2">
  <div>
   <div class="card online"><div class="num">3</div><div><b>Clients online</b><span>Connected to this server right now</span></div></div>

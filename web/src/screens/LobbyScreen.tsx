@@ -34,15 +34,17 @@ export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartG
       <Hero />
       <aside className="home-side">
         <div className="card join">
-          <h2>{t(`Welcome, ${state.myName}.`, `ยินดีต้อนรับ ${state.myName}`)}</h2>
+          <h2>{t('Ahoy, captain', 'สวัสดี กัปตัน')}</h2>
+          <div className="field captain-name-display">{state.myName}</div>
           <p className="hint">
             {searching
-              ? t('You will be paired with the next captain who presses Start game.', 'คุณจะได้จับคู่กับกัปตันคนถัดไปที่กดเริ่มเกม')
-              : t("Press Start game when you're ready to play.", "กดเริ่มเกมเมื่อคุณพร้อมเล่น")}
+              ? t('You will be paired with the next captain who presses Start playing.', 'คุณจะได้จับคู่กับกัปตันคนถัดไปที่กดเริ่มเกม')
+              : t("Press Start playing when you're ready to play.", "กดเริ่มเกมเมื่อคุณพร้อมเล่น")}
           </p>
           <button type="button" className="btn wide" disabled={searching} onClick={start}>
-            {searching ? t('Looking for an opponent…', 'กำลังหาคู่แข่ง…') : t('Start game', 'เริ่มเกม')}
+            {searching ? t('Looking for an opponent…', 'กำลังหาคู่แข่ง…') : t('Start playing', 'เริ่มเล่น')}
           </button>
+          <p className="conn"><span className="dot" />{t('Connected to game server automatically', 'เชื่อมต่อเซิร์ฟเวอร์เกมแล้ว')}</p>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">
           <div className="lobby-head">

@@ -64,6 +64,12 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .legend{display:flex;gap:18px;align-items:center;font-weight:800;font-size:14px}
 .legend .sw{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:inline-block;vertical-align:middle;margin-right:6px}
 
+.iconbtn{width:44px;height:44px;display:inline-grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:13px;
+  box-shadow:0 4px 0 var(--ink);flex:none;cursor:pointer}
+.iconbtn svg{width:26px;height:26px}
+.hdr-right{display:flex;gap:12px;align-items:center}
+
+.app > .topnav{position:absolute !important;top:26px;right:40px;display:flex;gap:12px;z-index:3}
 .home{display:grid;grid-template-columns:1fr 470px;gap:44px;height:100%;align-items:center;padding-bottom:60px}
 .hero h1{font-size:118px;font-weight:800;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;
   text-shadow:7px 7px 0 var(--ink);transform:rotate(-3deg);transform-origin:left;margin-bottom:6px}
@@ -71,7 +77,7 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 .hero svg{display:block;margin:6px 0 0 40px}
 .side{display:flex;flex-direction:column;gap:22px}
 .join{padding:26px 28px}
-.join h2{font-size:30px;margin-bottom:4px}
+.join h2{font-size:32px;margin-bottom:18px}
 .join .hint{color:var(--muted);font-weight:700;font-size:15px;margin-bottom:16px}
 .field{display:flex;align-items:center;border:3px solid var(--ink);border-radius:16px;background:var(--mist);height:60px;padding:0 18px;
   font-size:24px;font-weight:800;margin-bottom:18px}
@@ -91,6 +97,7 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
 <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3"/>
 <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" stroke-width="3"/>
 </svg>
+<nav class="topnav"><a class="iconbtn" title="Leaderboard" aria-label="Leaderboard"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4.5a5 5 0 0 1-10 0z" fill="#FFC83D"/><path d="M7 6H4.5c0 2.4 1.2 4 3.2 4.2M17 6h2.5c0 2.4-1.2 4-3.2 4.2M12 13.5V17"/><rect x="8" y="17" width="8" height="3.5" rx="1" fill="#FFC83D"/></svg></a><a class="iconbtn" title="Match history" aria-label="Match history"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 13A8 8 0 1 0 6.3 6.3" fill="none"/><path d="M3.5 3.5v4.2h4.2"/><circle cx="12" cy="12.5" r="5.2" fill="#E6F1FB" stroke="none"/><path d="M12 8.5v4.2l2.8 1.8"/></svg></a><a class="iconbtn" title="Profile" aria-label="Profile"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4.2" fill="#FFC83D"/><path d="M4.5 20.5c.8-4 3.8-6.3 7.5-6.3s6.7 2.3 7.5 6.3z" fill="#FFC83D"/></svg></a><a class="iconbtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#14325A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(0 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(45 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(90 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(135 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(180 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(225 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(270 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="1" fill="#14325A" stroke="none" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="6.6" fill="#fff"/><circle cx="12" cy="12" r="2.6" fill="#FFC83D"/></svg></a></nav>
 <div class="home">
  <section class="hero">
   <h1>Battleship</h1>
@@ -114,9 +121,7 @@ h1,h2,h3,.display{font-family:'Baloo 2','Trebuchet MS',sans-serif;line-height:1.
  </section>
  <aside class="side">
   <div class="card join">
-   <h2>Ahoy, captain!</h2>
-   <div class="hint">Choose a nickname your opponent will see.</div>
-   <div class="field">Alice<span class="caret"></span></div>
+   <h2>Ahoy, captain Alice</h2>
    <a class="btn">Start playing</a>
    <div class="conn"><span class="dot"></span>Connected to game server automatically</div>
   </div>

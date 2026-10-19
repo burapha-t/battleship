@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <None Update="Dashboard\index.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Dashboard\FONT-LICENSES.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>
