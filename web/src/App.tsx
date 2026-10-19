@@ -1,8 +1,9 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
+import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
 import type { GameState, HistoryAction } from './gameReducer'
@@ -18,6 +19,7 @@ import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
 export default function App() {
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
   const screen = useEndDelay(state.screen)
@@ -33,7 +35,7 @@ export default function App() {
         <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3" />
         <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" strokeWidth="3" />
       </svg>
-      <Header state={state} />
+      <Header state={state} onOpenSettings={() => setSettingsOpen(true)} />
       <LinkBanner link={link} connected={state.myId !== null} />
       <Notice notice={state.notice} />
       {state.fatal ? (
@@ -53,6 +55,7 @@ export default function App() {
         }} />
       )}
       <ErrorToast error={state.lastError} />
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

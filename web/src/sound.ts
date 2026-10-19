@@ -1,5 +1,6 @@
 // Background music and sound effects, played from the clips in
-// assets/sounds through the Web Audio API. Mute is remembered in localStorage.
+// assets/sounds through the Web Audio API. Device volumes come from #43.
+import { getSettings, subscribeSettings, updateSettings } from './settings'
 import hitUrl from './assets/sounds/hit.mp3'
 import loseUrl from './assets/sounds/lose.mp3'
 import missUrl from './assets/sounds/miss.mp3'
@@ -12,7 +13,6 @@ export type Sound = 'hit' | 'miss' | 'sunk' | 'win' | 'lose'
 /** Where the player is: the music is quieter once a match has begun. */
 export type Scene = 'menu' | 'match' | 'result'
 
-const MUTE_KEY = 'battleship.muted'
 const CLIPS: Record<Sound | 'music', string> = {
   hit: hitUrl,
   miss: missUrl,
@@ -26,7 +26,6 @@ const EFFECTS_VOLUME = 0.8
 
 type Engine = { ctx: AudioContext; master: GainNode; music: GainNode; effects: GainNode }
 
-let muted = readMuted()
 let scene: Scene = 'menu'
 let engine: Engine | null = null
 const buffers = new Map<Sound | 'music', AudioBuffer>()
@@ -49,13 +48,13 @@ function start(): Engine {
   const ctx = new AudioContext()
   void ctx.resume()
   const master = ctx.createGain()
-  master.gain.value = muted ? 0 : 1
+  master.gain.value = 1
   master.connect(ctx.destination)
   const music = ctx.createGain()
-  music.gain.value = MUSIC_VOLUME[scene]
+  music.gain.value = MUSIC_VOLUME[scene] * getSettings().musicVolume / 100
   music.connect(master)
   const effects = ctx.createGain()
-  effects.gain.value = EFFECTS_VOLUME
+  effects.gain.value = EFFECTS_VOLUME * getSettings().effectsVolume / 100
   effects.connect(master)
 
   for (const [name, url] of Object.entries(CLIPS) as [Sound | 'music', string][]) {
@@ -79,26 +78,18 @@ function start(): Engine {
   return { ctx, master, music, effects }
 }
 
-function readMuted(): boolean {
-  try {
-    return localStorage.getItem(MUTE_KEY) === '1'
-  } catch {
-    return false // storage blocked (private window, file://, …): default to sound on
-  }
-}
+// Keep channels independent; scene changes retain the player's music level.
+subscribeSettings(() => {
+  if (!engine) return
+  engine.music.gain.setTargetAtTime(MUSIC_VOLUME[scene] * getSettings().musicVolume / 100, engine.ctx.currentTime, 0.05)
+  engine.effects.gain.setTargetAtTime(EFFECTS_VOLUME * getSettings().effectsVolume / 100, engine.ctx.currentTime, 0.05)
+})
 
 export function isMuted(): boolean {
-  return muted
+  return getSettings().musicVolume === 0 && getSettings().effectsVolume === 0
 }
-
 export function setMuted(value: boolean): void {
-  muted = value
-  engine?.master.gain.setTargetAtTime(value ? 0 : 1, engine.ctx.currentTime, 0.05)
-  try {
-    localStorage.setItem(MUTE_KEY, value ? '1' : '0')
-  } catch {
-    // Not remembered, but still applies for this page.
-  }
+  updateSettings({ musicVolume: value ? 0 : 70, effectsVolume: value ? 0 : 85 })
 }
 
 /** Fades the music to the scene's level; leaving the result screen stops its clip. */
@@ -108,12 +99,12 @@ export function setScene(next: Scene): void {
     ending = null
   }
   scene = next
-  engine?.music.gain.setTargetAtTime(MUSIC_VOLUME[next], engine.ctx.currentTime, 0.4)
+  engine?.music.gain.setTargetAtTime(MUSIC_VOLUME[next] * getSettings().musicVolume / 100, engine.ctx.currentTime, 0.4)
 }
 
 export function playSound(sound: Sound): void {
   const buffer = buffers.get(sound)
-  if (muted || !engine || !buffer) return
+  if (getSettings().effectsVolume === 0 || !engine || !buffer) return
   const source = engine.ctx.createBufferSource()
   source.buffer = buffer
   source.connect(engine.effects)
