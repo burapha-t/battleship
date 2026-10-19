@@ -605,6 +605,29 @@
   font-size: 28px;
 }
 
+.actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Not .home: that's the lobby screen's layout. */
+.btn.go-home {
+  height: 62px;
+  padding: 10px 22px;
+  font-size: 22px;
+}
+
+.btn.big.rm {
+  height: 62px;
+  white-space: nowrap;
+}
+
+.btn.big.pressed.rm {
+  padding: 10px 26px;
+  font-size: 23px;
+}
+
 .note {
   display: flex;
   align-items: center;
@@ -694,6 +717,10 @@
   }
   .hero svg {
     display: none;
+  }
+  .actions {
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .field2 {
     grid-template-columns: minmax(0, 1fr);

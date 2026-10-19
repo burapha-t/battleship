@@ -39,6 +39,10 @@ export default function App() {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
+        }} goHome={() => {
+          // The server answers `leave` with no event of its own; go home locally.
+          send({ type: 'leave' })
+          dispatch({ type: 'wentHome' })
         }} />
       )}
       <ErrorToast error={state.lastError} />
@@ -46,9 +50,14 @@ export default function App() {
   )
 }
 
-type ScreenProps = { state: GameState; send: (verb: ClientVerb) => void; placeShips: (ships: Cell[][]) => void }
+type ScreenProps = {
+  state: GameState
+  send: (verb: ClientVerb) => void
+  placeShips: (ships: Cell[][]) => void
+  goHome: () => void
+}
 
-function Screen({ state, send, placeShips }: ScreenProps) {
+function Screen({ state, send, placeShips, goHome }: ScreenProps) {
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
@@ -66,6 +75,12 @@ function Screen({ state, send, placeShips }: ScreenProps) {
     case 'game':
       return <GameScreen state={state} onFire={([row, col]) => send({ type: 'fire', row, col })} />
     case 'end':
-      return <EndScreen state={state} onRematch={() => send({ type: 'rematch' })} />
+      return (
+        <EndScreen
+          state={state}
+          onRematch={() => send({ type: 'rematch' })}
+          onHome={goHome}
+        />
+      )
   }
 }
