@@ -43,7 +43,7 @@ export function LobbyScreen({ state, onStartGame, onOpenHistory }: Props) {
           <button type="button" className="btn wide" disabled={searching} onClick={start}>
             {searching ? 'Looking for an opponent…' : 'Start game'}
           </button>
-          <button type="button" className="btn white wide join-history" onClick={onOpenHistory}>
+          <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenHistory}>
             Match history
           </button>
         </div>
