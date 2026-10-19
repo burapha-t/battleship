@@ -1,19 +1,17 @@
 // The UI's single source of truth: a pure fold over the server's events. The
-// server is authoritative, so the only local actions are `myShips` — the ships I
-// sent in `place`, which the server never sends back — and `wentHome`.
+// server is authoritative, so the only local action is `myShips` — the ships I
+// sent in `place`, which the server never sends back.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
 import type { Cell, ErrorCode, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'login' | 'lobby' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
 
 export type MyShipsAction = { type: 'myShips'; ships: Cell[][] }
-/** I pressed Home on the end screen. */
-export type WentHomeAction = { type: 'wentHome' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction
+export type GameAction = ServerEvent | MyShipsAction
 
 export type GameState = {
   screen: Screen
@@ -36,12 +34,6 @@ export type GameState = {
   winnerId: string | null
   /** Ids that have a `rematchPending`. */
   rematchFrom: string[]
-  /**
-   * Set by Home. While true a `matchStart` is ignored (the opponent's rematch
-   * can start a new match just as I leave). Cleared by the first `lobby` that
-   * lists me as `idle` or `searching`.
-   */
-  leaving: boolean
   /** `seq` grows on every error, so the same message twice still shows twice. */
   lastError: { code: ErrorCode; message: string; seq: number } | null
   /** A new object per notice, so the same text twice still shows twice. */
@@ -66,7 +58,6 @@ export const initialState: GameState = {
   lobby: [],
   players: [],
   ...noMatch,
-  leaving: false,
   lastError: null,
   notice: null,
 }
@@ -81,19 +72,15 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
           ...state,
           fatal: `This page speaks protocol v${PROTOCOL_VERSION}, but the server speaks v${event.protocolVersion}.`,
         }
-      return { ...state, myId: event.id, screen: 'login' }
+      return { ...state, myId: event.id, screen: 'nickname' }
 
     case 'welcome':
       return { ...state, myName: event.nickname, screen: 'lobby' }
 
-    case 'lobby': {
-      const me = event.clients.find((c) => c.id === state.myId)
-      const back = me?.status === 'idle' || me?.status === 'searching'
-      return { ...state, lobby: event.clients, leaving: back ? false : state.leaving }
-    }
+    case 'lobby':
+      return { ...state, lobby: event.clients }
 
     case 'matchStart':
-      if (state.leaving) return state
       return {
         ...state,
         ...noMatch,
@@ -142,7 +129,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return {
         ...state,
         ...noMatch,
-        // A client that hasn't joined yet stays on the login screen.
+        // A client that hasn't joined yet stays on the nickname screen.
         screen: state.myName === null ? state.screen : 'lobby',
         myScore: 0,
         players: state.players.map((p) => ({ ...p, score: 0 })),
@@ -157,9 +144,6 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'myShips':
       return { ...state, myShips: event.ships }
-
-    case 'wentHome':
-      return { ...state, ...noMatch, screen: 'lobby', leaving: true }
 
     default:
       assertNever(event)

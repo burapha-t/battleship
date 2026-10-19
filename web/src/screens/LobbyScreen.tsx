@@ -15,15 +15,8 @@ const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 
-type Props = {
-  state: GameState
-  /** The link to the game server is open. */
-  connected: boolean
-  onStartGame: () => void
-}
-
-export function LobbyScreen({ state, connected, onStartGame }: Props) {
-  // The lobby list I had when I pressed Start playing. Until the server sends a
+export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartGame: () => void }) {
+  // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
   const myStatus = state.lobby.find((c) => c.id === state.myId)?.status
@@ -39,14 +32,15 @@ export function LobbyScreen({ state, connected, onStartGame }: Props) {
       <Hero />
       <aside className="home-side">
         <div className="card join">
-          <h2>Ahoy, captain {state.myName}</h2>
-          <button type="button" className="btn wide" disabled={searching} onClick={start}>
-            {searching ? 'Looking for an opponent…' : 'Start playing'}
-          </button>
-          <p className="conn">
-            <span className={connected ? 'dot' : 'dot coral'} />
-            {connected ? 'Connected to game server automatically' : 'Disconnected from game server'}
+          <h2>Welcome, {state.myName}.</h2>
+          <p className="hint">
+            {searching
+              ? 'You will be paired with the next captain who presses Start game.'
+              : "Press Start game when you're ready to play."}
           </p>
+          <button type="button" className="btn wide" disabled={searching} onClick={start}>
+            {searching ? 'Looking for an opponent…' : 'Start game'}
+          </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">
           <div className="lobby-head">
