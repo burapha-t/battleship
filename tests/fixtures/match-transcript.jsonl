@@ -20,6 +20,8 @@
 {"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"p3","to":"server","frame":{"type":"historyList","page":1}}
 {"from":"server","to":"p3","frame":{"type":"history","page":1,"stats":{"matchCount":0,"winCount":0,"loseCount":0,"winRate":0,"accuracy":0},"matches":[],"more":false}}
+{"from":"p3","to":"server","frame":{"type":"leaderboardGet"}}
+{"from":"server","to":"p3","frame":{"type":"leaderboard","rows":[]}}
 {"from":"p1","to":"server","frame":{"type":"findMatch"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

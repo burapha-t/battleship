@@ -181,6 +181,10 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, history: { stats, matches: [...shown.matches, ...matches], page, more, loadingMore: false } }
     }
 
+    // Shown by the leaderboard screen (LB-2).
+    case 'leaderboard':
+      return state
+
     case 'error': {
       const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
       // The history screen sends nothing but historyList, so an error there is its answer.

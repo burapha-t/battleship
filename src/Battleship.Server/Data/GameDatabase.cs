@@ -331,6 +331,51 @@ public sealed class GameDatabase
         return new History { Page = page, Stats = stats, Matches = matches, More = more };
     }
 
+    /// <summary>
+    /// The all-time leaderboard (LB-1): every account with a saved match,
+    /// ranked by points (wins), then accuracy, then name A–Z. Players tied on
+    /// points and accuracy as sent (one decimal) share a rank: 1, 1, 3. Every
+    /// shot counts toward accuracy, timeout shots included. At most
+    /// <see cref="Leaderboard.MaxRows"/> rows.
+    /// </summary>
+    public Leaderboard GetLeaderboard()
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT u.username, SUM(mp.won), SUM(mp.hits), SUM(mp.shots)
+            FROM match_players mp JOIN users u ON u.id = mp.user_id
+            GROUP BY u.id;
+            """;
+
+        var players = new List<LeaderboardRow>();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                players.Add(new LeaderboardRow
+                {
+                    Name = reader.GetString(0),
+                    Points = reader.GetInt32(1),
+                    Accuracy = Percent(reader.GetInt64(2), reader.GetInt64(3)),
+                });
+            }
+        }
+
+        var rows = players
+            .OrderByDescending(p => p.Points)
+            .ThenByDescending(p => p.Accuracy)
+            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(Leaderboard.MaxRows)
+            .ToList();
+        for (int i = 0; i < rows.Count; i++)
+        {
+            bool tied = i > 0 && rows[i].Points == rows[i - 1].Points && rows[i].Accuracy == rows[i - 1].Accuracy;
+            rows[i].Rank = tied ? rows[i - 1].Rank : i + 1;
+        }
+        return new Leaderboard { Rows = rows };
+    }
+
     /// <summary>part / whole as a percentage with one decimal; 0 when whole is 0.</summary>
     private static double Percent(long part, long whole) =>
         whole == 0 ? 0 : Math.Round(100.0 * part / whole, 1, MidpointRounding.AwayFromZero);

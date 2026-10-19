@@ -32,7 +32,9 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 
 1. **Lobby.** All three connect and join. Bob's first nickname (`"   "`) gets
    `bad-nickname`. `p3`, a guest, asks for its match history (`historyList`)
-   and gets zeros and no matches (`history`).
+   and gets zeros and no matches (`history`), then asks for the leaderboard
+   (`leaderboardGet`) and gets no rows (`leaderboard`): the server under test
+   has no database.
 2. **Match `m1`, played to the end.** Bob moves first. On the way:
    `invalid-placement` (Bob), `not-your-turn` (Alice), `not-in-match` (`p3`),
    `out-of-range` and `already-fired` (Alice), and one of Bob's turns times out
