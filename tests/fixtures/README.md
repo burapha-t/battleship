@@ -31,7 +31,8 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 "Alice (2)". `p3` stays idle in the lobby throughout.
 
 1. **Lobby.** All three connect and join. Bob's first nickname (`"   "`) gets
-   `bad-nickname`.
+   `bad-nickname`. `p3`, a guest, asks for its match history (`historyList`)
+   and gets zeros and no matches (`history`).
 2. **Match `m1`, played to the end.** Bob moves first. On the way:
    `invalid-placement` (Bob), `not-your-turn` (Alice), `not-in-match` (`p3`),
    `out-of-range` and `already-fired` (Alice), and one of Bob's turns times out
@@ -42,7 +43,7 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 5. **Match `m3`.** Its `matchStart` shows both scores back at 0. Alice places,
    then Bob disconnects → `opponentLeft` to Alice, who ends idle in the lobby.
 
-All 17 message types and all five lobby statuses appear. The `unknown` error
+Every message type except `leave` and all five lobby statuses appear. The `unknown` error
 code does not, because `protocol.md` gives no trigger for it.
 
 ### Don't depend on

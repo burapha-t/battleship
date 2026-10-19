@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (6 verbs) · `S→C` server to client (12 events)
+`C→S` client to server (7 verbs) · `S→C` server to client (13 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -93,6 +93,8 @@ either side.
 | `leave` | C→S | Player presses Home after a match ends |
 | `opponentLeft` | S→C | The other player's socket closed, or they went back to the lobby |
 | `reset` | S→C | The dashboard RESET button was pressed |
+| `historyList` | C→S | Player opens Match history, or scrolls to the next page |
+| `history` | S→C | Reply to `historyList` |
 | `error` | S→C | A client message was rejected |
 
 ---
@@ -307,6 +309,37 @@ its board, zeroes both scores, and returns to `IDLE`. A fresh `lobby` follows.
 Searching players stop searching too — after a reset nobody is paired until
 they send `findMatch` again.
 
+### `history`
+
+The reply to `historyList`, sent only to the player who asked, and only ever
+about that player. Added with HIST-1, under the ignore-unknown rules (§1).
+
+```json
+{"type":"history","page":1,
+ "stats":{"matchCount":12,"winCount":8,"loseCount":4,"winRate":66.7,"accuracy":50.4},
+ "matches":[
+  {"won":true,"opponent":"Bob","endedAt":"2026-10-19T07:00:00Z","accuracy":57.1},
+  {"won":false,"opponent":"Carol","endedAt":"2026-10-18T19:42:00Z","accuracy":38.5}
+ ],"more":false}
+```
+
+| Field | Meaning |
+|---|---|
+| `page` | The page this is, from 1 (the newest) |
+| `stats` | Totals over all of the player's saved matches, whatever the page |
+| `stats.winRate` | wins ÷ matches, as a percentage with one decimal; `0` with no matches |
+| `stats.accuracy` | hits ÷ shots over all matches, as a percentage with one decimal |
+| `matches` | Up to 20 matches, newest first |
+| `won` | `true` if this player won that match |
+| `opponent` | The opponent's username at the time |
+| `endedAt` | When the match ended, UTC, ISO 8601 (`…Z`). The UI shows it in local time |
+| `accuracy` | This player's hits ÷ shots in that match, a percentage with one decimal |
+| `more` | `true` if an older page exists |
+
+Only finished matches between two logged-in players are saved
+(`docs/implement/database.md`), so a guest always gets zeros, no matches and
+`more: false`. Timeout auto-shots count toward accuracy.
+
 ### `error`
 
 ```json
@@ -324,7 +357,7 @@ Errors never change client state — the client stays where it was.
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
-| `unknown` | Anything else |
+| `unknown` | Anything else, e.g. the match history couldn't be read |
 
 ---
 
@@ -398,6 +431,17 @@ player gets `opponentLeft`. The sender gets no reply beyond the `lobby` update;
 its UI goes home on its own and ignores a `matchStart` until a `lobby` lists it
 `idle`. From `PLAYING` or `SEARCHING` it is `not-in-match`. From `IDLE` (both
 players pressed Home) it is ignored.
+
+### `historyList`
+
+```json
+{"type":"historyList","page":1}
+```
+
+Asks for one page of the sender's own match history; the server replies with
+`history`. `page` starts at 1 (the newest 20 matches); a missing `page`, or one
+below 1, means 1. Valid in any state and changes none. There is no way to ask
+for another player's history.
 
 ---
 
@@ -489,7 +533,8 @@ export type ClientVerb =
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
   | { type: "rematch" }
-  | { type: "leave" };
+  | { type: "leave" }
+  | { type: "historyList"; page: number };
 ```
 
 ### C# — `Battleship.Core`
@@ -512,7 +557,7 @@ while chunk := sock.recv(4096).decode("utf-8"):
 ```
 
 The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
-`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest. It must send
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history` included. It must send
 `findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
 will never be paired.
 

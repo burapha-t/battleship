@@ -1,5 +1,6 @@
 using System.Globalization;
 using Battleship.Core;
+using Battleship.Core.Protocol;
 using Microsoft.Data.Sqlite;
 
 namespace Battleship.Server.Data;
@@ -267,6 +268,72 @@ public sealed class GameDatabase
         transaction.Commit();
         return matchId;
     }
+
+    /// <summary>
+    /// One page of a player's match history (HIST-1): totals over all their
+    /// matches, and <see cref="History.PageSize"/> matches, newest first.
+    /// Page 1 is the newest; a page below 1 counts as 1. A player with no
+    /// matches gets zeros. Every shot counts toward accuracy, timeout shots
+    /// included (database.md, open question).
+    /// </summary>
+    public History GetHistory(long userId, int page)
+    {
+        page = Math.Max(1, page);
+        using var connection = Open();
+
+        var stats = new HistoryStats();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                SELECT COUNT(*), COALESCE(SUM(won), 0), COALESCE(SUM(hits), 0), COALESCE(SUM(shots), 0)
+                FROM match_players WHERE user_id = $userId;
+                """;
+            command.Parameters.AddWithValue("$userId", userId);
+            using var reader = command.ExecuteReader();
+            reader.Read();
+            stats.MatchCount = reader.GetInt32(0);
+            stats.WinCount = reader.GetInt32(1);
+            stats.LoseCount = stats.MatchCount - stats.WinCount;
+            stats.WinRate = Percent(stats.WinCount, stats.MatchCount);
+            stats.Accuracy = Percent(reader.GetInt64(2), reader.GetInt64(3));
+        }
+
+        // One extra row tells whether an older page exists.
+        var matches = new List<HistoryMatch>();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                SELECT mp.won, mp.opponent_name, m.ended_at, mp.hits, mp.shots
+                FROM match_players mp JOIN matches m ON m.id = mp.match_id
+                WHERE mp.user_id = $userId
+                ORDER BY m.ended_at DESC, m.id DESC
+                LIMIT $limit OFFSET $offset;
+                """;
+            command.Parameters.AddWithValue("$userId", userId);
+            command.Parameters.AddWithValue("$limit", History.PageSize + 1);
+            command.Parameters.AddWithValue("$offset", (long)(page - 1) * History.PageSize);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                matches.Add(new HistoryMatch
+                {
+                    Won = reader.GetInt64(0) == 1,
+                    Opponent = reader.GetString(1),
+                    EndedAt = DateTimeOffset.Parse(reader.GetString(2), CultureInfo.InvariantCulture)
+                        .ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
+                    Accuracy = Percent(reader.GetInt64(3), reader.GetInt64(4)),
+                });
+            }
+        }
+
+        bool more = matches.Count > History.PageSize;
+        if (more) matches.RemoveAt(History.PageSize);
+        return new History { Page = page, Stats = stats, Matches = matches, More = more };
+    }
+
+    /// <summary>part / whole as a percentage with one decimal; 0 when whole is 0.</summary>
+    private static double Percent(long part, long whole) =>
+        whole == 0 ? 0 : Math.Round(100.0 * part / whole, 1, MidpointRounding.AwayFromZero);
 
     /// <summary>The longest run of hits in a row among one player's shots, in turn order.</summary>
     private static int BestStreak(IEnumerable<ShotRecord> shots)

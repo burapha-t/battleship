@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-// The 12 server → client events (protocol.md §4). Property order is wire order.
+// The 13 server → client events (protocol.md §4). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary>First frame on every connection.</summary>
@@ -131,6 +131,50 @@ namespace Battleship.Core.Protocol
         public OpponentLeft() : base("opponentLeft") { }
 
         public string Id { get; set; } = "";
+    }
+
+    /// <summary>
+    /// <c>history</c>: the answer to <c>historyList</c>, only ever about the
+    /// player who asked. A guest gets zeros and no matches.
+    /// </summary>
+    public sealed class History : ProtocolMessage
+    {
+        /// <summary>Matches per page.</summary>
+        public const int PageSize = 20;
+
+        public History() : base("history") { }
+
+        public int Page { get; set; } = 1;
+        public HistoryStats Stats { get; set; } = new HistoryStats();
+
+        /// <summary>Newest first, at most <see cref="PageSize"/>.</summary>
+        public IReadOnlyList<HistoryMatch> Matches { get; set; } = Array.Empty<HistoryMatch>();
+
+        /// <summary>True when an older page exists.</summary>
+        public bool More { get; set; }
+    }
+
+    /// <summary>Totals over all my saved matches. Rates are percentages, one decimal; 0 with no matches.</summary>
+    public sealed class HistoryStats
+    {
+        public int MatchCount { get; set; }
+        public int WinCount { get; set; }
+        public int LoseCount { get; set; }
+        public double WinRate { get; set; }
+        public double Accuracy { get; set; }
+    }
+
+    /// <summary>One saved match from my side.</summary>
+    public sealed class HistoryMatch
+    {
+        public bool Won { get; set; }
+        public string Opponent { get; set; } = "";
+
+        /// <summary>UTC, e.g. <c>2026-10-19T07:00:00Z</c>.</summary>
+        public string EndedAt { get; set; } = "";
+
+        /// <summary>My hits / my shots in this match, a percentage with one decimal.</summary>
+        public double Accuracy { get; set; }
     }
 
     /// <summary>The dashboard RESET button was pressed.</summary>
