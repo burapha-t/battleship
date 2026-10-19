@@ -120,7 +120,7 @@ export function PlacementScreen({ state, onReady }: Props) {
 
   return (
     <main className="placement">
-      <h1 className="title">Place your ships</h1>
+      <h1 className="title">Welcome, {state.myName}.</h1>
       <p className="sub">
         Place your 4 ships on your grid. Each ship fills 4 slots in a straight line. {opponentName} can't see where
         you put them.
