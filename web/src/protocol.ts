@@ -27,7 +27,13 @@ export type ErrorCode =
   | 'not-in-match'
   | 'unknown'
 
-/** The 12 server → client events (§4). */
+/** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
+export type HistoryStats = { matchCount: number; winCount: number; loseCount: number; winRate: number; accuracy: number }
+
+/** One saved match from my side. `endedAt` is UTC ISO 8601; show it in local time. */
+export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; accuracy: number }
+
+/** The 13 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -51,9 +57,11 @@ export type ServerEvent =
   | { type: 'rematchPending'; from: string }
   | { type: 'opponentLeft'; id: string }
   | { type: 'reset' }
+  // My match history, one page of 20, newest first; `more` = an older page exists.
+  | { type: 'history'; page: number; stats: HistoryStats; matches: HistoryMatch[]; more: boolean }
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 6 client → server verbs (§5). */
+/** The 7 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
@@ -62,6 +70,8 @@ export type ClientVerb =
   | { type: 'rematch' }
   // Leave a finished match; the opponent gets `opponentLeft`.
   | { type: 'leave' }
+  // One page of my match history, 1 = newest; the reply is `history`.
+  | { type: 'historyList'; page: number }
 
 /**
  * Call in the `default` of a `switch (event.type)`. If a case is missing,

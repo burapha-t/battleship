@@ -11,9 +11,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import { BoardPreview } from './dev/BoardPreview.tsx'
+import { HistoryPreview } from './dev/HistoryPreview.tsx'
 
 const preview = new URLSearchParams(window.location.search).get('preview')
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>{preview === 'board' ? <BoardPreview /> : <App />}</StrictMode>,
+  <StrictMode>
+    {preview === 'board' ? <BoardPreview /> : preview?.startsWith('history') ? <HistoryPreview mode={preview} /> : <App />}
+  </StrictMode>,
 )

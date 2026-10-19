@@ -163,6 +163,7 @@ ORDER BY m.ended_at DESC;
 - CreateUser(username, salt, hash, iterations): adds an account and returns its id, or null if the name is taken.
 - FindUser(username): the account, or null. Ignores case.
 - SaveMatch(match): saves one finished match in one transaction and returns its id.
+- GetHistory(userId, page): one player's stats and 20 matches, newest first (HIST-1). The server calls it on DatabaseWorker and sends the result as `history`.
 
 Read methods for history, the leaderboard and badges come with their own issues.
 
@@ -181,7 +182,7 @@ Issue codes after DB-1 are proposals until the issues are created.
 | DB-1 (#32) | Database file, tables, GameDatabase | Built (PR #33) |
 | LOGIN-1 (#46) | Signup and login over the game connection, password hashing | Not started. Sets PlayerRecord.UserId |
 | DB-2 (#48) | Save each finished match with SaveMatch | Built. Saves nothing until LOGIN-1 sets UserId |
-| HIST-1 (#49) | History request and reply | Not started (needs DB-2) |
+| HIST-1 (#49) | History request and reply (`historyList` / `history`, protocol.md) | Built |
 | Leaderboard (server) | Leaderboard request and reply | Not started (needs DB-2) |
 | Achievements (server) | Check badges at match end, tell the player | Not started (needs DB-2) |
 | Profile picture (server) | Save the chosen avatar | Not started (needs AUTH-1) |
