@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (5 verbs) · `S→C` server to client (12 events)
+`C→S` client to server (6 verbs) · `S→C` server to client (12 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -90,7 +90,8 @@ either side.
 | `matchEnd` | S→C | All 4 of one player's ships are sunk |
 | `rematch` | C→S | Player presses Rematch |
 | `rematchPending` | S→C | One player has asked for a rematch |
-| `opponentLeft` | S→C | The other player's socket closed |
+| `leave` | C→S | Player presses Home after a match ends |
+| `opponentLeft` | S→C | The other player's socket closed, or they went back to the lobby |
 | `reset` | S→C | The dashboard RESET button was pressed |
 | `error` | S→C | A client message was rejected |
 
@@ -122,6 +123,7 @@ either side.
                                   └───────────────────│ MATCHEND │
                                        matchStart     └──────────┘
                                     (both rematched)     rematch
+                                    leave / opponentLeft → IDLE
 ```
 
 `PLACING` is entered on every `matchStart`, including rematches — boards are
@@ -129,7 +131,7 @@ cleared and both players place again. A rematch goes straight from `MATCHEND` to
 `PLACING`; it never passes through `SEARCHING`.
 
 `IDLE` means "in the lobby, not looking for a match". The server never pairs an
-`IDLE` player. Every return to `IDLE` (`opponentLeft`, `reset`) needs a new
+`IDLE` player. Every return to `IDLE` (`leave`, `opponentLeft`, `reset`) needs a new
 `findMatch` before the player is paired again.
 
 ---
@@ -178,10 +180,10 @@ joined yet: its `name` is `null` until its `welcome`.
 | `status` | From | Until |
 |---|---|---|
 | `"connecting"` | TCP accept — socket open, no nickname yet | `welcome` |
-| `"idle"` | `welcome`, `opponentLeft` or `reset` | `findMatch` |
+| `"idle"` | `welcome`, `leave`, `opponentLeft` or `reset` | `findMatch` |
 | `"searching"` | `findMatch` — pressed *Start game*, waiting for an opponent | `matchStart` or `reset` |
 | `"placing"` | `matchStart`, rematches included | the match's first `turn`, `opponentLeft` or `reset` |
-| `"in-match"` | the match's first `turn` | a rematch's `matchStart`, `opponentLeft` or `reset` |
+| `"in-match"` | the match's first `turn` | a rematch's `matchStart`, `leave`, `opponentLeft` or `reset` |
 
 Both players in a match change status together. A player stays `"in-match"`
 after `matchEnd`; there is no match-over status. A client that disconnects
@@ -290,7 +292,7 @@ sends a fresh `matchStart` instead of another `rematchPending`.
 {"type":"opponentLeft","id":"p2"}
 ```
 
-The surviving player returns to `IDLE` and must send `findMatch` again to be
+Sent when the other player's socket closes, or when they send `leave`. The remaining player returns to `IDLE` and must send `findMatch` again to be
 paired. Scores are retained — a disconnect is not a loss, and awarding a win for
 it would be trivially exploitable in a demo.
 
@@ -321,7 +323,7 @@ Errors never change client state — the client stays where it was.
 | `not-your-turn` | `fire` from the player who is not active |
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
-| `not-in-match` | `findMatch`, `place`, `fire`, or `rematch` sent in the wrong state |
+| `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
 | `unknown` | Anything else |
 
 ---
@@ -381,6 +383,21 @@ always fire at your opponent.
 
 Valid only in `MATCHEND`. Sending it twice is idempotent — the second is ignored,
 not an error.
+
+### `leave`
+
+```json
+{"type":"leave"}
+```
+
+The player pressed **Home** on the end screen instead of Rematch. Valid in
+`MATCHEND`, and in `PLACING` for the race where the opponent's rematch starts a
+new match just as the player presses Home. The match and any pending rematch are
+dropped, both players return to `IDLE` and keep their scores, and the other
+player gets `opponentLeft`. The sender gets no reply beyond the `lobby` update;
+its UI goes home on its own and ignores a `matchStart` until a `lobby` lists it
+`idle`. From `PLAYING` or `SEARCHING` it is `not-in-match`. From `IDLE` (both
+players pressed Home) it is ignored.
 
 ---
 
@@ -471,7 +488,8 @@ export type ClientVerb =
   | { type: "findMatch" }
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
-  | { type: "rematch" };
+  | { type: "rematch" }
+  | { type: "leave" };
 ```
 
 ### C# — `Battleship.Core`

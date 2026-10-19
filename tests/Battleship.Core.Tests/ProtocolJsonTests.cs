@@ -31,6 +31,17 @@ public class ProtocolJsonTests
         }
     }
 
+    // leave came after the transcript was recorded.
+    [Fact]
+    public void Leave_RoundTrips()
+    {
+        const string frame = "{\"type\":\"leave\"}";
+
+        var message = Assert.IsType<Leave>(ProtocolJson.Parse(frame));
+
+        Assert.Equal(frame, ProtocolJson.Serialize(message));
+    }
+
     [Fact]
     public void Transcript_CoversAll17Types()
     {

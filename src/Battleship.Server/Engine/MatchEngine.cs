@@ -77,6 +77,27 @@ public sealed class MatchEngine
         return StartMatch(match.Players[0], match.Players[1], match.WinnerId);
     }
 
+    /// <summary>
+    /// The player pressed Home. Works after a match ends, and while placing
+    /// for the race where the opponent's rematch starts a new match just as
+    /// the player leaves. The match and any pending rematch are dropped, both
+    /// players go idle and keep their scores, and the other player gets
+    /// <c>opponentLeft</c>. A repeat from an idle player (both pressed Home)
+    /// is ignored.
+    /// </summary>
+    public IReadOnlyList<Outbound> Leave(string playerId)
+    {
+        var match = MatchOf(playerId);
+        if (match == null && _roster.Find(playerId)?.Status == LobbyStatus.Idle) return None;
+        if (match == null || match.Phase == MatchPhase.Playing)
+            return new[] { Outbound.Error(playerId, ErrorCodes.NotInMatch, "You can only go home after a match ends.") };
+
+        End(match);
+        foreach (var player in match.Players) player.Status = LobbyStatus.Idle;
+        var other = match.Players.First(player => player.Id != playerId);
+        return new[] { Outbound.ToPlayer(other.Id, new OpponentLeft { Id = playerId }) };
+    }
+
     /// <summary>Auto-fires if that turn is still current; a stale expiry is dropped.</summary>
     public IReadOnlyList<Outbound> TurnExpired(string matchId, int turnNumber) =>
         _matches.TryGetValue(matchId, out var match) ? Track(match, match.TurnExpired(turnNumber)) : None;

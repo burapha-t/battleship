@@ -129,6 +129,9 @@ public sealed class GameHost
             case Rematch:
                 Send(_engine.Rematch(playerId));
                 break;
+            case Leave:
+                OnLeave(player);
+                break;
             // A server event sent by a client is ignored, like an unknown type.
         }
     }
@@ -152,6 +155,13 @@ public sealed class GameHost
         player.Status = LobbyStatus.Idle;
         Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = name }) });
         Log($"{player.Id} joined as {name}");
+    }
+
+    private void OnLeave(PlayerRecord player)
+    {
+        var match = _engine.Matches.FirstOrDefault(m => m.Has(player.Id) && m.Phase != MatchPhase.Playing);
+        Send(_engine.Leave(player.Id));
+        if (match != null) Log($"{player.Name} left match {match.Id} for the lobby");
     }
 
     private void OnDisconnected(string playerId)
