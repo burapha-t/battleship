@@ -69,6 +69,11 @@ export function GameScreen({ state, onFire }: Props) {
     else playSound(last.sunk ? 'sunk' : last.result)
   }, [last, myId])
 
+  // Only the shooter hears it, like the pop-up.
+  useEffect(() => {
+    if (myStreak) playSound('streak')
+  }, [myStreak])
+
   return (
     <main className="game">
       <div className={`banner${(over ? iWon : myTurn) ? '' : ' theirs'}`} role="status">
