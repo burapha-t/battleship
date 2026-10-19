@@ -1,5 +1,6 @@
 using Battleship.Core;
 using Battleship.Core.Protocol;
+using Battleship.Server.Data;
 using Battleship.Server.Host;
 using Battleship.Server.Lobby;
 
@@ -16,6 +17,8 @@ public sealed class Match
 
     private readonly PlayerRecord[] _players;
     private readonly Board?[] _boards = new Board?[2];
+    private readonly IReadOnlyList<IReadOnlyList<Coord>>?[] _fleets = new IReadOnlyList<IReadOnlyList<Coord>>?[2];
+    private readonly long?[] _userIds;
     private readonly List<Shot> _moves = new();
     private readonly HashSet<string> _rematchRequests = new();
     private readonly Random _random;
@@ -28,12 +31,18 @@ public sealed class Match
     {
         Id = id;
         _players = new[] { first, second };
+        // Taken now, so the match is saved under the accounts that started it.
+        _userIds = new[] { first.UserId, second.UserId };
+        StartedAt = DateTimeOffset.UtcNow;
         _random = random;
         FirstPickedAtRandom = firstPlayerId == null;
         FirstPlayerId = firstPlayerId ?? _players[random.Next(2)].Id;
     }
 
     public string Id { get; }
+
+    /// <summary>When <c>matchStart</c> was sent.</summary>
+    public DateTimeOffset StartedAt { get; }
 
     /// <summary>Both players, in the order they're listed in <c>matchStart</c>.</summary>
     public IReadOnlyList<PlayerRecord> Players => _players;
@@ -82,6 +91,7 @@ public sealed class Match
         if (problem != null) return Reject(playerId, ErrorCodes.InvalidPlacement, problem);
 
         _boards[index] = new Board(ships.Select(cells => new Ship(cells)).ToList());
+        _fleets[index] = ships.Select(cells => (IReadOnlyList<Coord>)cells.ToList()).ToList();
         var outbounds = new List<Outbound> { ToBoth(new Placed { Id = playerId }) };
         if (_boards[1 - index] == null) return outbounds;
 
@@ -140,6 +150,25 @@ public sealed class Match
             return Reject(playerId, ErrorCodes.NotInMatch, "There's no finished match to rematch.");
         if (!_rematchRequests.Add(playerId) || BothWantRematch) return None;
         return new[] { ToBoth(new RematchPending { From = playerId }) };
+    }
+
+    /// <summary>
+    /// What the database keeps of this match: both players' accounts and
+    /// fleets, every shot, start and end time, and the winner. Null unless the
+    /// match is over and both players were logged in when it started.
+    /// </summary>
+    public MatchRecord? ToRecord(DateTimeOffset endedAt)
+    {
+        if (Phase != MatchPhase.MatchEnd || _userIds[0] is not long first || _userIds[1] is not long second)
+            return null;
+
+        long UserOf(string playerId) => IndexOf(playerId) == 0 ? first : second;
+        return new MatchRecord(
+            StartedAt,
+            endedAt,
+            UserOf(WinnerId!),
+            new[] { new MatchPlayerRecord(first, _fleets[0]!), new MatchPlayerRecord(second, _fleets[1]!) },
+            _moves.Select(m => new ShotRecord(m.TurnNumber, UserOf(m.By), m.Cell, m.Hit, m.Auto)).ToList());
     }
 
     private IReadOnlyList<Outbound> Shoot(Coord cell, bool auto)

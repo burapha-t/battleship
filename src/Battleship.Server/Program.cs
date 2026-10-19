@@ -19,7 +19,23 @@ Console.CancelKeyPress += (_, e) =>
     stop.Cancel();
 };
 
-var host = new GameHost(TimeSpan.FromSeconds(GameRules.TurnSeconds), new Random());
+// Accounts and match history. A file that can't be opened only prints a
+// warning: the game still runs, it just saves nothing.
+var databasePath = GameDatabase.DefaultPath();
+GameDatabase? database = null;
+string databaseLine;
+try
+{
+    database = new GameDatabase(databasePath);
+    databaseLine = $"  Database: {databasePath}";
+}
+catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or InvalidOperationException
+                                 or ArgumentException or NotSupportedException)
+{
+    databaseLine = $"  Database: could not open {databasePath} ({ex.Message}). The game runs, but saves nothing.";
+}
+
+var host = new GameHost(TimeSpan.FromSeconds(GameRules.TurnSeconds), new Random(), database);
 var acceptLoop = new TcpAcceptLoop(new IPEndPoint(IPAddress.Any, TcpPort), host);
 try
 {
@@ -38,19 +54,7 @@ foreach (var address in lan) Console.WriteLine($"    {address}");
 if (lan.Count == 0) Console.WriteLine("    (no LAN address found; a client on this machine can use 127.0.0.1)");
 Console.WriteLine($"  Dashboard: {DashboardUrl}");
 
-// Accounts and match history (DB-1). Nothing in the game uses it yet, so a
-// failure here only prints a warning.
-var databasePath = GameDatabase.DefaultPath();
-try
-{
-    new GameDatabase(databasePath);
-    Console.WriteLine($"  Database: {databasePath}");
-}
-catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or InvalidOperationException
-                                 or ArgumentException or NotSupportedException)
-{
-    Console.WriteLine($"  Database: could not open {databasePath} ({ex.Message}). The game server keeps running.");
-}
+Console.WriteLine(databaseLine);
 
 Console.WriteLine("  Ctrl+C stops the server.");
 

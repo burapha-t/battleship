@@ -1,6 +1,6 @@
 # Database
 
-**Status:** DB-1 is built (issue #32, PR #33). The game does not use the database yet.
+**Status:** DB-1 (#32) and DB-2 (#48) are built. The server saves every finished match between two logged-in players. Login (LOGIN-1, #46) isn't built yet, so for now every player is a guest and nothing is saved.
 
 This file is the source of truth for the database. A copy for the whole team is in the planning
 Google Doc, tab **db_schema**:
@@ -14,7 +14,7 @@ A change to a table updates this file in the same pull request, and the Google D
 - One SQLite file. Only the game server opens it.
 - Clients (Computer B, browsers, other devices) never touch the file. They ask the server over the game connection, and the server reads or writes the file and answers.
 - Library: Microsoft.Data.Sqlite 8.0.11 with plain SQL (no Entity Framework).
-- Code: src/Battleship.Server/Data/GameDatabase.cs. Tests: tests/Battleship.Server.Tests/GameDatabaseTests.cs (32 tests).
+- Code: src/Battleship.Server/Data/GameDatabase.cs, and DatabaseWorker.cs, which runs every database job on one background task. Tests: tests/Battleship.Server.Tests/GameDatabaseTests.cs and MatchArchiveTests.cs.
 - Why SQLite: no database server to install, everything is one file, and it ships inside the demo build for Windows, Mac and Linux.
 
 ## 2. Where the file lives
@@ -166,16 +166,22 @@ ORDER BY m.ended_at DESC;
 
 Read methods for history, the leaderboard and badges come with their own issues.
 
+How a match gets saved (DB-2):
+
+- Each player's roster record has a UserId: the account id once logged in, null for a guest. LOGIN-1 sets it.
+- A match takes both UserIds when it starts. At matchEnd, if both were set, MatchEngine hands a MatchRecord to DatabaseWorker, which saves it on its background task. A failed save is logged; the game carries on.
+- Disconnects, RESET mid-match and guests save nothing. A rematch is saved as its own match.
+
 ## 7. Plan
 
 Issue codes after DB-1 are proposals until the issues are created.
 
 | Issue | What | Status |
 |---|---|---|
-| DB-1 (#32) | Database file, tables, GameDatabase | Built. PR #33 waiting for review |
-| AUTH-1 (server) | Signup and login over the game connection, password hashing | Not started |
-| DB-2 | Save each finished match with SaveMatch | Not started (needs AUTH-1) |
-| History (server) | History request and reply | Not started (needs DB-2) |
+| DB-1 (#32) | Database file, tables, GameDatabase | Built (PR #33) |
+| LOGIN-1 (#46) | Signup and login over the game connection, password hashing | Not started. Sets PlayerRecord.UserId |
+| DB-2 (#48) | Save each finished match with SaveMatch | Built. Saves nothing until LOGIN-1 sets UserId |
+| HIST-1 (#49) | History request and reply | Not started (needs DB-2) |
 | Leaderboard (server) | Leaderboard request and reply | Not started (needs DB-2) |
 | Achievements (server) | Check badges at match end, tell the player | Not started (needs DB-2) |
 | Profile picture (server) | Save the chosen avatar | Not started (needs AUTH-1) |

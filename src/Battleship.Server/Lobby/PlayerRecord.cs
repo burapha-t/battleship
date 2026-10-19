@@ -30,5 +30,11 @@ public sealed class PlayerRecord
 
     public int Score { get; set; }
 
+    /// <summary>
+    /// The account (users.id) once the player has logged in (LOGIN-1); null
+    /// for a guest. Only matches between two accounts are saved (DB-2).
+    /// </summary>
+    public long? UserId { get; set; }
+
     public bool HasJoined => Name != null;
 }

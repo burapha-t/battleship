@@ -29,7 +29,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
 - `web/`: complete — all five screens plus sound. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state.
-- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). Not used by the game yet.
+- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 
