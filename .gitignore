@@ -14,3 +14,9 @@ obj/
 
 # Demo builds from scripts/publish.ps1 and scripts/publish.sh
 publish/
+
+# SQLite databases (accounts and match history live on the host only)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
