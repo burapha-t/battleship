@@ -15,7 +15,9 @@ const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 
-export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartGame: () => void }) {
+type Props = { state: GameState; onStartGame: () => void; onOpenHistory: () => void }
+
+export function LobbyScreen({ state, onStartGame, onOpenHistory }: Props) {
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
@@ -40,6 +42,9 @@ export function LobbyScreen({ state, onStartGame }: { state: GameState; onStartG
           </p>
           <button type="button" className="btn wide" disabled={searching} onClick={start}>
             {searching ? 'Looking for an opponent…' : 'Start game'}
+          </button>
+          <button type="button" className="btn white wide join-history" onClick={onOpenHistory}>
+            Match history
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

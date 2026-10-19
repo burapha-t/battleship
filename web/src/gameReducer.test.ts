@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { gameReducer, initialState, matchSides } from './gameReducer'
 import type { GameAction, GameState } from './gameReducer'
-import type { ServerEvent } from './protocol'
+import type { HistoryMatch, ServerEvent } from './protocol'
 import { replayActions } from './replay'
 import { parseServerEvent } from './useGameSocket'
 
@@ -187,5 +187,75 @@ describe('parseServerEvent', () => {
     expect(parseServerEvent('{"type":"reset","extra":1}')).toEqual({ type: 'reset', extra: 1 })
     expect(warn).toHaveBeenCalledTimes(3)
     warn.mockRestore()
+  })
+})
+
+describe('match history', () => {
+  const lobby = fold([
+    { type: 'connected', id: 'p1', protocolVersion: 1 },
+    { type: 'welcome', id: 'p1', nickname: 'Alice' },
+  ])
+  const stats = { matchCount: 21, winCount: 13, loseCount: 8, winRate: 61.9, accuracy: 48.2 }
+  const match = (n: number): HistoryMatch => ({
+    won: n % 2 === 0,
+    opponent: `Captain ${n}`,
+    endedAt: `2026-10-19T07:${String(59 - n).padStart(2, '0')}:00Z`,
+    accuracy: 50,
+  })
+  const page1: ServerEvent = { type: 'history', page: 1, stats, matches: Array.from({ length: 20 }, (_, i) => match(i)), more: true }
+  const page2: ServerEvent = { type: 'history', page: 2, stats, matches: [match(20)], more: false }
+  const open = gameReducer(lobby, { type: 'openHistory' })
+
+  it('opens from the lobby and waits for the first page', () => {
+    expect(open.screen).toBe('history')
+    expect(open.history).toBeNull()
+  })
+
+  it('a history message fills the screen', () => {
+    const state = gameReducer(open, page1)
+    expect(state.history?.stats).toEqual(stats)
+    expect(state.history?.matches).toHaveLength(20)
+    expect(state.history?.more).toBe(true)
+  })
+
+  it('the next page adds to the list', () => {
+    const asked = gameReducer(gameReducer(open, page1), { type: 'loadMoreHistory' })
+    expect(asked.history?.loadingMore).toBe(true)
+    const state = gameReducer(asked, page2)
+    expect(state.history?.matches.map((m) => m.opponent)).toEqual(Array.from({ length: 21 }, (_, i) => `Captain ${i}`))
+    expect(state.history?.page).toBe(2)
+    expect(state.history?.more).toBe(false)
+    expect(state.history?.loadingMore).toBe(false)
+  })
+
+  it('drops a repeated page instead of listing it twice', () => {
+    const twice = [page2, page2].reduce(gameReducer, gameReducer(open, page1))
+    expect(twice.history?.matches).toHaveLength(21)
+  })
+
+  it('a new player sees an empty list, not an error', () => {
+    const empty: ServerEvent = {
+      type: 'history',
+      page: 1,
+      stats: { matchCount: 0, winCount: 0, loseCount: 0, winRate: 0, accuracy: 0 },
+      matches: [],
+      more: false,
+    }
+    const state = gameReducer(open, empty)
+    expect(state.history?.matches).toEqual([])
+    expect(state.historyFailed).toBe(false)
+    expect(state.lastError).toBeNull()
+  })
+
+  it('an error while loading marks the load failed, and reopening clears it', () => {
+    const failed = gameReducer(open, { type: 'error', code: 'unknown', message: 'x' })
+    expect(failed.historyFailed).toBe(true)
+    expect(gameReducer(failed, { type: 'openHistory' }).historyFailed).toBe(false)
+  })
+
+  it('back goes to the lobby; history only opens from the lobby', () => {
+    expect(gameReducer(open, { type: 'closeHistory' }).screen).toBe('lobby')
+    const placing = gameReducer(lobby, { type: 'matchStart', matchId: 'm1', players: [], firstPlayerId: 'p1' })
+    expect(gameReducer(placing, { type: 'openHistory' }).screen).toBe('placement')
   })
 })

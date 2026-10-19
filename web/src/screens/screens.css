@@ -87,6 +87,13 @@
   font-size: 26px;
 }
 
+.join .join-history {
+  margin-top: 14px;
+  padding: 6px;
+  font-size: 19px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
 .conn {
   display: flex;
   align-items: center;
