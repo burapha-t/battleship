@@ -1,0 +1,141 @@
+import { useEffect, useRef, useState } from 'react'
+import { Avatar } from '../components/Avatar'
+import type { HistoryView } from '../gameReducer'
+import type { HistoryMatch } from '../protocol'
+import { historyLanguage, historyText, localTime, percent } from './historyText'
+import type { Language } from './historyText'
+import './history.css'
+
+const OPPONENT_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
+
+type Props = {
+  /** Null while the first page is loading. */
+  history: HistoryView | null
+  failed: boolean
+  onBack: () => void
+  onLoadMore: () => void
+  onRetry: () => void
+}
+
+/** The spec layout: my five stats on top, my matches below, newest first. */
+export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: Props) {
+  const [language] = useState(historyLanguage)
+  const t = historyText(language)
+  const title = useRef<HTMLHeadingElement>(null)
+  useEffect(() => title.current?.focus(), [])
+
+  const stats = history?.stats
+  const cells: [label: string, value: string, tone?: string][] = [
+    [t('matches'), stats ? String(stats.matchCount) : '–'],
+    [t('wins'), stats ? String(stats.winCount) : '–', 'win'],
+    [t('losses'), stats ? String(stats.loseCount) : '–', 'lost'],
+    [t('winRate'), stats ? percent(stats.winRate, language) : '–'],
+    [t('accuracy'), stats ? percent(stats.accuracy, language) : '–'],
+  ]
+
+  return (
+    <main className="history">
+      <div className="history-head">
+        <button type="button" className="btn white small" onClick={onBack}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+          {t('back')}
+        </button>
+        <h1 ref={title} tabIndex={-1}>{t('title')}</h1>
+      </div>
+
+      <dl className="card history-stats">
+        {cells.map(([label, value, tone]) => (
+          <div key={label} className={tone}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <section className="card history-log" aria-labelledby="history-log-title">
+        <h2 id="history-log-title" className="visually-hidden">{t('title')}</h2>
+        {history === null ? (
+          failed ? <Failed t={t} onRetry={onRetry} /> : <p className="history-note" role="status">{t('loading')}</p>
+        ) : history.matches.length === 0 ? (
+          <div className="history-note">
+            <h3>{t('emptyTitle')}</h3>
+            <p>{t('emptyBody')}</p>
+          </div>
+        ) : (
+          <div className="history-scroll">
+            <div className="history-row history-columns" aria-hidden>
+              <span>{t('result')}</span>
+              <span>{t('opponent')}</span>
+              <span>{t('when')}</span>
+              <span>{t('matchAccuracy')}</span>
+            </div>
+            <ol>
+              {history.matches.map((match, i) => (
+                <MatchRow key={`${match.endedAt}-${i}`} match={match} language={language} t={t} />
+              ))}
+            </ol>
+            {failed ? (
+              <Failed t={t} onRetry={onRetry} />
+            ) : (
+              history.more && (
+                <div className="history-more">
+                  <button type="button" className="btn white small" disabled={history.loadingMore} onClick={onLoadMore}>
+                    {history.loadingMore ? t('loadingMore') : t('more')}
+                  </button>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </section>
+    </main>
+  )
+}
+
+type T = ReturnType<typeof historyText>
+
+function MatchRow({ match, language, t }: { match: HistoryMatch; language: Language; t: T }) {
+  const color = OPPONENT_COLORS[[...match.opponent].reduce((sum, c) => sum + c.charCodeAt(0), 0) % OPPONENT_COLORS.length]
+  return (
+    <li className="history-row">
+      <Pennant won={match.won} label={match.won ? t('win') : t('lost')} />
+      <span className="history-opponent">
+        <Avatar name={match.opponent} color={color} />
+        {match.opponent}
+      </span>
+      <time className="history-when" dateTime={match.endedAt}>
+        {localTime(match.endedAt, language)}
+      </time>
+      <span className="history-accuracy">
+        <span className="visually-hidden">{t('matchAccuracy')} </span>
+        <span className="meter" aria-hidden>
+          <i style={{ width: `${Math.min(100, Math.max(0, match.accuracy))}%` }} />
+        </span>
+        {percent(match.accuracy, language)}
+      </span>
+    </li>
+  )
+}
+
+/** A swallowtail signal flag: kelp for a win, coral for a loss. */
+function Pennant({ won, label }: { won: boolean; label: string }) {
+  return (
+    <span className={`pennant ${won ? 'win' : 'lost'}`}>
+      <svg viewBox="0 0 76 34" preserveAspectRatio="none" aria-hidden>
+        <path d="M2 2 H74 L60 17 L74 32 H2 Z" />
+      </svg>
+      <span>{label}</span>
+    </span>
+  )
+}
+
+function Failed({ t, onRetry }: { t: T; onRetry: () => void }) {
+  return (
+    <div className="history-note" role="alert">
+      <p>{t('failed')}</p>
+      <button type="button" className="btn small" onClick={onRetry}>{t('retry')}</button>
+    </div>
+  )
+}
