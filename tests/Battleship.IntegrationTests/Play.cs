@@ -49,6 +49,8 @@ internal static class Play
             await loser.WaitForAsync<FireResult>();
             if (shot.AllSunk)
             {
+                // The winner never missed, so the winning shot also sends a streak.
+                Assert.Equal(GameRules.ShipCount * GameRules.ShipLength, (await winner.NextAsync<StreakUpdate>()).Count);
                 var end = await winner.NextAsync<MatchEnd>();
                 await loser.WaitForAsync<MatchEnd>();
                 return end;

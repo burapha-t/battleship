@@ -34,6 +34,7 @@ namespace Battleship.Core.Protocol
             ["placed"] = typeof(Placed),
             ["turn"] = typeof(Turn),
             ["fireResult"] = typeof(FireResult),
+            ["streakUpdate"] = typeof(StreakUpdate),
             ["matchEnd"] = typeof(MatchEnd),
             ["rematchPending"] = typeof(RematchPending),
             ["opponentLeft"] = typeof(OpponentLeft),

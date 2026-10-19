@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-// The 12 server → client events (protocol.md §4). Property order is wire order.
+// The 13 server → client events (protocol.md §4). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary>First frame on every connection.</summary>
@@ -105,6 +105,18 @@ namespace Battleship.Core.Protocol
         public IReadOnlyList<Coord>? SunkCells { get; set; }
         public bool AllSunk { get; set; }
         public bool Auto { get; set; }
+    }
+
+    /// <summary>
+    /// A player has hit at least <see cref="GameRules.StreakMinimum"/> times in
+    /// a row. Sent to both right after that <see cref="FireResult"/>.
+    /// </summary>
+    public sealed class StreakUpdate : ProtocolMessage
+    {
+        public StreakUpdate() : base("streakUpdate") { }
+
+        public string Player { get; set; } = "";
+        public int Count { get; set; }
     }
 
     /// <summary>All of one player's ships are sunk. Scores already include the win.</summary>

@@ -43,11 +43,11 @@ public class ProtocolJsonTests
     }
 
     [Fact]
-    public void Transcript_CoversAll17Types()
+    public void Transcript_CoversAll18Types()
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(17, types.Count);
+        Assert.Equal(18, types.Count);
     }
 
     [Fact]

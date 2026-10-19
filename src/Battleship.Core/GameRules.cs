@@ -7,5 +7,8 @@ namespace Battleship.Core
         public const int ShipLength = 4;
         public const int ShipCount = 4;
         public const int TurnSeconds = 10;
+
+        /// <summary>Hits in a row before the server sends <c>streakUpdate</c>.</summary>
+        public const int StreakMinimum = 2;
     }
 }

@@ -16,6 +16,7 @@ public sealed class Match
 
     private readonly PlayerRecord[] _players;
     private readonly Board?[] _boards = new Board?[2];
+    private readonly int[] _streaks = new int[2];
     private readonly List<Shot> _moves = new();
     private readonly HashSet<string> _rematchRequests = new();
     private readonly Random _random;
@@ -60,6 +61,13 @@ public sealed class Match
     public bool BothWantRematch => _rematchRequests.Count == 2;
 
     public bool Has(string playerId) => _players[0].Id == playerId || _players[1].Id == playerId;
+
+    /// <summary>
+    /// The player's own hits in a row this match. The opponent's shots in
+    /// between don't break it; a miss or a timeout auto-fire sets it to 0.
+    /// A new match (rematch included) starts at 0.
+    /// </summary>
+    public int StreakOf(string playerId) => _streaks[IndexOf(playerId)];
 
     /// <summary>Both players go to <c>placing</c> and get <c>matchStart</c>.</summary>
     public IReadOnlyList<Outbound> Start()
@@ -164,6 +172,12 @@ public sealed class Match
                 Auto = auto,
             }),
         };
+
+        // A timeout breaks the streak even when the random cell is a hit.
+        int shooter = IndexOf(by);
+        _streaks[shooter] = result.Hit && !auto ? _streaks[shooter] + 1 : 0;
+        if (_streaks[shooter] >= GameRules.StreakMinimum)
+            outbounds.Add(ToBoth(new StreakUpdate { Player = by, Count = _streaks[shooter] }));
 
         if (!result.AllSunk)
         {

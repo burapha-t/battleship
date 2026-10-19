@@ -144,7 +144,7 @@ public class FireTests
             $"{{\"type\":\"fireResult\",\"by\":\"{shooter}\",\"target\":\"{target}\",\"row\":{ship[^1].Row},\"col\":{ship[^1].Col}," +
             $"\"result\":\"hit\",\"sunk\":true,\"sunkCells\":[{cells}],\"allSunk\":false,\"auto\":false}}",
             ProtocolJson.Serialize(last[0].Message));
-        Assert.IsType<Turn>(last[1].Message);
+        Assert.Single(Messages<Turn>(last));
     }
 
     [Fact]

@@ -14,8 +14,9 @@ public class MatchEndTests
 
         var last = setup.PlayToWin("p1");
 
-        Assert.Equal(new[] { "p1", "p2" }, last[1].To);
-        var end = Assert.IsType<MatchEnd>(last[1].Message);
+        var endFrame = last.Single(outbound => outbound.Message is MatchEnd);
+        Assert.Equal(new[] { "p1", "p2" }, endFrame.To);
+        var end = (MatchEnd)endFrame.Message;
         Assert.Equal(match.Id, end.MatchId);
         Assert.Equal("p1", end.WinnerId);
         Assert.Collection(end.Players,

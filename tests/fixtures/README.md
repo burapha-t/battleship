@@ -42,7 +42,7 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 5. **Match `m3`.** Its `matchStart` shows both scores back at 0. Alice places,
    then Bob disconnects → `opponentLeft` to Alice, who ends idle in the lobby.
 
-All 17 message types and all five lobby statuses appear. The `unknown` error
+All 18 message types and all five lobby statuses appear. The `unknown` error
 code does not, because `protocol.md` gives no trigger for it.
 
 ### Don't depend on

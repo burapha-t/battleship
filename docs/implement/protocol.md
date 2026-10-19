@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (6 verbs) · `S→C` server to client (12 events)
+`C→S` client to server (6 verbs) · `S→C` server to client (13 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -87,6 +87,7 @@ either side.
 | `turn` | S→C | A turn begins |
 | `fire` | C→S | Active player selects a target cell |
 | `fireResult` | S→C | A shot resolves (including a timeout auto-fire) |
+| `streakUpdate` | S→C | A shot makes its shooter's hit streak 2 or more |
 | `matchEnd` | S→C | All 4 of one player's ships are sunk |
 | `rematch` | C→S | Player presses Rematch |
 | `rematchPending` | S→C | One player has asked for a rematch |
@@ -262,6 +263,29 @@ reveals nothing hidden. It lets the UI draw the whole destroyed ship at once.
 
 When `auto` is `true`, the UI should say so — "Alice ran out of time" reads far
 better in a demo than a shot appearing from nowhere.
+
+### `streakUpdate`
+
+```json
+{"type":"streakUpdate","player":"p1","count":3}
+```
+
+Sent to both, right after the `fireResult` of a shot that made `player`'s hit
+streak `count`, when `count` is 2 or more. It comes before that shot's `turn` or
+`matchEnd`.
+
+| Field | Meaning |
+|---|---|
+| `player` | id of the player who fired |
+| `count` | that player's own hits in a row this match; no upper limit |
+
+The server keeps the count; clients only display it. The opponent's shots in
+between don't break a streak. A miss or a timeout auto-fire (`auto: true`, even
+when it hits) sets it to 0, and so does a new match, a rematch or `reset`. Nothing
+is sent when a streak breaks.
+
+Like every message, both players get the same bytes (§2). The UI shows the
+"Hot streak" pop-up only when `player` is its own id.
 
 ### `matchEnd`
 
