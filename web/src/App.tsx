@@ -5,10 +5,11 @@ import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { GameState } from './gameReducer'
+import type { GameState, HistoryAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
+import { HistoryScreen } from './screens/HistoryScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
@@ -41,7 +42,7 @@ export default function App() {
           <p>{state.fatal}</p>
         </main>
       ) : (
-        <Screen state={{ ...state, screen }} send={send} placeShips={(ships) => {
+        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
@@ -59,11 +60,22 @@ export default function App() {
 type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
+  dispatch: (action: HistoryAction) => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
 
-function Screen({ state, send, placeShips, goHome }: ScreenProps) {
+function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
+  const openHistory = () => {
+    dispatch({ type: 'openHistory' })
+    send({ type: 'historyList', page: 1 })
+  }
+  const loadMore = () => {
+    if (!state.history?.more || state.history.loadingMore) return
+    dispatch({ type: 'loadMoreHistory' })
+    send({ type: 'historyList', page: state.history.page + 1 })
+  }
+
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
@@ -75,7 +87,17 @@ function Screen({ state, send, placeShips, goHome }: ScreenProps) {
         />
       )
     case 'lobby':
-      return <LobbyScreen state={state} onStartGame={() => send({ type: 'findMatch' })} />
+      return <LobbyScreen state={state} onStartGame={() => send({ type: 'findMatch' })} onOpenHistory={openHistory} />
+    case 'history':
+      return (
+        <HistoryScreen
+          history={state.history}
+          failed={state.historyFailed}
+          onBack={() => dispatch({ type: 'closeHistory' })}
+          onLoadMore={loadMore}
+          onRetry={state.history ? loadMore : openHistory}
+        />
+      )
     case 'placement':
       return <PlacementScreen state={state} onReady={placeShips} />
     case 'game':

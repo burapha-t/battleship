@@ -1,11 +1,12 @@
 // The UI's single source of truth: a pure fold over the server's events. The
 // server is authoritative, so the only local actions are `myShips` — the ships I
-// sent in `place`, which the server never sends back — and `wentHome`.
+// sent in `place`, which the server never sends back — `wentHome`, and opening,
+// paging and closing the match history screen.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { Cell, ErrorCode, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
+import type { Cell, ErrorCode, HistoryMatch, HistoryStats, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'nickname' | 'lobby' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
@@ -13,7 +14,22 @@ export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
 export type MyShipsAction = { type: 'myShips'; ships: Cell[][] }
 /** I pressed Home on the end screen. */
 export type WentHomeAction = { type: 'wentHome' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction
+/** Match history: open it from the lobby (I send `historyList` page 1), ask for the next page, go back. */
+export type HistoryAction = { type: 'openHistory' } | { type: 'loadMoreHistory' } | { type: 'closeHistory' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction
+
+/** The pages of `history` received so far, joined into one list. */
+export type HistoryView = {
+  stats: HistoryStats
+  /** Newest first, every page received so far. */
+  matches: HistoryMatch[]
+  /** The last page received. */
+  page: number
+  /** An older page exists. */
+  more: boolean
+  /** The next page has been asked for and hasn't come yet. */
+  loadingMore: boolean
+}
 
 export type GameState = {
   screen: Screen
@@ -46,6 +62,10 @@ export type GameState = {
   lastError: { code: ErrorCode; message: string; seq: number } | null
   /** A new object per notice, so the same text twice still shows twice. */
   notice: { text: string } | null
+  /** Null until the first `history` page after opening the screen. */
+  history: HistoryView | null
+  /** An `error` came while a history page was loading. */
+  historyFailed: boolean
 }
 
 const noMatch = {
@@ -69,6 +89,8 @@ export const initialState: GameState = {
   leaving: false,
   lastError: null,
   notice: null,
+  history: null,
+  historyFailed: false,
 }
 
 export function gameReducer(state: GameState, event: GameAction): GameState {
@@ -149,15 +171,43 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         notice: { text: 'The server was reset' },
       }
 
-    // The match history screen (HIST-2) isn't built yet.
-    case 'history':
-      return state
+    // Page 1 starts the list over; the next page adds to it. Anything else
+    // (a repeat, or a page that crossed a reopen) is dropped.
+    case 'history': {
+      const { page, stats, matches, more } = event
+      if (page === 1) return { ...state, history: { stats, matches, page, more, loadingMore: false } }
+      const shown = state.history
+      if (!shown || page !== shown.page + 1) return state
+      return { ...state, history: { stats, matches: [...shown.matches, ...matches], page, more, loadingMore: false } }
+    }
 
-    case 'error':
+    case 'error': {
+      const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
+      // The history screen sends nothing but historyList, so an error there is its answer.
+      const loading = state.screen === 'history' && (state.history === null || state.history.loadingMore)
+      if (!loading) return { ...state, lastError }
       return {
         ...state,
-        lastError: { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 },
+        lastError,
+        historyFailed: true,
+        history: state.history && { ...state.history, loadingMore: false },
       }
+    }
+
+    // From the lobby, or again from the history screen to retry a failed first
+    // page. A lobby notice ("Bob left the game") is done with by now.
+    case 'openHistory':
+      return state.screen === 'lobby' || state.screen === 'history'
+        ? { ...state, screen: 'history', history: null, historyFailed: false, notice: null }
+        : state
+
+    case 'loadMoreHistory':
+      return state.screen === 'history' && state.history?.more && !state.history.loadingMore
+        ? { ...state, historyFailed: false, history: { ...state.history, loadingMore: true } }
+        : state
+
+    case 'closeHistory':
+      return state.screen === 'history' ? { ...state, screen: 'lobby' } : state
 
     case 'myShips':
       return { ...state, myShips: event.ships }
