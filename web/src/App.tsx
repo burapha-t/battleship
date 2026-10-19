@@ -3,6 +3,7 @@ import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
+import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
 import type { GameState } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
@@ -17,6 +18,7 @@ import { useGameSocket } from './useGameSocket'
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
+  const screen = useEndDelay(state.screen)
 
   return (
     <div className="app">
@@ -33,7 +35,7 @@ export default function App() {
           <p>{state.fatal}</p>
         </main>
       ) : (
-        <Screen state={state} send={send} placeShips={(ships) => {
+        <Screen state={{ ...state, screen }} send={send} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })

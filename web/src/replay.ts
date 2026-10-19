@@ -3,10 +3,13 @@
 // with no server running.
 
 import transcript from '../../tests/fixtures/match-transcript.jsonl?raw'
+import { END_DELAY_MS } from './endDelay'
 import type { GameAction } from './gameReducer'
 import type { ClientVerb, ServerEvent } from './protocol'
 
 const DELAY_MS = 350
+/** How long the end screen shows before the transcript's rematch. */
+const END_SCREEN_MS = 3000
 
 type Line = { from: string; to: string; frame: ServerEvent | ClientVerb }
 
@@ -31,12 +34,17 @@ export function startReplay(player: string, onAction: (action: GameAction) => vo
   const actions = replayActions(player)
   if (actions.length === 0) console.warn(`[replay] the transcript has no lines for "${player}"`)
   let next = 0
-  const timer = setInterval(() => {
-    if (next < actions.length) onAction(actions[next++])
-    else {
-      clearInterval(timer)
+  let timer: ReturnType<typeof setTimeout>
+  const step = () => {
+    if (next >= actions.length) {
       console.info('[replay] finished')
+      return
     }
-  }, DELAY_MS)
-  return () => clearInterval(timer)
+    const action = actions[next++]
+    onAction(action)
+    // After a win, wait out the final-board pause and leave the end screen up for a bit.
+    timer = setTimeout(step, action.type === 'matchEnd' ? END_DELAY_MS + END_SCREEN_MS : DELAY_MS)
+  }
+  timer = setTimeout(step, DELAY_MS)
+  return () => clearTimeout(timer)
 }
