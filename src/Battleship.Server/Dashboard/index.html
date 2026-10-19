@@ -52,6 +52,11 @@ td{padding:11px 10px;border-top:2.5px dashed #C7DCEF;vertical-align:middle}
 td .avatar{width:34px;height:34px;font-size:16px;display:inline-grid;vertical-align:middle;margin-right:10px;border-width:2.5px}
 td.score{font-family:var(--display);font-size:22px}
 .empty{color:var(--muted);font-weight:700;padding:8px 0}
+.key{margin-top:16px;padding-top:14px;border-top:3px solid var(--ink)}
+.key h3{font-family:var(--display);font-size:18px;margin-bottom:8px}
+.key ul{list-style:none;display:grid;grid-template-columns:max-content 1fr;gap:8px 14px;align-items:center}
+.key li{display:contents}
+.key .meaning{font-weight:700;font-size:15px;color:var(--muted)}
 .match{margin-bottom:24px}
 .match .progress{font-weight:800;color:var(--muted);margin:-8px 0 12px}
 .match .vsrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -99,6 +104,10 @@ td.score{font-family:var(--display);font-size:22px}
           <tbody id="clients"></tbody>
         </table>
         <div class="empty" id="no-clients">Nobody is connected yet.</div>
+        <div class="key">
+          <h3>Status key</h3>
+          <ul id="status-key"></ul>
+        </div>
       </div>
     </div>
     <div>
@@ -113,12 +122,13 @@ td.score{font-family:var(--display);font-size:22px}
 
 <script>
 const COLORS = ['var(--sun)', 'var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--coral)'];
+// [dot colour, chip label, meaning]. The table and the status key both read this.
 const STATUS = {
-  connecting: ['grey', 'Connecting'],
-  idle: ['sun', 'Lobby'],
-  searching: ['', 'Searching'],
-  placing: ['lilac', 'Placing ships'],
-  'in-match': ['coral', 'In match'],
+  connecting: ['grey', 'Connecting', "Connected, hasn't entered a nickname yet"],
+  idle: ['sun', 'Lobby', 'Has a nickname, waiting in the lobby'],
+  searching: ['', 'Searching', 'Pressed Start game, waiting for an opponent'],
+  placing: ['lilac', 'Placing ships', 'Matched, placing ships on their grid'],
+  'in-match': ['coral', 'In match', 'Playing: taking turns to fire'],
 };
 
 const $ = id => document.getElementById(id);
@@ -126,6 +136,7 @@ const esc = text => String(text ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeA
 const clock = (iso, seconds) =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: seconds ? '2-digit' : undefined, hour12: false });
 const color = id => COLORS[(parseInt(String(id).slice(1), 10) || 0) % COLORS.length];
+const chip = (dot, label) => `<span class="pill"><span class="dot ${dot}"></span>${esc(label)}</span>`;
 const avatar = (id, name) => `<span class="avatar" style="background:${color(id)}">${esc((name || '?')[0].toUpperCase())}</span>`;
 
 function render(state) {
@@ -143,7 +154,7 @@ function render(state) {
     return `<tr>
       <td>${avatar(c.id, c.name || c.id)}${name}</td>
       <td>${esc(c.address)}${own.has(c.address) ? ' (client on this PC)' : ''}</td>
-      <td><span class="pill"><span class="dot ${dot}"></span>${esc(label)}</span></td>
+      <td>${chip(dot, label)}</td>
       <td class="score">${c.name ? esc(c.score) : '–'}</td>
       <td>${clock(c.connectedAt, false)}</td>
     </tr>`;
@@ -199,6 +210,10 @@ $('reset').addEventListener('click', async () => {
     setTimeout(() => button.classList.remove('pressed'), 300);
   }
 });
+
+$('status-key').innerHTML = Object.values(STATUS)
+  .map(([dot, label, meaning]) => `<li>${chip(dot, label)}<span class="meaning">${esc(meaning)}</span></li>`)
+  .join('');
 
 poll();
 </script>
