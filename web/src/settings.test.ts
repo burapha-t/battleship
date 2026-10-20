@@ -18,7 +18,7 @@ it('honors legacy mute and quoted language', async () => {
 it('bounds invalid values', async () => {
   storage({ 'battleship.music-volume': 'broken', 'battleship.effects-volume': '200' })
   const store = await import('./settings')
-  expect(store.getSettings().musicVolume).toBe(70)
+  expect(store.getSettings().musicVolume).toBe(50)
   expect(store.getSettings().effectsVolume).toBe(100)
   store.updateSettings({ musicVolume: -1, effectsVolume: NaN })
   expect(store.getSettings().musicVolume).toBe(0)

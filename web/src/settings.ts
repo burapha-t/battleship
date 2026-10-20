@@ -16,8 +16,8 @@ const savedLanguage = read(keys.language)?.replaceAll('"', '')
 const legacyMuted = read('battleship.muted') === '1'
 let settings: Settings = {
   language: savedLanguage === 'en' || savedLanguage === 'th' ? savedLanguage : typeof navigator !== 'undefined' && navigator.language.startsWith('th') ? 'th' : 'en',
-  musicVolume: savedVolume(keys.musicVolume, legacyMuted ? 0 : 70),
-  effectsVolume: savedVolume(keys.effectsVolume, legacyMuted ? 0 : 85),
+  musicVolume: savedVolume(keys.musicVolume, legacyMuted ? 0 : 50),
+  effectsVolume: savedVolume(keys.effectsVolume, legacyMuted ? 0 : 50),
 }
 const listeners = new Set<() => void>()
 export const getSettings = () => settings

@@ -21,8 +21,8 @@ const CLIPS: Record<Sound | 'music', string> = {
   lose: loseUrl,
   music: musicUrl,
 }
-const MUSIC_VOLUME: Record<Scene, number> = { menu: 0.45, match: 0.1, result: 0.08 }
-const EFFECTS_VOLUME = 0.8
+const MUSIC_VOLUME: Record<Scene, number> = { menu: 0.63, match: 0.14, result: 0.112 }
+const EFFECTS_VOLUME = 1.36
 
 type Engine = { ctx: AudioContext; master: GainNode; music: GainNode; effects: GainNode }
 
