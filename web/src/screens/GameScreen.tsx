@@ -9,6 +9,7 @@ import type { GameState, Shot } from '../gameReducer'
 import { SHIP_COUNT, cellName } from '../placement'
 import type { Cell } from '../protocol'
 import { playSound } from '../sound'
+import { STREAK_MIN, consecutiveHits } from '../streak'
 import { SHIP_COLORS } from './shipColors'
 import './screens.css'
 
@@ -61,11 +62,15 @@ export function GameScreen({ state, onFire }: Props) {
   }
 
   const last = state.shots.at(-1)
+  // A hit that keeps my streak going plays the streak sound instead of the
+  // hit sound; a sinking shot keeps the sunk (or win) clip.
+  const streakHit = last?.by === myId && consecutiveHits(myShots, myId) >= STREAK_MIN
   useEffect(() => {
     if (!last) return
     if (last.allSunk) playSound(last.by === myId ? 'win' : 'lose')
-    else playSound(last.sunk ? 'sunk' : last.result)
-  }, [last, myId])
+    else if (last.sunk) playSound('sunk')
+    else playSound(last.result === 'hit' && streakHit ? 'streak' : last.result)
+  }, [last, myId, streakHit])
 
   return (
     <main className="game">
