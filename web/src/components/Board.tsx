@@ -25,6 +25,8 @@ type Props = {
   shots?: BoardShot[]
   /** Draws the aim marker on this cell. */
   hover?: Cell | null
+  /** Rings this cell in yellow: the newest hit. */
+  fresh?: Cell | null
   /** Darker water for the opponent's board. */
   enemy?: boolean
   /** No cell is clickable. */
@@ -45,6 +47,7 @@ export function Board({
   ships = [],
   shots = [],
   hover = null,
+  fresh = null,
   enemy = false,
   disabled = false,
   canClick,
@@ -102,6 +105,11 @@ export function Board({
           </div>
         )}
       </div>
+      {fresh && (
+        <div className="water-over" style={{ gridTemplateColumns: tracks, gridTemplateRows: tracks }}>
+          <div className="fresh" style={at(fresh[0], fresh[1])} aria-hidden />
+        </div>
+      )}
     </div>
   )
 }

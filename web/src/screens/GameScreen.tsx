@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
 import { Countdown } from '../components/Countdown'
+import { StreakLevels, StreakNotification } from '../components/StreakNotification'
 import { END_DELAY_MS } from '../endDelay'
 import { matchSides } from '../gameReducer'
 import type { GameState, Shot } from '../gameReducer'
@@ -41,6 +42,9 @@ export function GameScreen({ state, onFire }: Props) {
   const sunkByMe = sunkShips(myShots)
   const sunkAtMe = sunkShips(incoming)
   const alreadyShot = new Set(myShots.map((s) => `${s.row},${s.col}`))
+  // My newest shot, if it hit, gets the yellow ring until my next shot.
+  const myLast = myShots.at(-1)
+  const freshHit: Cell | null = myLast?.result === 'hit' ? [myLast.row, myLast.col] : null
 
   const ownShips: BoardShip[] = state.myShips
     ? state.myShips.map((cells, i) => ({
@@ -101,25 +105,30 @@ export function GameScreen({ state, onFire }: Props) {
           ) : (
             turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />
           )}
-          <div className="card log">
-            <h4>Last shots</h4>
-            {state.shots.length === 0 && <p className="empty">No shots yet</p>}
-            {state.shots
-              .slice(-LOG_LENGTH)
-              .reverse()
-              .map((s) => (
-                <p key={`${s.by}-${s.row},${s.col}`}>
-                  <span className={`tag ${s.sunk ? 's' : s.result === 'hit' ? 'h' : 'm'}`}>
-                    {s.sunk ? 'Sunk' : s.result === 'hit' ? 'Hit' : 'Miss'}
-                  </span>
-                  {s.auto
-                    ? `${nameOf(s.by)} ran out of time → ${cellName([s.row, s.col])}`
-                    : s.sunk
-                      ? `${nameOf(s.by)} sank ${nameOf(s.target)}'s ship`
-                      : `${nameOf(s.by)} → ${cellName([s.row, s.col])}`}
-                </p>
-              ))}
+          <div className="log-wrap">
+            {/* Over the top of the log: it covers neither board nor the timer. */}
+            <StreakNotification myShots={myShots} myId={myId} />
+            <div className="card log">
+              <h4>Last shots</h4>
+              {state.shots.length === 0 && <p className="empty">No shots yet</p>}
+              {state.shots
+                .slice(-LOG_LENGTH)
+                .reverse()
+                .map((s) => (
+                  <p key={`${s.by}-${s.row},${s.col}`}>
+                    <span className={`tag ${s.sunk ? 's' : s.result === 'hit' ? 'h' : 'm'}`}>
+                      {s.sunk ? 'Sunk' : s.result === 'hit' ? 'Hit' : 'Miss'}
+                    </span>
+                    {s.auto
+                      ? `${nameOf(s.by)} ran out of time → ${cellName([s.row, s.col])}`
+                      : s.sunk
+                        ? `${nameOf(s.by)} sank ${nameOf(s.target)}'s ship`
+                        : `${nameOf(s.by)} → ${cellName([s.row, s.col])}`}
+                  </p>
+                ))}
+            </div>
           </div>
+          <StreakLevels />
           <div className="legend">
             <span>
               <i className="sw hit">✕</i>Hit
@@ -149,6 +158,7 @@ export function GameScreen({ state, onFire }: Props) {
             ships={sunkByMe.map((cells) => ({ cells, sunk: true }))}
             shots={myShots}
             hover={canFire && aim && !alreadyShot.has(`${aim[0]},${aim[1]}`) ? aim : null}
+            fresh={freshHit}
             disabled={!canFire}
             canClick={([r, c]) => !alreadyShot.has(`${r},${c}`)}
             onCellClick={fire}

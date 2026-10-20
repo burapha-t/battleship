@@ -392,8 +392,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding-top: 10px;
+  gap: 14px;
 }
 
 .timer {
@@ -460,7 +459,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 0;
+  padding: 3px 0;
   border-top: 2px dashed var(--rule);
 }
 
@@ -481,10 +480,12 @@
 .tag.m { background: #fff; }
 .tag.s { background: var(--ink); color: #fff; }
 
+/* One line, so the centre column fits under the Hot streak card. */
 .legend {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
   font-size: 14px;
   font-weight: 800;
 }
@@ -515,6 +516,111 @@
   background: var(--color-sunk)
     repeating-linear-gradient(45deg, transparent 0 4px, rgba(20, 50, 90, 0.3) 4px 6px);
 }
+
+/* ── Hot streak (7_hot_streak, #40) ─────────────────────────── */
+
+.log-wrap {
+  position: relative;
+}
+
+/* Over the top of the log card, so it covers neither board nor the timer. */
+.streak-badge {
+  position: absolute;
+  z-index: 5;
+  top: 4px;
+  left: 50%;
+  translate: -50% 0;
+  rotate: -6deg;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px 8px 14px;
+  white-space: nowrap;
+  background: var(--sun);
+  border: 4px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 6px 6px 0 var(--ink);
+  pointer-events: none;
+  animation: streak-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.streak-badge.x4 {
+  background: var(--coral);
+  color: #fff;
+}
+
+.streak-badge svg {
+  flex: none;
+  width: 36px;
+  height: 44px;
+}
+
+.streak-badge b {
+  display: block;
+  font: 800 26px / 1 var(--font-display);
+}
+
+.streak-badge span {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@keyframes streak-pop {
+  0% { transform: scale(0.3) rotate(-18deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.levels {
+  width: 250px;
+  padding: 14px 16px 16px;
+}
+
+.levels h4 {
+  margin-bottom: 4px;
+  font-size: 19px;
+}
+
+.levels p {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.lv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-top: 2px dashed var(--rule);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* The ×N multipliers (.chip is the header's player chip). */
+.mult {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.mult svg {
+  width: 16px;
+  height: 20px;
+}
+
+.mult.x2 { background: var(--sun); font-size: 16px; }
+.mult.x3 { background: var(--sun); font-size: 18px; }
+.mult.x4 { background: var(--coral); color: #fff; font-size: 20px; }
 
 /* ── End (4_result_rematch) ─────────────────────────────────── */
 
@@ -683,6 +789,14 @@
 }
 
 /* ── Short windows: a 1280×800 projector minus taskbar and browser bars ── */
+
+/* The Hot streak card drops its description first, so the centre column
+   stays above the waves. */
+@media (max-height: 860px) {
+  .levels { padding: 10px 16px 12px; }
+  .levels p { display: none; }
+  .lv { padding: 3px 0; }
+}
 
 @media (max-height: 760px) {
   .hero h1 { font-size: 90px; }
