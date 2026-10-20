@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Avatar } from '../components/Avatar'
 import type { HistoryView } from '../gameReducer'
 import type { HistoryMatch } from '../protocol'
-import { historyLanguage, historyText, localTime, percent } from './historyText'
+import { historyText, localTime, percent } from './historyText'
 import type { Language } from './historyText'
+import { useSettings } from '../useSettings'
 import './history.css'
 
 const OPPONENT_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
@@ -19,7 +20,7 @@ type Props = {
 
 /** The spec layout: my five stats on top, my matches below, newest first. */
 export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: Props) {
-  const [language] = useState(historyLanguage)
+  const { language } = useSettings()
   const t = historyText(language)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => title.current?.focus(), [])

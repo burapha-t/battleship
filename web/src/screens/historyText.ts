@@ -1,6 +1,5 @@
-// English and Thai text for the match history screen. The language comes from
-// the `battleship.language` setting (the key the language feature, #38, saves),
-// else the browser's language. Swap for that feature's t() once it lands.
+// English and Thai text for the match history screen. The screen passes in the
+// language from the device settings (#43).
 
 export type Language = 'en' | 'th'
 
@@ -31,17 +30,6 @@ const TEXT = {
 } satisfies Record<string, [en: string, th: string]>
 
 export type TextKey = keyof typeof TEXT
-
-export function historyLanguage(): Language {
-  try {
-    const saved = localStorage.getItem('battleship.language')
-    if (saved === 'th' || saved === '"th"') return 'th'
-    if (saved === 'en' || saved === '"en"') return 'en'
-  } catch {
-    // Storage blocked: fall back to the browser's language.
-  }
-  return navigator.language?.toLowerCase().startsWith('th') ? 'th' : 'en'
-}
 
 export function historyText(language: Language): (key: TextKey) => string {
   return (key) => TEXT[key][language === 'th' ? 1 : 0]
