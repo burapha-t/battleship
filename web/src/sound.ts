@@ -1,6 +1,6 @@
 // Background music and sound effects, played from the clips in
 // assets/sounds through the Web Audio API. Device volumes come from #43.
-import { getSettings, subscribeSettings, updateSettings } from './settings'
+import { getSettings, subscribeSettings } from './settings'
 import hitUrl from './assets/sounds/hit.mp3'
 import loseUrl from './assets/sounds/lose.mp3'
 import missUrl from './assets/sounds/miss.mp3'
@@ -84,13 +84,6 @@ subscribeSettings(() => {
   engine.music.gain.setTargetAtTime(MUSIC_VOLUME[scene] * getSettings().musicVolume / 100, engine.ctx.currentTime, 0.05)
   engine.effects.gain.setTargetAtTime(EFFECTS_VOLUME * getSettings().effectsVolume / 100, engine.ctx.currentTime, 0.05)
 })
-
-export function isMuted(): boolean {
-  return getSettings().musicVolume === 0 && getSettings().effectsVolume === 0
-}
-export function setMuted(value: boolean): void {
-  updateSettings({ musicVolume: value ? 0 : 70, effectsVolume: value ? 0 : 85 })
-}
 
 /** Fades the music to the scene's level; leaving the result screen stops its clip. */
 export function setScene(next: Scene): void {

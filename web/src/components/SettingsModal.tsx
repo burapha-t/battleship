@@ -10,15 +10,15 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const t = (en: string, th: string) => settings.language === 'th' ? th : en
   useEffect(() => { if (!dialog.current?.open) dialog.current?.showModal() }, [])
   return (
-    <dialog ref={dialog} className="settings-modal" aria-labelledby="settings-title" onCancel={onClose} onClose={onClose}
+    <dialog ref={dialog} className="settings-modal" aria-labelledby="settings-title" onClose={onClose}
       onClick={event => {
         if (event.target !== event.currentTarget) return
         const rect = event.currentTarget.getBoundingClientRect()
-        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose()
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.current?.close()
       }}>
       <div className="settings-heading">
         <h2 id="settings-title">{t('Settings', 'การตั้งค่า')}</h2>
-        <button type="button" className="settings-close" aria-label={t('Close', 'ปิด')} onClick={onClose}>×</button>
+        <button type="button" className="settings-close" aria-label={t('Close', 'ปิด')} onClick={() => dialog.current?.close()}>×</button>
       </div>
       <section className="settings-section" aria-labelledby="settings-sound">
         <h3 id="settings-sound"><span aria-hidden>♫</span> {t('Sound', 'เสียง')}</h3>
@@ -39,7 +39,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           <button type="button" lang="th" aria-pressed={settings.language === 'th'} onClick={() => updateSettings({ language: 'th' })}>ไทย</button>
         </div>
       </section>
-      <div className="settings-footer"><button type="button" className="btn" onClick={onClose}>{t('Done', 'เสร็จสิ้น')}</button></div>
+      <div className="settings-footer"><button type="button" className="btn" onClick={() => dialog.current?.close()}>{t('Done', 'เสร็จสิ้น')}</button></div>
     </dialog>
   )
 }
