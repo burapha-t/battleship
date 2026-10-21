@@ -5,7 +5,8 @@ export type Language = 'en' | 'th'
 
 const TEXT = {
   title: ['Match history', 'ประวัติการแข่งขัน'],
-  back: ['Back to lobby', 'กลับไปล็อบบี้'],
+  subtitle: ['Your battles, newest first', 'การรบของคุณ เรียงจากล่าสุด'],
+  home: ['Home', 'หน้าหลัก'],
   matches: ['Matches', 'แมตช์'],
   wins: ['Wins', 'ชนะ'],
   losses: ['Losses', 'แพ้'],

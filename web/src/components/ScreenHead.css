@@ -1,6 +1,6 @@
-/* The top row of the profile, leaderboard and badges screens. It spans the
-   full content width, so Home lines up with the header's settings icon; the
-   screen below keeps its own max-width. */
+/* The top row of the profile, leaderboard, badges and match history screens.
+   It spans the full content width, so Home lines up with the header's
+   settings icon; the screen below keeps its own max-width. */
 
 .screen-head {
   display: flex;
