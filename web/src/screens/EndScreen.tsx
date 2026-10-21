@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 import { useState } from 'react'
 import { UnlockCard } from '../components/UnlockCard'
 import { matchSides } from '../gameReducer'
@@ -10,8 +11,9 @@ type Props = { state: GameState; onRematch: () => void; onHome: () => void }
 
 /** Win or Lost from `matchEnd.winnerId`, both scores, the rematch handshake, and Home. */
 export function EndScreen({ state, onRematch, onHome }: Props) {
+  const { t } = useTranslation('game')
   const { me, opponent } = matchSides(state)
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('yourOpponent')
   const won = state.winnerId !== null && state.winnerId === state.myId
 
   const [pressed, setPressed] = useState(false)
@@ -43,18 +45,18 @@ export function EndScreen({ state, onRematch, onHome }: Props) {
               aria-hidden
             />
           ))}
-        <h1 className="status">{won ? 'Win' : 'Lost'}</h1>
+        <h1 className="status">{won ? t('win') : t('lost')}</h1>
         <p className="line">
-          {won ? `You sank all 4 of ${opponentName}'s ships!` : `${opponentName} sank your whole fleet this time.`}
+          {t(won ? 'winLine' : 'lostLine', { name: opponentName })}
         </p>
         <div className="scores">
           {sides.map((p, i) => (
             <div key={p.id} className="score-pair">
-              {i > 0 && <span className="vs">vs</span>}
+              {i > 0 && <span className="vs">{t('versus')}</span>}
               <div className={`sc${p.score === top ? ' lead' : ''}`}>
                 <div className="n">
                   {p.name}
-                  {p.id === state.myId && ' (you)'}
+                  {p.id === state.myId && t('youSuffix')}
                 </div>
                 <div className="v">{p.score}</div>
               </div>
@@ -69,22 +71,22 @@ export function EndScreen({ state, onRematch, onHome }: Props) {
               <path d="M5.5 10v9.5h13V10" fill="#fff" stroke="#14325A" strokeWidth="2.8" strokeLinejoin="round" />
               <rect x="10" y="13.5" width="4" height="6" rx="1" fill="#FFC83D" stroke="#14325A" strokeWidth="2" />
             </svg>
-            Home
+            {t('home')}
           </button>
           <button type="button" className={`btn big rm${iAsked ? ' pressed' : ''}`} disabled={iAsked} onClick={rematch}>
-            {iAsked ? 'Rematch requested' : 'Rematch'}
+            {iAsked ? t('rematchRequested') : t('rematch')}
           </button>
         </div>
         {iAsked ? (
           <p className="note" role="status">
             <span className="dot sun" />
-            Waiting for {opponentName}…
+            {t('waitingFor', { name: opponentName })}
           </p>
         ) : (
           theyAsked && (
             <p className="note" role="status">
               <span className="dot" />
-              {opponentName} wants a rematch{won ? ". You'll fire first as the winner." : '.'}
+              {t(won ? 'wantsRematchWinner' : 'wantsRematch', { name: opponentName })}
             </p>
           )
         )}

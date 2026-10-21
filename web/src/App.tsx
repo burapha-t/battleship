@@ -18,10 +18,14 @@ import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { setScene } from './sound'
+import { localizeMessage } from './localizeMessage'
+import { useTranslation } from './useTranslation'
 import { useGameSocket } from './useGameSocket'
 
 /** One reducer over the server's events, and a switch over its screen. */
 export default function App() {
+  const { language, t } = useTranslation('game')
+  useEffect(() => { document.documentElement.lang = language }, [language])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
@@ -74,8 +78,8 @@ export default function App() {
       <Notice notice={state.notice} />
       {state.fatal ? (
         <main className="card fatal" role="alert">
-          <h2>Can't play</h2>
-          <p>{state.fatal}</p>
+          <h2>{t('cantPlay')}</h2>
+          <p>{localizeMessage(state.fatal, language)}</p>
         </main>
       ) : (
         <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open} searching={searching} startGame={() => {

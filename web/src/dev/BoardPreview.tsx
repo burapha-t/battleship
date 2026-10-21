@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 // Dev page at ?preview=board: every cell state from mock data, and a board
 // that reports the [row, col] of each click. No server needed.
 
@@ -35,6 +36,7 @@ const placing: BoardShip[] = [
 ]
 
 export function BoardPreview() {
+  const { t } = useTranslation('preview')
   const [shots, setShots] = useState<BoardShot[]>([
     { row: 1, col: 1, result: 'hit' },
     { row: 1, col: 2, result: 'hit' },
@@ -57,25 +59,24 @@ export function BoardPreview() {
     <div className="app preview">
       <header className="header">
         <div className="logo">
-          <b>Board</b> preview
+          {t('board')}
         </div>
       </header>
       <p>
-        Every cell state from mock data: water, ship, hit (✕), miss (ring), sunk (grey hatched hull), hover (dashed
-        aim), and placement ghosts (valid / blocked).
+        {t('hint')}
       </p>
       <div className="preview-grid">
         <figure>
-          <figcaption>Own board — ships, hits, misses, a sunk ship</figcaption>
-          <Board label="Own board preview" ships={ownShips} shots={ownShots} />
+          <figcaption>{t('ownCaption')}</figcaption>
+          <Board label={t('own')} ships={ownShips} shots={ownShots} />
         </figure>
         <figure>
           <figcaption>
-            Target board — click any unshot cell.{' '}
-            <output>{clicked ? `Clicked [${clicked[0]}, ${clicked[1]}] = ${cellName(clicked)}` : 'Nothing clicked yet'}</output>
+            {t('targetCaption')}{' '}
+            <output>{clicked ? t('clicked', { row: clicked[0], col: clicked[1], cell: cellName(clicked) }) : t('notClicked')}</output>
           </figcaption>
           <Board
-            label="Target board preview"
+            label={t('target')}
             enemy
             ships={[{ cells: [[1, 1], [1, 2], [1, 3], [1, 4]], sunk: true }]}
             shots={shots}
@@ -86,8 +87,8 @@ export function BoardPreview() {
           />
         </figure>
         <figure>
-          <figcaption>Placement — placed ships, a ghost that fits, a blocked ghost</figcaption>
-          <Board label="Placement preview" ships={placing} disabled />
+          <figcaption>{t('placementCaption')}</figcaption>
+          <Board label={t('placement')} ships={placing} disabled />
         </figure>
       </div>
     </div>

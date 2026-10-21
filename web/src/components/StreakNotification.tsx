@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 // The "Hot streak ×N" badge and the levels card (#40, docs/frontend/7_hot_streak).
 // Started from feat/extra-features-ui's StreakNotification.tsx. The count
 // comes from my own `fireResult`s (streak.ts); the server sends nothing extra.
@@ -18,6 +19,7 @@ export function StreakNotification({ myShots, myId }: { myShots: Shot[]; myId: s
 }
 
 function TimedBadge({ count }: { count: number }) {
+  const { t } = useTranslation('game')
   const [hidden, setHidden] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => setHidden(true), STREAK_BADGE_MS)
@@ -31,8 +33,8 @@ function TimedBadge({ count }: { count: number }) {
     <div className={`streak-badge ${level}`} role="status">
       {level !== 'x2' && <Flame />}
       <div>
-        <b>Hot streak ×{count}</b>
-        <span>{count} hits in a row</span>
+        <b>{t('hotStreakCount', { count })}</b>
+        <span>{t('hitsInRow', { count })}</span>
       </div>
     </div>
   )
@@ -61,21 +63,22 @@ function Flame() {
 
 /** The rules card for the centre column. */
 export function StreakLevels() {
+  const { t } = useTranslation('game')
   return (
     <div className="card levels">
-      <h4>Hot streak</h4>
-      <p>Hit twice in a row to start a streak. A miss or timeout resets it.</p>
+      <h4>{t('hotStreak')}</h4>
+      <p>{t('streakHint')}</p>
       <div className="lv">
-        2 hits in a row<span className="mult x2">×2</span>
+        {t('hitsInRow', { count: 2 })}<span className="mult x2">×2</span>
       </div>
       <div className="lv">
-        3 hits in a row
+        {t('hitsInRow', { count: 3 })}
         <span className="mult x3">
           <Flame />×3
         </span>
       </div>
       <div className="lv">
-        4 or more
+        {t('fourOrMore')}
         <span className="mult x4">
           <Flame />×4+
         </span>

@@ -1,40 +1,11 @@
-// English and Thai text for the match history screen. The screen passes in the
-// language from the device settings (#43).
+// Shared catalogue adapter (#38) and date/percentage formatting for history.
+// Keep historyText/Language compatible with the pending profile/badges PR #65.
 
-export type Language = 'en' | 'th'
+import type { Language } from '../settings'
+import { translator } from '../translations'
+export type { Language } from '../settings'
 
-const TEXT = {
-  title: ['Match history', 'ประวัติการแข่งขัน'],
-  subtitle: ['Your battles, newest first', 'การรบของคุณ เรียงจากล่าสุด'],
-  home: ['Home', 'หน้าหลัก'],
-  matches: ['Matches', 'แมตช์'],
-  wins: ['Wins', 'ชนะ'],
-  losses: ['Losses', 'แพ้'],
-  winRate: ['Win rate', 'อัตราชนะ'],
-  accuracy: ['Shot accuracy', 'ความแม่นยำ'],
-  result: ['Result', 'ผล'],
-  opponent: ['Opponent', 'คู่แข่ง'],
-  when: ['Date and time', 'วันและเวลา'],
-  matchAccuracy: ['Accuracy', 'ความแม่นยำ'],
-  win: ['Win', 'ชนะ'],
-  lost: ['Lost', 'แพ้'],
-  loading: ['Loading your matches…', 'กำลังโหลดแมตช์ของคุณ…'],
-  loadingMore: ['Loading…', 'กำลังโหลด…'],
-  more: ['Show older matches', 'ดูแมตช์ก่อนหน้า'],
-  emptyTitle: ['No saved matches yet', 'ยังไม่มีแมตช์ที่บันทึกไว้'],
-  emptyBody: [
-    'Finish a match while you are logged in and it shows up here.',
-    'แมตช์ที่เล่นจบขณะเข้าสู่ระบบจะแสดงที่นี่',
-  ],
-  failed: ["Your match history couldn't be loaded.", 'โหลดประวัติการแข่งขันไม่สำเร็จ'],
-  retry: ['Try again', 'ลองอีกครั้ง'],
-} satisfies Record<string, [en: string, th: string]>
-
-export type TextKey = keyof typeof TEXT
-
-export function historyText(language: Language): (key: TextKey) => string {
-  return (key) => TEXT[key][language === 'th' ? 1 : 0]
-}
+export const historyText = (language: Language) => translator(language, 'history')
 
 /** 66.7 → "66.7%", 50 → "50.0%". */
 export function percent(value: number, language: Language): string {

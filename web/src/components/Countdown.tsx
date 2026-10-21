@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 import { useEffect, useState } from 'react'
 
 /**
@@ -7,12 +8,13 @@ import { useEffect, useState } from 'react'
 export function Countdown({
   seconds,
   turnNumber,
-  label = 'time left',
+  label,
 }: {
   seconds: number
   turnNumber: number
   label?: string
 }) {
+  const { t } = useTranslation('game')
   const total = seconds * 1000
   const [tick, setTick] = useState({ turnNumber, leftMs: total })
 
@@ -35,12 +37,12 @@ export function Countdown({
       className={`timer${left <= 3 ? ' urgent' : ''}`}
       style={{ background: `conic-gradient(var(--coral) 0 ${filled}%, #fff ${filled}% 100%)` }}
       role="timer"
-      aria-label={`${label}: ${left} seconds`}
+      aria-label={t('timerLabel', { label: label ?? t('timeLeft'), count: left })}
     >
       <div>
-        <span>{label}</span>
+        <span>{label ?? t('timeLeft')}</span>
         <b key={left}>{left}</b>
-        <span>seconds</span>
+        <span>{t('seconds')}</span>
       </div>
     </div>
   )

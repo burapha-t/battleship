@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 import type { Link } from '../useGameSocket'
 
 /**
@@ -5,12 +6,13 @@ import type { Link } from '../useGameSocket'
  * *Disconnected — reload* once it closes. A reload is a new player (§9).
  */
 export function LinkBanner({ link, connected }: { link: Link; connected: boolean }) {
+  const { t } = useTranslation('game')
   if (link === 'closed')
     return (
       <div className="link-banner closed" role="alert">
-        Disconnected — reload
+        {t('disconnected')}
         <button type="button" className="btn white small" onClick={() => window.location.reload()}>
-          Reload
+          {t('reload')}
         </button>
       </div>
     )
@@ -18,7 +20,7 @@ export function LinkBanner({ link, connected }: { link: Link; connected: boolean
     return (
       <div className="link-banner" role="status">
         <span className="dot sun" />
-        Connecting…
+        {t('connecting')}
       </div>
     )
   return null
