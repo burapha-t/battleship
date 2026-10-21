@@ -25,7 +25,7 @@ public class ProfileTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_database.Path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -176,7 +176,7 @@ public class ProfileTests : IDisposable
         // Turn the file back into what a version 1 server made.
         Execute(path, "ALTER TABLE users DROP COLUMN shown_badges; PRAGMA user_version = 1;");
         Assert.DoesNotContain("shown_badges", Columns(path, "users"));
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(path);
 
         var upgraded = new GameDatabase(path);
 
@@ -227,7 +227,7 @@ public class ProfileTests : IDisposable
 
     private static void Execute(string path, string sql)
     {
-        using var connection = new SqliteConnection($"Data Source={path}");
+        using var connection = new SqliteConnection($"Data Source={path};Pooling=False");
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = sql;
@@ -236,7 +236,7 @@ public class ProfileTests : IDisposable
 
     private static long Scalar(string path, string sql)
     {
-        using var connection = new SqliteConnection($"Data Source={path}");
+        using var connection = new SqliteConnection($"Data Source={path};Pooling=False");
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = sql;
@@ -245,7 +245,7 @@ public class ProfileTests : IDisposable
 
     private static List<string> Columns(string path, string table)
     {
-        using var connection = new SqliteConnection($"Data Source={path}");
+        using var connection = new SqliteConnection($"Data Source={path};Pooling=False");
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = $"SELECT name FROM pragma_table_info('{table}')";

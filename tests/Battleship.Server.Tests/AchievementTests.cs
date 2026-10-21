@@ -25,7 +25,7 @@ public class AchievementTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_database.Path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -213,7 +213,7 @@ public class AchievementTests : IDisposable
     [Fact]
     public async Task AnUnlockFailure_KeepsTheSavedMatch_AndTheWorkerCarriesOn()
     {
-        using (var connection = new SqliteConnection($"Data Source={_database.Path}"))
+        using (var connection = new SqliteConnection($"Data Source={_database.Path};Pooling=False"))
         {
             connection.Open();
             using var drop = connection.CreateCommand();

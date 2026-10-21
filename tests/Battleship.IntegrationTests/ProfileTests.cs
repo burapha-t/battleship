@@ -3,7 +3,6 @@ using Battleship.Core.Protocol;
 using Battleship.Server.Data;
 using Battleship.Server.Host;
 using Battleship.Server.Lobby;
-using Microsoft.Data.Sqlite;
 
 namespace Battleship.IntegrationTests;
 
@@ -24,7 +23,7 @@ public class ProfileTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         await _server.DisposeAsync();
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_database.Path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 

@@ -16,7 +16,7 @@ public class GameDatabaseTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -42,7 +42,7 @@ public class GameDatabaseTests : IDisposable
         long alice = first.CreateUser("Alice", Salt, Hash, 1000)!.Value;
         long bob = first.CreateUser("Bob", Salt, Hash, 1000)!.Value;
         first.SaveMatch(Match(alice, bob, winner: alice, Shots((1, alice, true))));
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_path);
 
         var second = new GameDatabase(_path);
 

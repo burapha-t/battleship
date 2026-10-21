@@ -96,7 +96,7 @@ public sealed class GameDatabase
         Path = path;
         var folder = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path));
         if (!string.IsNullOrEmpty(folder)) Directory.CreateDirectory(folder);
-        _connectionString = new SqliteConnectionStringBuilder { DataSource = path, ForeignKeys = true }.ToString();
+        _connectionString = ConnectionString(path);
 
         using var connection = Open();
         using var transaction = connection.BeginTransaction();
@@ -118,6 +118,21 @@ public sealed class GameDatabase
     }
 
     public string Path { get; }
+
+    /// <summary>
+    /// Closes the idle pooled connections to the file at <paramref name="path"/>,
+    /// and only that file's, so it can be reopened fresh or deleted. Unlike
+    /// <see cref="SqliteConnection.ClearAllPools"/>, it can't close a connection
+    /// another database (e.g. a test running in parallel) is about to reuse.
+    /// </summary>
+    public static void ClearPool(string path)
+    {
+        using var connection = new SqliteConnection(ConnectionString(path));
+        SqliteConnection.ClearPool(connection);
+    }
+
+    private static string ConnectionString(string path) =>
+        new SqliteConnectionStringBuilder { DataSource = path, ForeignKeys = true }.ToString();
 
     /// <summary>
     /// <c>battleship/battleship.db</c> in the host's app-data folder. Not beside

@@ -31,7 +31,7 @@ public class MatchArchiveTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(Path.Combine(_folder, "test.db"));
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -185,7 +185,7 @@ public class MatchArchiveTests : IDisposable
 
         await worker.CompleteAsync();
 
-        using var connection = new SqliteConnection($"Data Source={database.Path}");
+        using var connection = new SqliteConnection($"Data Source={database.Path};Pooling=False");
         connection.Open();
         long Count(string sql) { using var c = connection.CreateCommand(); c.CommandText = sql; return (long)c.ExecuteScalar()!; }
         Assert.Equal(1, Count("SELECT COUNT(*) FROM matches"));
@@ -211,7 +211,7 @@ public class MatchArchiveTests : IDisposable
         await worker.CompleteAsync();
 
         Assert.True(ranAfter);
-        using var connection = new SqliteConnection($"Data Source={database.Path}");
+        using var connection = new SqliteConnection($"Data Source={database.Path};Pooling=False");
         connection.Open();
         using var count = connection.CreateCommand();
         count.CommandText = "SELECT COUNT(*) FROM matches";
