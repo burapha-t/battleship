@@ -6,8 +6,9 @@ import { Notice } from './components/Notice'
 import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { GameState, HistoryAction, LeaderboardAction } from './gameReducer'
+import type { BadgesAction, GameState, HistoryAction, LeaderboardAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
+import { BadgesScreen } from './screens/BadgesScreen'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
@@ -64,7 +65,7 @@ export default function App() {
 type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
-  dispatch: (action: HistoryAction | LeaderboardAction) => void
+  dispatch: (action: HistoryAction | LeaderboardAction | BadgesAction) => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
@@ -82,6 +83,10 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
   const openLeaderboard = () => {
     dispatch({ type: 'openLeaderboard' })
     send({ type: 'leaderboardGet' })
+  }
+  const openBadges = () => {
+    dispatch({ type: 'openBadges' })
+    send({ type: 'achievementsGet' })
   }
 
   switch (state.screen) {
@@ -101,6 +106,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           onStartGame={() => send({ type: 'findMatch' })}
           onOpenHistory={openHistory}
           onOpenLeaderboard={openLeaderboard}
+          onOpenBadges={openBadges}
         />
       )
     case 'history':
@@ -121,6 +127,15 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           myName={state.myName}
           onHome={() => dispatch({ type: 'closeLeaderboard' })}
           onRetry={openLeaderboard}
+        />
+      )
+    case 'badges':
+      return (
+        <BadgesScreen
+          achievements={state.achievements}
+          failed={state.achievementsFailed}
+          onBack={() => dispatch({ type: 'closeBadges' })}
+          onRetry={openBadges}
         />
       )
     case 'placement':

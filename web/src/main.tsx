@@ -10,6 +10,7 @@ import './index.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import { BadgesPreview } from './dev/BadgesPreview.tsx'
 import { BoardPreview } from './dev/BoardPreview.tsx'
 import { HistoryPreview } from './dev/HistoryPreview.tsx'
 import { LeaderboardPreview } from './dev/LeaderboardPreview.tsx'
@@ -24,6 +25,8 @@ createRoot(document.getElementById('root')!).render(
       <HistoryPreview mode={preview} />
     ) : preview?.startsWith('leaderboard') ? (
       <LeaderboardPreview mode={preview} />
+    ) : preview?.startsWith('badges') ? (
+      <BadgesPreview mode={preview} />
     ) : (
       <App />
     )}

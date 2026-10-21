@@ -1,0 +1,175 @@
+/* Badges (ACH-2): one card per group, progress on top, five medals below. */
+
+.badges {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-bottom: 72px; /* clear of the waves */
+}
+
+.badges-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.badges-head h1 {
+  font-size: 44px;
+  outline: none;
+}
+
+.badges-head .btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.badges-note {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.badges-empty {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.badge-group {
+  display: grid;
+  gap: 16px;
+  padding: 18px 24px 22px;
+}
+
+.badge-group-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.badge-group-head h2 {
+  font-size: 26px;
+}
+
+.badge-group-head p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.badge-count {
+  flex: none;
+  padding: 4px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 99px;
+  background: var(--mist);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge-progress {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.badge-stat {
+  font: 800 20px / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge-next {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.badge-progress .meter {
+  height: 14px;
+  border: 2.5px solid var(--ink);
+  border-radius: 99px;
+  background: var(--mist);
+  overflow: hidden;
+}
+
+.badge-progress .meter i {
+  display: block;
+  height: 100%;
+}
+
+.wins .meter i { background: var(--sun); }
+.accuracy .meter i { background: var(--sea); }
+.streak .meter i { background: var(--coral); }
+
+.badge-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+}
+
+.badge-row li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px; /* room for the lock chip */
+  text-align: center;
+}
+
+.badge-row b {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.badge-row small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.badge-row .locked b {
+  color: var(--muted);
+}
+
+/* ---- Narrow screens: progress stacks, medals shrink ---- */
+
+@media (max-width: 760px) {
+  .badges-head h1 {
+    font-size: 34px;
+  }
+
+  .badge-group {
+    padding: 16px;
+  }
+
+  .badge-group-head h2 {
+    font-size: 22px;
+  }
+
+  .badge-progress {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .badge-progress .meter {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .badge-row {
+    --medal: 48px;
+    gap: 4px;
+  }
+  .badge-row .badge-medal > svg { width: 15px; height: 15px; }
+  .badge-row .badge-medal > span { font-size: 14px; }
+  .badge-row .badge-chip { right: -6px; top: -6px; width: 20px; height: 20px; }
+  .badge-row b { font-size: 12px; }
+}
