@@ -10,7 +10,7 @@ const TEXT = {
   you: ['You', 'คุณ'],
   rank: ['Rank', 'อันดับ'],
   name: ['Name', 'ชื่อ'],
-  point: ['Point', 'คะแนน'],
+  point: ['Wins', 'ชนะ'],
   accuracy: ['Accuracy', 'ความแม่นยำ'],
   loading: ['Loading the leaderboard…', 'กำลังโหลดกระดานผู้นำ…'],
   emptyTitle: ['No ranked players yet', 'ยังไม่มีผู้เล่นที่ได้รับการจัดอันดับ'],
