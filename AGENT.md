@@ -15,7 +15,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/implement/database.md` | SQLite tables, where the file lives, rules for saving matches, which feature uses what |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
-| `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard, hot streak) — the visual direction |
+| `docs/frontend/` | Static HTML mockups (home, placement, gameplay, result, server dashboard, hot streak, leaderboard, profile) — the visual direction |
 | `tests/fixtures/README.md` | Golden transcript `match-transcript.jsonl`: format, story, what not to depend on |
 | `README.md` | Building `publish/` and running the demo on machines with nothing installed |
 
@@ -25,12 +25,12 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
-  `NicknamePolicy`, `GameRules`, `Achievements`) and the protocol DTOs + `ProtocolJson`.
+  `NicknamePolicy`, `GameRules`, `Achievements`, `Avatars`) and the protocol DTOs + `ProtocolJson`.
 - `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
-- `web/`: complete — all five screens plus sound, and match history (HIST-2), leaderboard (LB-2) and badges (ACH-2) screens opened from the lobby; the end screen shows newly earned badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history`, `?preview=leaderboard` and `?preview=badges` (also `-empty`, `-loading`; `badges-unlock` is the end screen's badge card) show those screens with sample data.
+- `web/`: complete — all five screens plus sound, and match history (HIST-2), leaderboard (LB-2), badges (ACH-2) and profile (#42) screens opened from the lobby; the end screen shows newly earned badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history`, `?preview=leaderboard`, `?preview=badges` and `?preview=profile` (also `-empty`, `-loading`; `badges-unlock` is the end screen's badge card, `profile-guest` a guest) show those screens with sample data.
 - Settings (#43): header popup with independent music/effect volumes and EN/TH preference saved in browser storage; full game translation is tracked in #38.
-- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros).
+- Database (DB-1, schema version 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros). #42: `profileGet` / `profileUpdate` read and save my picture and shown badges; guests get an empty profile marked `guest` and can't save.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 
