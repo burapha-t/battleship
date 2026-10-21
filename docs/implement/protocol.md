@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (9 verbs) · `S→C` server to client (16 events)
+`C→S` client to server (11 verbs) · `S→C` server to client (17 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -100,6 +100,9 @@ either side.
 | `achievementsGet` | C→S | Player opens Badges |
 | `achievements` | S→C | Reply to `achievementsGet` |
 | `achievementUnlocked` | S→C | A saved match earned the player new badges |
+| `profileGet` | C→S | Player opens Profile |
+| `profileUpdate` | C→S | Player presses Save profile |
+| `profile` | S→C | Reply to `profileGet` or `profileUpdate` |
 | `error` | S→C | A client message was rejected |
 
 ---
@@ -427,6 +430,27 @@ loop, so this arrives a moment after `matchEnd` and may come after a rematch's
 `matchStart`. The UI shows it with the result of `matchId` and ignores it
 otherwise; the badges are owned either way.
 
+### `profile`
+
+The reply to `profileGet`, and to a `profileUpdate` that was saved. Sent only to
+the player who asked, and only ever about that player. Added with #42, under the
+ignore-unknown rules (§1).
+
+```json
+{"type":"profile","guest":false,"avatar":"pufferfish","shownBadges":["wins-5","accuracy-70","streak-6"],"rank":3,"wins":8}
+```
+
+| Field | Meaning |
+|---|---|
+| `guest` | `true` when the player isn't logged in. A guest can't save a profile, so the UI disables Save |
+| `avatar` | The chosen picture, one of the codes under `profileUpdate`, or `""` for none (the UI shows the name's first letter) |
+| `shownBadges` | 0–3 badge codes to show, in the player's order |
+| `rank` | The player's place on the leaderboard (`leaderboard`), counted over every account, not only the top 50; `null` with no saved match |
+| `wins` | Total wins over all the player's saved matches |
+
+Earned badges and best accuracy and streak are in `achievements`; the profile
+screen asks for both. A guest gets `"guest":true`, `""`, `[]`, `null` and `0`.
+
 ### `error`
 
 ```json
@@ -444,7 +468,9 @@ Errors never change client state — the client stays where it was.
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
-| `unknown` | Anything else, e.g. the match history, the leaderboard or the badges couldn't be read |
+| `invalid-profile` | `profileUpdate` broke a rule under it — `message` says which. Nothing was saved |
+| `not-logged-in` | A guest sent `profileUpdate` |
+| `unknown` | Anything else, e.g. the match history, the leaderboard, the badges or the profile couldn't be read or saved |
 
 ---
 
@@ -549,6 +575,33 @@ Asks for the sender's own badges and best stats; the server replies with
 `achievements`. Valid in any state and changes none. There is no way to ask for
 another player's badges.
 
+### `profileGet`
+
+```json
+{"type":"profileGet"}
+```
+
+Asks for the sender's own profile; the server replies with `profile`. Valid in
+any state and changes none. A guest gets an empty profile with `"guest":true`.
+
+### `profileUpdate`
+
+```json
+{"type":"profileUpdate","avatar":"pufferfish","shownBadges":["wins-5","accuracy-70","streak-6"]}
+```
+
+Saves the sender's picture and the badges they show, both at once; the server
+replies with the saved `profile`. Valid in any state; changes no game state.
+Both fields are required:
+
+- `avatar`: `""` (no picture) or one of `whale`, `octopus`, `crab`,
+  `pufferfish`, `turtle`, `jellyfish`, `starfish`, `shark`. Case matters.
+- `shownBadges`: at most 3 codes, no repeats, each one a badge the player has
+  earned (`achievements`).
+
+Anything else gets `error` `invalid-profile` and saves nothing. A guest gets
+`error` `not-logged-in`.
+
 ---
 
 ## 6. Full match sequence
@@ -642,7 +695,9 @@ export type ClientVerb =
   | { type: "leave" }
   | { type: "historyList"; page: number }
   | { type: "leaderboardGet" }
-  | { type: "achievementsGet" };
+  | { type: "achievementsGet" }
+  | { type: "profileGet" }
+  | { type: "profileUpdate"; avatar: string; shownBadges: string[] };
 ```
 
 ### C# — `Battleship.Core`
@@ -665,7 +720,7 @@ while chunk := sock.recv(4096).decode("utf-8"):
 ```
 
 The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
-`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history`, `leaderboard` and the badge messages included. It must send
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history`, `leaderboard`, `profile` and the badge messages included. It must send
 `findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
 will never be paired.
 

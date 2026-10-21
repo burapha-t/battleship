@@ -46,7 +46,8 @@ Six tables. Times are stored as text in UTC (ISO 8601, e.g. 2026-10-19T07:00:00.
 | `salt` | BLOB | Random bytes used when hashing the password |
 | `hash` | BLOB | The hashed password (the password itself is never stored) |
 | `iterations` | INTEGER | Hashing rounds, kept so they can be raised later |
-| `avatar` | TEXT | Chosen profile picture. Empty until that feature is built |
+| `avatar` | TEXT | Chosen profile picture (#42): one of the 8 codes under `profileUpdate` in protocol.md. Null or empty = none |
+| `shown_badges` | TEXT | Up to 3 earned badge codes shown on the profile, comma-separated, in the player's order; empty = none (#42, schema version 2) |
 | `created_at` | TEXT | When the account was made |
 
 ### matches: one row per finished match
@@ -118,7 +119,7 @@ Each badge at most once per player (#41). The 15 codes, and when each is earned,
 5. Usernames are unique ignoring case: Alice and alice cannot both exist. The name is shown as it was typed.
 6. Passwords are never stored, only a salted hash.
 7. Every shot keeps its auto flag (fired by the 10-second timeout). Timeout shots count toward accuracy and hit streaks like any other shot (decided with #41); the flag stays so that can change later.
-8. Schema version: the file has user_version = 1. Whoever changes a table must raise the version and add an upgrade step. A server refuses a file made by a newer version instead of changing it.
+8. Schema version: the file has user_version = 2. Whoever changes a table must raise the version and add an upgrade step. A server refuses a file made by a newer version instead of changing it. Version 2 (#42) added users.shown_badges; a version 1 file is upgraded in place and keeps its accounts and matches.
 
 ## 5. How each feature uses it
 
@@ -131,7 +132,7 @@ Each badge at most once per player (#41). The 15 codes, and when each is earned,
 | Badges: wins | match_players | Count of won = 1 reaches 5, 10, 20, 50, 100 (`wins-5` … `wins-100`) |
 | Badges: accuracy | match_players | hits / shots in one match strictly above 40, 50, 60, 70, 80% (`accuracy-40` … `accuracy-80`) |
 | Badges: hit streak | match_players | best_streak in one match reaches 4, 6, 8, 10, 12 (`streak-4` … `streak-12`) |
-| Profile picture | users | avatar column |
+| Profile | users, match_players, achievements | avatar and shown_badges columns; rank and wins as on the leaderboard; only earned badges may be shown |
 | AI ghost fleet, decoy | fleets, shots | Where a player hides ships and how they shoot |
 | Kill streak popup | none | The web counts hits live from fireResult |
 | Language, sound, settings | none | Saved in the browser |
@@ -170,6 +171,8 @@ ORDER BY m.ended_at DESC;
 
 - UnlockAchievements(userId, matchId, unlockedAt): checks one saved match and the player's total wins against the 15 badges, stores the ones they don't own yet (INSERT OR IGNORE) and returns only those (#41).
 - GetAchievements(userId): one player's badges, oldest first, with total wins, best single-match accuracy and best streak (#41). The server sends it as `achievements`.
+- GetProfile(userId): the player's picture, shown badges, leaderboard rank (null with no saved match) and wins (#42). The server sends it as `profile`.
+- SetProfile(userId, avatar, shownBadges): checks the picture and badges (protocol.md `profileUpdate`) and saves both in one transaction, or throws ArgumentException and saves nothing (#42).
 
 The rules for each badge are in `Battleship.Core/Achievements.cs`.
 
@@ -192,7 +195,7 @@ Issue codes after DB-1 are proposals until the issues are created.
 | HIST-1 (#49) | History request and reply (`historyList` / `history`, protocol.md) | Built |
 | LB-1 (#44) | Leaderboard request and reply (`leaderboardGet` / `leaderboard`, protocol.md) | Built |
 | ACH-1 (#51) | Check badges at match end, tell the player (`achievementsGet` / `achievements` / `achievementUnlocked`, protocol.md) | Built. Earns nothing until LOGIN-1 sets UserId |
-| Profile picture (server) | Save the chosen avatar | Not started (needs AUTH-1) |
+| Profile (#42) | Picture and shown badges (`profileGet` / `profileUpdate` / `profile`, protocol.md) | Built. Guests can look but not save until LOGIN-1 sets UserId |
 
 ## 8. Open questions
 
