@@ -46,7 +46,8 @@ Six tables. Times are stored as text in UTC (ISO 8601, e.g. 2026-10-19T07:00:00.
 | `salt` | BLOB | Random bytes used when hashing the password |
 | `hash` | BLOB | The hashed password (the password itself is never stored) |
 | `iterations` | INTEGER | Hashing rounds, kept so they can be raised later |
-| `avatar` | TEXT | Chosen profile picture. Empty until that feature is built |
+| `avatar` | TEXT | One of the eight profile creature codes, or empty/null for none |
+| `shown_badges` | TEXT NOT NULL DEFAULT '' | 0–3 owned codes, comma-separated in display order (#42) |
 | `created_at` | TEXT | When the account was made |
 
 ### matches: one row per finished match
@@ -98,12 +99,12 @@ One row per ship cell: 4 ships × 4 cells = 16 rows per player per match. The AI
 
 ### achievements: badges a player has unlocked
 
-Each badge at most once per player. The badge codes are not decided yet; they come with the achievements issue.
+Each badge at most once per player (#41). Codes and conditions: wins-5/10/20/50/100 (total wins >= tier), accuracy-40/50/60/70/80 (strictly over the tier in one match, shots > 0), streak-4/6/8/10/12 (match best_streak >= tier). Lower tiers unlock together, for either player.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `user_id` | INTEGER | → users.id |
-| `code` | TEXT | Which badge (names to be decided) |
+| `code` | TEXT | One of the 15 fixed badge codes |
 | `unlocked_at` | TEXT | When it was unlocked |
 | `match_id` | INTEGER | → matches.id of the match that unlocked it |
 
@@ -116,7 +117,7 @@ Each badge at most once per player. The badge codes are not decided yet; they co
 5. Usernames are unique ignoring case: Alice and alice cannot both exist. The name is shown as it was typed.
 6. Passwords are never stored, only a salted hash.
 7. Every shot keeps its auto flag (fired by the 10-second timeout), so we can decide later whether those shots count toward accuracy.
-8. Schema version: the file has user_version = 1. Whoever changes a table must raise the version and add an upgrade step. A server refuses a file made by a newer version instead of changing it.
+8. Schema version: the file has user_version = 2. Upgrade from version 1 adds users.shown_badges with ALTER TABLE and preserves all rows. New files run both steps. A server refuses a file made by a newer version instead of changing it.
 
 ## 5. How each feature uses it
 
@@ -166,7 +167,13 @@ ORDER BY m.ended_at DESC;
 - GetHistory(userId, page): one player's stats and 20 matches, newest first (HIST-1). The server calls it on DatabaseWorker and sends the result as `history`.
 - GetLeaderboard(): the top 50 accounts, ranked (LB-1). The server calls it on DatabaseWorker and sends the result as `leaderboard`.
 
-Read methods for badges come with their own issue.
+- GetProfile(userId): own avatar, shown badges, queried best stats and owned badges oldest first (#42).
+- SetProfile(userId, avatar, shownBadges): validates codes and ownership, then updates both choices in one transaction (#42).
+- UnlockAchievements(userId, matchId, unlockedAt): checks the saved match and total wins, INSERT OR IGNORE, returns only newly inserted badges (#41).
+
+DatabaseWorker saves the match first, then unlocks for both accounts in the same
+job. An unlock failure is logged independently and cannot undo the saved match.
+Notifications return through HostInput.DatabaseReply; no worker touches game state.
 
 How a match gets saved (DB-2):
 
@@ -185,11 +192,9 @@ Issue codes after DB-1 are proposals until the issues are created.
 | DB-2 (#48) | Save each finished match with SaveMatch | Built. Saves nothing until LOGIN-1 sets UserId |
 | HIST-1 (#49) | History request and reply (`historyList` / `history`, protocol.md) | Built |
 | LB-1 (#44) | Leaderboard request and reply (`leaderboardGet` / `leaderboard`, protocol.md) | Built |
-| Achievements (server) | Check badges at match end, tell the player | Not started (needs DB-2) |
-| Profile picture (server) | Save the chosen avatar | Not started (needs AUTH-1) |
+| Achievements (#41) | Check both players after saving, notify new unlocks | Built; guests unlock nothing |
+| Profile (#42) | Own avatar, shown badges and best stats | Built; account identity comes from LOGIN-1 |
 
 ## 8. Open questions
 
 - Password length: the planning doc's Description tab says 4–16 characters; older drafts used 8–64 and 8–128. Pick one.
-- Hit-streak badge tiers are listed as 5, 7, 6, 8, 9. Probably meant 5, 6, 7, 8, 9?
-- Badge codes (names) for the achievements table.

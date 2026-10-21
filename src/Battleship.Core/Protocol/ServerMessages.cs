@@ -228,6 +228,8 @@ namespace Battleship.Core.Protocol
         public const string AlreadyFired = "already-fired";
         public const string OutOfRange = "out-of-range";
         public const string NotInMatch = "not-in-match";
+        public const string InvalidProfile = "invalid-profile";
+        public const string NotLoggedIn = "not-logged-in";
         public const string Unknown = "unknown";
     }
 }

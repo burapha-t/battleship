@@ -20,6 +20,10 @@
 {"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"p3","to":"server","frame":{"type":"historyList","page":1}}
 {"from":"server","to":"p3","frame":{"type":"history","page":1,"stats":{"matchCount":0,"winCount":0,"loseCount":0,"winRate":0,"accuracy":0},"matches":[],"more":false}}
+{"from":"p3","to":"server","frame":{"type":"profileGet"}}
+{"from":"server","to":"p3","frame":{"type":"profile","avatar":"","shownBadges":[],"wins":0,"bestAccuracy":0,"bestStreak":0,"badges":[]}}
+{"from":"p3","to":"server","frame":{"type":"profileUpdate","avatar":"whale","shownBadges":[]}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"not-logged-in","message":"Log in to save your profile."}}
 {"from":"p3","to":"server","frame":{"type":"leaderboardGet"}}
 {"from":"server","to":"p3","frame":{"type":"leaderboard","rows":[]}}
 {"from":"p1","to":"server","frame":{"type":"findMatch"}}
@@ -232,6 +236,7 @@
 {"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":7,"col":7,"result":"hit","sunk":true,"sunkCells":[[4,7],[5,7],[6,7],[7,7]],"allSunk":true,"auto":false}}
 {"from":"server","to":"p1","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
 {"from":"server","to":"p2","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
+{"example":true,"from":"server","to":"p1","frame":{"type":"achievementUnlocked","matchId":"m1","badges":[{"code":"accuracy-40","unlockedAt":"2026-10-21T07:00:00Z"}]}}
 {"from":"p2","to":"server","frame":{"type":"rematch"}}
 {"from":"server","to":"p1","frame":{"type":"rematchPending","from":"p2"}}
 {"from":"server","to":"p2","frame":{"type":"rematchPending","from":"p2"}}

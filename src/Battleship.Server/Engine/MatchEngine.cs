@@ -168,7 +168,7 @@ public sealed class MatchEngine
         if (_archive == null || match.ToRecord(DateTimeOffset.UtcNow) is not { } record) return;
         try
         {
-            _archive.Save(record);
+            _archive.Save(record, match.Id, match.Players.Select(player => player.Id).ToArray());
         }
         catch (Exception ex)
         {

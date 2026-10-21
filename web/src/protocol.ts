@@ -1,5 +1,5 @@
 // The wire contract: a mirror of docs/implement/protocol.md, which wins if the
-// two disagree. Change both in the same PR.
+// two disagree. Change both in the same PR. Profile #42 and badge unlocks #41.
 
 /** On any other `connected.protocolVersion`, show an error and stop (§4). */
 export const PROTOCOL_VERSION = 1
@@ -25,6 +25,8 @@ export type ErrorCode =
   | 'already-fired'
   | 'out-of-range'
   | 'not-in-match'
+  | 'invalid-profile'
+  | 'not-logged-in'
   | 'unknown'
 
 /** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
@@ -39,7 +41,11 @@ export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; ac
  */
 export type LeaderboardRow = { rank: number; name: string; points: number; accuracy: number }
 
-/** The 14 server → client events (§4). */
+/** Profile (#42) and authoritative badge unlocks (#41). */
+export type BadgeUnlock = { code: string; unlockedAt: string }
+export type ProfileView = { avatar: string; shownBadges: string[]; wins: number; bestAccuracy: number; bestStreak: number; badges: BadgeUnlock[] }
+
+/** Server → client events (§4), including achievements (#41) and profile (#42). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -63,13 +69,15 @@ export type ServerEvent =
   | { type: 'rematchPending'; from: string }
   | { type: 'opponentLeft'; id: string }
   | { type: 'reset' }
+  | ({ type: 'profile' } & ProfileView)
+  | { type: 'achievementUnlocked'; matchId: string; badges: BadgeUnlock[] }
   // My match history, one page of 20, newest first; `more` = an older page exists.
   | { type: 'history'; page: number; stats: HistoryStats; matches: HistoryMatch[]; more: boolean }
   // The all-time leaderboard, at most 50 rows, best first.
   | { type: 'leaderboard'; rows: LeaderboardRow[] }
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 8 client → server verbs (§5). */
+/** Client → server verbs (§5), including own profile requests (#42). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
@@ -80,6 +88,8 @@ export type ClientVerb =
   | { type: 'leave' }
   // One page of my match history, 1 = newest; the reply is `history`.
   | { type: 'historyList'; page: number }
+  | { type: 'profileGet' }
+  | { type: 'profileUpdate'; avatar: string; shownBadges: string[] }
   // The leaderboard; the reply is `leaderboard`.
   | { type: 'leaderboardGet' }
 

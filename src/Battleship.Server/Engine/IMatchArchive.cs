@@ -9,5 +9,5 @@ namespace Battleship.Server.Engine;
 /// </summary>
 public interface IMatchArchive
 {
-    void Save(MatchRecord match);
+    void Save(MatchRecord match, string matchId, IReadOnlyList<string> playerIds);
 }

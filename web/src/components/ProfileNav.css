@@ -1,0 +1,7 @@
+/* Profile (#42): corner navigation stays in header flow to avoid card overlap. */
+.profile-corner-nav { margin-left: auto; display: flex; gap: 12px; flex-shrink: 0; }
+.profile-corner-nav button { width: 44px; height: 44px; display: grid; place-items: center; border: 3px solid var(--ink); border-radius: 13px; background: white; color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+.profile-corner-nav svg { width: 26px; height: 26px; }
+.profile-corner-nav button:disabled { opacity: .5; cursor: default; }
+.profile-corner-nav button:focus-visible { outline: 3px solid var(--sea); outline-offset: 5px; }
+@media (max-width: 600px) { .app:has(.profile-corner-nav) .header { flex-wrap: wrap; } }

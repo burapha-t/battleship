@@ -30,9 +30,9 @@ public sealed record MatchRecord(
 /// connection, so the class keeps no open handle. Tables and rules:
 /// docs/implement/database.md.
 /// </summary>
-public sealed class GameDatabase
+public sealed partial class GameDatabase
 {
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
 
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS users (
@@ -107,10 +107,10 @@ public sealed class GameDatabase
             throw new InvalidOperationException(
                 $"{path} was made by a newer server (schema {found}; this one knows {SchemaVersion}).");
 
-        // One step per version, oldest first; a new file runs them all. Schema is
-        // version 1, so leave it as is: to change a table, raise SchemaVersion and
-        // add "if (found < N) { ALTER ... }" below.
+        // Oldest first: preserve existing accounts and matches when upgrading (#42).
         if (found < 1) Execute(connection, transaction, Schema);
+        if (found < 2) Execute(connection, transaction,
+            "ALTER TABLE users ADD COLUMN shown_badges TEXT NOT NULL DEFAULT '';");
         Execute(connection, transaction, $"PRAGMA user_version = {SchemaVersion};");
         transaction.Commit();
     }

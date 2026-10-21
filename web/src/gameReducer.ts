@@ -2,12 +2,12 @@
 // server is authoritative, so the only local actions are `myShips` — the ships I
 // sent in `place`, which the server never sends back — `wentHome`, opening,
 // paging and closing the match history screen, and opening and closing the
-// leaderboard.
+// leaderboard, and profile (#42); badge unlocks are server events (#41).
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
+import type { BadgeUnlock, ProfileView, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'profile' | 'leaderboard' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
@@ -19,7 +19,8 @@ export type WentHomeAction = { type: 'wentHome' }
 export type HistoryAction = { type: 'openHistory' } | { type: 'loadMoreHistory' } | { type: 'closeHistory' }
 /** Leaderboard: open it from the lobby (I send `leaderboardGet`), or again to retry; go back. */
 export type LeaderboardAction = { type: 'openLeaderboard' } | { type: 'closeLeaderboard' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction
+export type ProfileAction = { type: 'openProfile' } | { type: 'closeProfile' } | { type: 'saveProfile' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | ProfileAction
 
 /** The pages of `history` received so far, joined into one list. */
 export type HistoryView = {
@@ -69,6 +70,11 @@ export type GameState = {
   history: HistoryView | null
   /** An `error` came while a history page was loading. */
   historyFailed: boolean
+  profile: ProfileView | null
+  profileFailed: boolean
+  profileSaving: boolean
+  matchId: string | null
+  unlocked: BadgeUnlock[]
   /** Null until the `leaderboard` reply after opening the screen. Best first. */
   leaderboard: LeaderboardRow[] | null
   /** An `error` came while the leaderboard was loading. */
@@ -76,6 +82,8 @@ export type GameState = {
 }
 
 const noMatch = {
+  matchId: null,
+  unlocked: [],
   myShips: null,
   placed: [],
   turn: null,
@@ -98,6 +106,9 @@ export const initialState: GameState = {
   notice: null,
   history: null,
   historyFailed: false,
+  profile: null,
+  profileFailed: false,
+  profileSaving: false,
   leaderboard: null,
   leaderboardFailed: false,
 }
@@ -129,6 +140,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         ...state,
         ...noMatch,
         screen: 'placement',
+        matchId: event.matchId,
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
         notice: null,
@@ -151,6 +163,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return {
         ...state,
         screen: 'end',
+        matchId: event.matchId,
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
         winnerId: event.winnerId,
@@ -182,6 +195,22 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     // Page 1 starts the list over; the next page adds to it. Anything else
     // (a repeat, or a page that crossed a reopen) is dropped.
+    case 'profile': {
+      const { avatar, shownBadges, wins, bestAccuracy, bestStreak, badges } = event
+      return { ...state, profile: { avatar, shownBadges, wins, bestAccuracy, bestStreak, badges }, profileFailed: false, profileSaving: false }
+    }
+    case 'achievementUnlocked':
+      return state.matchId === event.matchId && state.screen === 'end'
+        ? { ...state, unlocked: [...state.unlocked, ...event.badges.filter(b => !state.unlocked.some(owned => owned.code === b.code))] }
+        : state
+    case 'openProfile':
+      return state.screen === 'lobby' || state.screen === 'profile'
+        ? { ...state, screen: 'profile', profile: null, profileFailed: false, profileSaving: false, notice: null } : state
+    case 'closeProfile':
+      return state.screen === 'profile' ? { ...state, screen: 'lobby', profileSaving: false } : state
+    case 'saveProfile':
+      return state.screen === 'profile' ? { ...state, profileSaving: true } : state
+
     case 'history': {
       const { page, stats, matches, more } = event
       if (page === 1) return { ...state, history: { stats, matches, page, more, loadingMore: false } }
@@ -195,6 +224,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'error': {
       const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
+      if (state.screen === 'profile') return { ...state, lastError, profileSaving: false, profileFailed: state.profile === null }
       // Likewise the leaderboard screen sends nothing but leaderboardGet.
       if (state.screen === 'leaderboard' && state.leaderboard === null) {
         return { ...state, lastError, leaderboardFailed: true }

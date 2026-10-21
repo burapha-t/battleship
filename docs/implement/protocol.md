@@ -369,6 +369,38 @@ RESET doesn't change it. Only accounts with at least one saved match are listed.
 Rows are ordered by `points`, then `accuracy` (both highest first), then `name`
 A–Z ignoring case. Every shot counts toward accuracy, timeout auto-shots included.
 
+### `achievementUnlocked` (#41)
+
+Only sent to the owner, only for newly inserted badges, after `matchEnd`. The
+`matchId` is the wire id, never the SQLite id. Disconnected recipients are skipped.
+
+```json
+{"type":"achievementUnlocked","matchId":"m1","badges":[{"code":"wins-5","unlockedAt":"2026-10-21T07:00:00Z"}]}
+```
+
+| Codes | Condition |
+|---|---|
+| `wins-5`, `wins-10`, `wins-20`, `wins-50`, `wins-100` | Total wins >= tier |
+| `accuracy-40`, `accuracy-50`, `accuracy-60`, `accuracy-70`, `accuracy-80` | One match: shots > 0 and hits × 100 > tier × shots (strictly over) |
+| `streak-4`, `streak-6`, `streak-8`, `streak-10`, `streak-12` | One match's best hit streak >= tier |
+
+Lower tiers unlock together. Losers can earn accuracy/streak badges. Each code is
+owned at most once. Guests unlock nothing. Timeout shots count as ordinary shots.
+
+### `profile` (#42)
+
+The answer to `profileGet` or a successful `profileUpdate`, only to the asker.
+
+```json
+{"type":"profile","avatar":"pufferfish","shownBadges":["wins-5"],"wins":8,"bestAccuracy":73,"bestStreak":6,"badges":[{"code":"wins-5","unlockedAt":"2026-10-21T07:00:00Z"}]}
+```
+
+`wins` counts won matches; `bestAccuracy` is the best single-match percentage,
+rounded to one decimal; `bestStreak` is the maximum match streak. No matches means
+zeros. `badges` lists all owned badges, oldest first; simultaneous unlocks retain
+catalogue order. `unlockedAt` is UTC ISO 8601 (`…Z`). `shownBadges` preserves display
+order. A guest gets empty avatar/arrays and zeros immediately, without a DB query.
+
 ### `error`
 
 ```json
@@ -386,6 +418,8 @@ Errors never change client state — the client stays where it was.
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
+| `invalid-profile` | Invalid avatar, too many/duplicate/unknown/unowned badges; nothing changes |
+| `not-logged-in` | A guest tried to update their profile |
 | `unknown` | Anything else, e.g. the match history or the leaderboard couldn't be read |
 
 ---
@@ -480,6 +514,29 @@ for another player's history.
 
 Asks for the leaderboard; the server replies with `leaderboard`. Valid in any
 state and changes none. A guest may ask too: the leaderboard isn't personal.
+
+---
+
+### `profileGet` (#42)
+
+```json
+{"type":"profileGet"}
+```
+
+Valid in any state. Requests only the sender's profile and changes no game state.
+
+### `profileUpdate` (#42)
+
+```json
+{"type":"profileUpdate","avatar":"pufferfish","shownBadges":["wins-5"]}
+```
+
+Both fields are required. `avatar` is `""` (none), `whale`, `octopus`, `crab`,
+`pufferfish`, `turtle`, `jellyfish`, `starfish` or `shark`, case-sensitive.
+`shownBadges` has 0–3 distinct valid, owned codes. The server validates ownership
+inside its database job before changing either field. Failure replies `error`
+with `invalid-profile` and a reason, with no changes. Guests get `not-logged-in`.
+Success replies with the full `profile`. Login (#46) is separate.
 
 ---
 

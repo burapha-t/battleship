@@ -25,12 +25,12 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
-  `NicknamePolicy`, `GameRules`) and the protocol DTOs + `ProtocolJson`.
-- `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
+  `NicknamePolicy`, `GameRules`, `Achievements` #41, `Avatars` #42) and the protocol DTOs + `ProtocolJson`.
+- `Battleship.Server`: achievements (#41) unlock after saved matches and own profile get/update (#42) use DatabaseWorker; guests get defaults. Complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
-- `web/`: complete — all five screens plus sound, and match history (HIST-2) and leaderboard (LB-2) screens opened from the lobby. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history` and `?preview=leaderboard` (also `-empty`, `-loading`) show those screens with sample data.
+- `web/`: profile (#42) with creature/badge choices and result unlock card (#41); complete — all five screens plus sound, and match history (HIST-2) and leaderboard (LB-2) screens opened from the lobby. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history` and `?preview=leaderboard` (also `-empty`, `-loading`) show those screens with sample data.
 - Settings (#43): header popup with independent music/effect volumes and EN/TH preference saved in browser storage; full game translation is tracked in #38.
-- Database (DB-1): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too).
+- Database (DB-1, schema 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too).
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 

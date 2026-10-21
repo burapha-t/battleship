@@ -27,6 +27,7 @@ public class TranscriptReplayTests
             if (text.Length == 0) continue;
             using var document = JsonDocument.Parse(text);
             var root = document.RootElement;
+            if (root.TryGetProperty("example", out var example) && example.GetBoolean()) continue;
             lines.Add(new Line(root.GetProperty("from").GetString()!, root.GetProperty("to").GetString()!,
                 root.GetProperty("frame").GetRawText()));
         }

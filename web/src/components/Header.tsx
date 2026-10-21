@@ -2,13 +2,14 @@ import { matchSides } from '../gameReducer'
 import type { GameState } from '../gameReducer'
 import { useSettings } from '../useSettings'
 import { Avatar } from './Avatar'
+import { ProfileNav } from './ProfileNav'
 
 /**
- * Logo, names and scores, and the device settings menu. In a
+ * Logo, names and scores, profile navigation (#42), and settings. In a
  * match it shows both players; outside one, my name and last known score
  * (`lobby` carries none).
  */
-export function Header({ state, onOpenSettings }: { state: GameState; onOpenSettings: () => void }) {
+export function Header({ state, onOpenSettings, onOpenProfile }: { state: GameState; onOpenSettings: () => void; onOpenProfile: () => void }) {
   const { language } = useSettings()
   const { me, opponent } = matchSides(state)
   const inMatch = state.screen === 'placement' || state.screen === 'game' || state.screen === 'end'
@@ -30,9 +31,12 @@ export function Header({ state, onOpenSettings }: { state: GameState; onOpenSett
           state.myName !== null && <PlayerChip name={state.myName} score={state.myScore} you />
         )}
       </div>
-      <button type="button" className="btn white small sound" onClick={onOpenSettings} aria-haspopup="dialog">
+      {state.screen === 'lobby' ? (
+        <ProfileNav onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings}
+          disabled={state.lobby.some(player => player.id === state.myId && player.status === 'searching')} />
+      ) : <button type="button" className="btn white small sound" onClick={onOpenSettings} aria-haspopup="dialog">
         <span aria-hidden>⚙</span> {language === 'th' ? 'การตั้งค่า' : 'Settings'}
-      </button>
+      </button>}
     </header>
   )
 }

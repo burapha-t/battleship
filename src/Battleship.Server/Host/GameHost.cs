@@ -15,7 +15,7 @@ namespace Battleship.Server.Host;
 /// handles them in order, sends the resulting frames, then publishes a
 /// <see cref="DashboardSnapshot"/>.
 /// </summary>
-public sealed class GameHost
+public sealed partial class GameHost
 {
     private const int ActivityKept = 30;
 
@@ -37,7 +37,7 @@ public sealed class GameHost
     /// <param name="database">Accounts and match history; null keeps nothing (tests, or a file that failed to open).</param>
     public GameHost(TimeSpan turnDuration, Random random, GameDatabase? database = null)
     {
-        _database = database == null ? null : new DatabaseWorker(database);
+        _database = database == null ? null : new DatabaseWorker(database, (id, reply) => Post(new HostInput.DatabaseReply(id, reply)));
         _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random, _database);
     }
 
@@ -139,6 +139,12 @@ public sealed class GameHost
                 break;
             case Leave:
                 OnLeave(player);
+                break;
+            case ProfileGet:
+                OnProfile(player, null);
+                break;
+            case ProfileUpdate update:
+                OnProfile(player, update);
                 break;
             case HistoryList list:
                 OnHistoryList(player, list.Page);

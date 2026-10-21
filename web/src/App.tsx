@@ -6,10 +6,11 @@ import { Notice } from './components/Notice'
 import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { GameState, HistoryAction, LeaderboardAction } from './gameReducer'
+import type { GameState, HistoryAction, LeaderboardAction, ProfileAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
+import { ProfileScreen } from './screens/ProfileScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { LeaderboardScreen } from './screens/LeaderboardScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
@@ -18,7 +19,7 @@ import { PlacementScreen } from './screens/PlacementScreen'
 import { setScene } from './sound'
 import { useGameSocket } from './useGameSocket'
 
-/** One reducer over the server's events, and a switch over its screen. */
+/** Server events and screen navigation, including own profile (#42). */
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
@@ -36,7 +37,10 @@ export default function App() {
         <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3" />
         <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" strokeWidth="3" />
       </svg>
-      <Header state={state} onOpenSettings={() => setSettingsOpen(true)} />
+      <Header state={state} onOpenSettings={() => setSettingsOpen(true)} onOpenProfile={() => {
+        dispatch({ type: 'openProfile' })
+        send({ type: 'profileGet' })
+      }} />
       <LinkBanner link={link} connected={state.myId !== null} />
       <Notice notice={state.notice} />
       {state.fatal ? (
@@ -64,12 +68,16 @@ export default function App() {
 type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
-  dispatch: (action: HistoryAction | LeaderboardAction) => void
+  dispatch: (action: HistoryAction | LeaderboardAction | ProfileAction) => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
 
 function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
+  const openProfile = () => {
+    dispatch({ type: 'openProfile' })
+    send({ type: 'profileGet' })
+  }
   const openHistory = () => {
     dispatch({ type: 'openHistory' })
     send({ type: 'historyList', page: 1 })
@@ -103,6 +111,10 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           onOpenLeaderboard={openLeaderboard}
         />
       )
+    case 'profile':
+      return <ProfileScreen profile={state.profile} failed={state.profileFailed} saving={state.profileSaving} myName={state.myName}
+        onBack={() => dispatch({ type: 'closeProfile' })} onRetry={openProfile}
+        onSave={(avatar, shownBadges) => { dispatch({ type: 'saveProfile' }); send({ type: 'profileUpdate', avatar, shownBadges }) }} />
     case 'history':
       return (
         <HistoryScreen

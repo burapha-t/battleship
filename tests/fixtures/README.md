@@ -57,3 +57,10 @@ code does not, because `protocol.md` gives no trigger for it.
 
 A protocol change updates this file in the same PR as `protocol.md`,
 `web/src/protocol.ts` and the C# DTOs.
+
+### Profile and badge examples (#41, #42)
+
+The `achievementUnlocked` line with `example: true` is a hand-written wire
+example for an account, placed after matchEnd. It is checked by protocol
+round-trip tests, but excluded from real-server replay: the story uses guests,
+who cannot unlock anything. Root metadata is not part of the wire frame.

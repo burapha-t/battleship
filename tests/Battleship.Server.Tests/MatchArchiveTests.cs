@@ -13,7 +13,7 @@ internal sealed class FakeArchive : IMatchArchive
     public List<MatchRecord> Saved { get; } = new();
     public bool Fail { get; set; }
 
-    public void Save(MatchRecord match)
+    public void Save(MatchRecord match, string matchId, IReadOnlyList<string> playerIds)
     {
         if (Fail) throw new IOException("disk full");
         Saved.Add(match);
@@ -204,7 +204,7 @@ public class MatchArchiveTests : IDisposable
         var record = setup.Engine.Matches.Single().ToRecord(DateTimeOffset.UtcNow)!;
         bool ranAfter = false;
 
-        worker.Save(record);
+        worker.Save(record, "m1", new[] { "p1", "p2" });
         worker.Enqueue(_ => ranAfter = true);
         await worker.CompleteAsync();
 

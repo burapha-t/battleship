@@ -47,7 +47,7 @@ public class ProtocolJsonTests
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(21, types.Count);
+        Assert.Equal(25, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
     }
 

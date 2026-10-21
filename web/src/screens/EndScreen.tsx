@@ -1,3 +1,4 @@
+import { UnlockCard } from '../components/UnlockCard'
 import { useState } from 'react'
 import { matchSides } from '../gameReducer'
 import type { GameState } from '../gameReducer'
@@ -60,6 +61,7 @@ export function EndScreen({ state, onRematch, onHome }: Props) {
             </div>
           ))}
         </div>
+        <div className="unlock-space"><UnlockCard badges={state.unlocked} /></div>
         <div className="actions">
           <button type="button" className="btn white go-home" onClick={onHome}>
             <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
