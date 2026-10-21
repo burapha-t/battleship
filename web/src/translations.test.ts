@@ -30,7 +30,7 @@ it('interpolates whole phrases without changing player names or coordinates', ()
 })
 it('retains the existing history and leaderboard APIs for PR65', () => {
   expect(historyText('th')('title')).toBe('ประวัติการแข่งขัน')
-  expect(leaderboardText('th')('title')).toBe('กระดานผู้นำ')
+  expect(leaderboardText('th')('title')).toBe('ทำเนียบกัปตันทั่วโลก')
   expect(wins(1, 'en')).toBe('1 win')
   expect(wins(2, 'en')).toBe('2 wins')
   expect(wins(2, 'th')).toBe('ชนะ 2 ครั้ง')
@@ -49,7 +49,7 @@ it('translates error codes first and safely handles unfamiliar server messages',
   for (const code of ['unknown','bad-nickname','invalid-placement','not-your-turn','already-fired','out-of-range','not-in-match','invalid-profile','not-logged-in']) {
     expect(localizeError({ code, message: 'A future server message' }, 'th')).toMatch(/[ก-๙]/)
   }
-  expect(localizeError({ code: 'not-your-turn', message: 'You already fired at that cell.' }, 'th')).toBe('ยังไม่ถึงตาของคุณ')
+  expect(localizeError({ code: 'not-your-turn', message: 'You already fired at that cell.' }, 'th')).toBe('ยังไม่ถึงรอบยิงของคุณ')
   expect(localizeError({ code: 'future-code', message: 'Future English' }, 'th')).toBe('เกิดข้อผิดพลาด โปรดลองอีกครั้ง')
   expect(localizeError({ code: 'invalid-profile', message: 'You can only show badges you have earned.' }, 'th')).toBe('คุณแสดงได้เฉพาะเหรียญตราที่ได้รับแล้ว')
   expect(localizeError({ code: 'unknown', message: "Match history couldn't be loaded. Try again." }, 'th')).toContain('ประวัติการแข่งขัน')
