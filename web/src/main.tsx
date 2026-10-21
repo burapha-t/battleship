@@ -14,6 +14,7 @@ import { BadgesPreview } from './dev/BadgesPreview.tsx'
 import { BoardPreview } from './dev/BoardPreview.tsx'
 import { HistoryPreview } from './dev/HistoryPreview.tsx'
 import { LeaderboardPreview } from './dev/LeaderboardPreview.tsx'
+import { ProfilePreview } from './dev/ProfilePreview.tsx'
 
 const preview = new URLSearchParams(window.location.search).get('preview')
 
@@ -27,6 +28,8 @@ createRoot(document.getElementById('root')!).render(
       <LeaderboardPreview mode={preview} />
     ) : preview?.startsWith('badges') ? (
       <BadgesPreview mode={preview} />
+    ) : preview?.startsWith('profile') ? (
+      <ProfilePreview mode={preview} />
     ) : (
       <App />
     )}

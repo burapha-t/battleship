@@ -1,13 +1,13 @@
 // The UI's single source of truth: a pure fold over the server's events. The
 // server is authoritative, so the only local actions are `myShips` — the ships I
 // sent in `place`, which the server never sends back — `wentHome`, opening,
-// paging and closing the match history screen, and opening and closing the
-// leaderboard and the badges screen.
+// paging and closing the match history screen, opening and closing the
+// leaderboard and the badges screen, and opening, saving and closing the profile.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
+import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ProfileView, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'badges' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'badges' | 'profile' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
@@ -21,7 +21,12 @@ export type HistoryAction = { type: 'openHistory' } | { type: 'loadMoreHistory' 
 export type LeaderboardAction = { type: 'openLeaderboard' } | { type: 'closeLeaderboard' }
 /** Badges (#41): open them from the lobby (I send `achievementsGet`), or again to retry; go back. */
 export type BadgesAction = { type: 'openBadges' } | { type: 'closeBadges' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | BadgesAction
+/**
+ * Profile (#42): open it from the lobby (I send `profileGet` and
+ * `achievementsGet`), or again to retry; Save (I send `profileUpdate`); go back.
+ */
+export type ProfileAction = { type: 'openProfile' } | { type: 'saveProfile' } | { type: 'closeProfile' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | BadgesAction | ProfileAction
 
 /** The pages of `history` received so far, joined into one list. */
 export type HistoryView = {
@@ -83,6 +88,12 @@ export type GameState = {
   achievements: AchievementsView | null
   /** An `error` came while my badges were loading. */
   achievementsFailed: boolean
+  /** Null until the `profile` reply after opening the profile; my badges come in `achievements`. */
+  profile: ProfileView | null
+  /** An `error` came while the profile or my badges were loading. */
+  profileFailed: boolean
+  /** `profileUpdate` sent; cleared by the `profile` or `error` that answers it. */
+  profileSaving: boolean
 }
 
 const noMatch = {
@@ -114,6 +125,9 @@ export const initialState: GameState = {
   leaderboardFailed: false,
   achievements: null,
   achievementsFailed: false,
+  profile: null,
+  profileFailed: false,
+  profileSaving: false,
 }
 
 export function gameReducer(state: GameState, event: GameAction): GameState {
@@ -213,6 +227,11 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, achievements: { wins, bestAccuracy, bestStreak, badges } }
     }
 
+    case 'profile': {
+      const { guest, avatar, shownBadges, rank, wins } = event
+      return { ...state, profile: { guest, avatar, shownBadges, rank, wins }, profileSaving: false }
+    }
+
     // Only for the match on the end screen; one that came late is dropped.
     case 'achievementUnlocked': {
       if (state.screen !== 'end' || event.matchId !== state.matchId) return state
@@ -222,6 +241,12 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'error': {
       const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
+      // The profile screen sends profileGet and achievementsGet, then only profileUpdate.
+      // A refused save keeps the screen and my unsaved choices; the toast says why.
+      if (state.screen === 'profile') {
+        if (state.profile === null || state.achievements === null) return { ...state, lastError, profileFailed: true }
+        return { ...state, lastError, profileSaving: false }
+      }
       // The badges screen sends nothing but achievementsGet.
       if (state.screen === 'badges' && state.achievements === null) {
         return { ...state, lastError, achievementsFailed: true }
@@ -273,6 +298,20 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'closeBadges':
       return state.screen === 'badges' ? { ...state, screen: 'lobby' } : state
+
+    // From the lobby, or again from the profile to retry a failed load.
+    case 'openProfile':
+      return state.screen === 'lobby' || state.screen === 'profile'
+        ? { ...state, screen: 'profile', profile: null, achievements: null, profileFailed: false, profileSaving: false, notice: null }
+        : state
+
+    case 'saveProfile':
+      return state.screen === 'profile' && state.profile && !state.profile.guest && !state.profileSaving
+        ? { ...state, profileSaving: true }
+        : state
+
+    case 'closeProfile':
+      return state.screen === 'profile' ? { ...state, screen: 'lobby' } : state
 
     case 'myShips':
       return { ...state, myShips: event.ships }

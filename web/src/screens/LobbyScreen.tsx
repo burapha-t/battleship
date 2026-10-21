@@ -21,9 +21,10 @@ type Props = {
   onOpenHistory: () => void
   onOpenLeaderboard: () => void
   onOpenBadges: () => void
+  onOpenProfile: () => void
 }
 
-export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboard, onOpenBadges }: Props) {
+export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboard, onOpenBadges, onOpenProfile }: Props) {
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
@@ -57,6 +58,9 @@ export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboa
           </button>
           <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenBadges}>
             Badges
+          </button>
+          <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenProfile}>
+            Profile
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

@@ -26,6 +26,7 @@ const EVENT_TYPES: Record<ServerEvent['type'], true> = {
   leaderboard: true,
   achievements: true,
   achievementUnlocked: true,
+  profile: true,
   error: true,
 }
 

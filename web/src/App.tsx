@@ -6,7 +6,7 @@ import { Notice } from './components/Notice'
 import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { BadgesAction, GameState, HistoryAction, LeaderboardAction } from './gameReducer'
+import type { BadgesAction, GameState, HistoryAction, LeaderboardAction, ProfileAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
 import { BadgesScreen } from './screens/BadgesScreen'
 import { EndScreen } from './screens/EndScreen'
@@ -16,6 +16,7 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
+import { ProfileScreen } from './screens/ProfileScreen'
 import { setScene } from './sound'
 import { useGameSocket } from './useGameSocket'
 
@@ -65,7 +66,7 @@ export default function App() {
 type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
-  dispatch: (action: HistoryAction | LeaderboardAction | BadgesAction) => void
+  dispatch: (action: HistoryAction | LeaderboardAction | BadgesAction | ProfileAction) => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
@@ -88,6 +89,12 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
     dispatch({ type: 'openBadges' })
     send({ type: 'achievementsGet' })
   }
+  // The profile shows my badges too, so it asks for both.
+  const openProfile = () => {
+    dispatch({ type: 'openProfile' })
+    send({ type: 'profileGet' })
+    send({ type: 'achievementsGet' })
+  }
 
   switch (state.screen) {
     case 'connecting':
@@ -107,6 +114,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           onOpenHistory={openHistory}
           onOpenLeaderboard={openLeaderboard}
           onOpenBadges={openBadges}
+          onOpenProfile={openProfile}
         />
       )
     case 'history':
@@ -136,6 +144,22 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           failed={state.achievementsFailed}
           onBack={() => dispatch({ type: 'closeBadges' })}
           onRetry={openBadges}
+        />
+      )
+    case 'profile':
+      return (
+        <ProfileScreen
+          profile={state.profile}
+          achievements={state.achievements}
+          failed={state.profileFailed}
+          saving={state.profileSaving}
+          myName={state.myName}
+          onHome={() => dispatch({ type: 'closeProfile' })}
+          onRetry={openProfile}
+          onSave={(avatar, shownBadges) => {
+            dispatch({ type: 'saveProfile' })
+            send({ type: 'profileUpdate', avatar, shownBadges })
+          }}
         />
       )
     case 'placement':

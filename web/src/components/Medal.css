@@ -5,3 +5,5 @@
 .badge-medal > span { font-family: var(--font-display); font-weight: 800; font-size: 17px; line-height: 1; }
 .badge-locked .badge-medal { opacity: .5; box-shadow: none; }
 .badge-chip { position: absolute; right: -8px; top: -8px; width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--mist); display: grid; place-items: center; color: var(--ink); font-weight: 900; }
+.badge-chosen .badge-medal { box-shadow: 0 0 0 4px var(--sun), 0 0 0 7px var(--ink); }
+.badge-tick { background: var(--kelp); }

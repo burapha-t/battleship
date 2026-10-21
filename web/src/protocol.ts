@@ -25,6 +25,8 @@ export type ErrorCode =
   | 'already-fired'
   | 'out-of-range'
   | 'not-in-match'
+  | 'invalid-profile'
+  | 'not-logged-in'
   | 'unknown'
 
 /** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
@@ -49,7 +51,14 @@ export type BadgeUnlock = { code: string; unlockedAt: string }
  */
 export type AchievementsView = { wins: number; bestAccuracy: number; bestStreak: number; badges: BadgeUnlock[] }
 
-/** The 16 server → client events (§4). */
+/**
+ * My profile (#42). `guest`: not logged in, so I can't save. `avatar` is ''
+ * for none or a code from screens/profileText.ts; `shownBadges` 0–3 codes in
+ * my order; `rank` my leaderboard place, null with no saved match.
+ */
+export type ProfileView = { guest: boolean; avatar: string; shownBadges: string[]; rank: number | null; wins: number }
+
+/** The 17 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -81,9 +90,11 @@ export type ServerEvent =
   | ({ type: 'achievements' } & AchievementsView)
   // Badges the match `matchId` just earned me, sent after its `matchEnd`.
   | { type: 'achievementUnlocked'; matchId: string; badges: BadgeUnlock[] }
+  // My profile; the reply to `profileGet` and to a saved `profileUpdate`.
+  | ({ type: 'profile' } & ProfileView)
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 9 client → server verbs (§5). */
+/** The 11 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
@@ -98,6 +109,10 @@ export type ClientVerb =
   | { type: 'leaderboardGet' }
   // My badges; the reply is `achievements`.
   | { type: 'achievementsGet' }
+  // My profile; the reply is `profile`.
+  | { type: 'profileGet' }
+  // Save my picture ('' for none) and up to 3 earned badges; the reply is `profile` or `error`.
+  | { type: 'profileUpdate'; avatar: string; shownBadges: string[] }
 
 /**
  * Call in the `default` of a `switch (event.type)`. If a case is missing,
