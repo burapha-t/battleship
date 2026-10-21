@@ -23,6 +23,7 @@ const EVENT_TYPES: Record<ServerEvent['type'], true> = {
   opponentLeft: true,
   reset: true,
   history: true,
+  leaderboard: true,
   error: true,
 }
 

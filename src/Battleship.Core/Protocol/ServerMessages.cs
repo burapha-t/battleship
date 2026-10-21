@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-// The 13 server → client events (protocol.md §4). Property order is wire order.
+// The 14 server → client events (protocol.md §4). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary>First frame on every connection.</summary>
@@ -174,6 +174,33 @@ namespace Battleship.Core.Protocol
         public string EndedAt { get; set; } = "";
 
         /// <summary>My hits / my shots in this match, a percentage with one decimal.</summary>
+        public double Accuracy { get; set; }
+    }
+
+    /// <summary>
+    /// <c>leaderboard</c>: the answer to <c>leaderboardGet</c>, sent only to the
+    /// player who asked. All-time, from the database; RESET doesn't change it.
+    /// </summary>
+    public sealed class Leaderboard : ProtocolMessage
+    {
+        /// <summary>Rows sent at most.</summary>
+        public const int MaxRows = 50;
+
+        public Leaderboard() : base("leaderboard") { }
+
+        /// <summary>Best first, at most <see cref="MaxRows"/>.</summary>
+        public IReadOnlyList<LeaderboardRow> Rows { get; set; } = Array.Empty<LeaderboardRow>();
+    }
+
+    /// <summary>
+    /// One ranked account. Points = wins; accuracy = hits / shots, a percentage
+    /// with one decimal, 0 with no shots. Ties on both share a rank (1, 1, 3).
+    /// </summary>
+    public sealed class LeaderboardRow
+    {
+        public int Rank { get; set; }
+        public string Name { get; set; } = "";
+        public int Points { get; set; }
         public double Accuracy { get; set; }
     }
 

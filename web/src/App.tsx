@@ -6,11 +6,12 @@ import { Notice } from './components/Notice'
 import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
-import type { GameState, HistoryAction } from './gameReducer'
+import type { GameState, HistoryAction, LeaderboardAction } from './gameReducer'
 import type { Cell, ClientVerb } from './protocol'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
+import { LeaderboardScreen } from './screens/LeaderboardScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
@@ -63,7 +64,7 @@ export default function App() {
 type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
-  dispatch: (action: HistoryAction) => void
+  dispatch: (action: HistoryAction | LeaderboardAction) => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
@@ -78,6 +79,10 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
     dispatch({ type: 'loadMoreHistory' })
     send({ type: 'historyList', page: state.history.page + 1 })
   }
+  const openLeaderboard = () => {
+    dispatch({ type: 'openLeaderboard' })
+    send({ type: 'leaderboardGet' })
+  }
 
   switch (state.screen) {
     case 'connecting':
@@ -90,7 +95,14 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
         />
       )
     case 'lobby':
-      return <LobbyScreen state={state} onStartGame={() => send({ type: 'findMatch' })} onOpenHistory={openHistory} />
+      return (
+        <LobbyScreen
+          state={state}
+          onStartGame={() => send({ type: 'findMatch' })}
+          onOpenHistory={openHistory}
+          onOpenLeaderboard={openLeaderboard}
+        />
+      )
     case 'history':
       return (
         <HistoryScreen
@@ -99,6 +111,16 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           onBack={() => dispatch({ type: 'closeHistory' })}
           onLoadMore={loadMore}
           onRetry={state.history ? loadMore : openHistory}
+        />
+      )
+    case 'leaderboard':
+      return (
+        <LeaderboardScreen
+          rows={state.leaderboard}
+          failed={state.leaderboardFailed}
+          myName={state.myName}
+          onHome={() => dispatch({ type: 'closeLeaderboard' })}
+          onRetry={openLeaderboard}
         />
       )
     case 'placement':

@@ -143,6 +143,9 @@ public sealed class GameHost
             case HistoryList list:
                 OnHistoryList(player, list.Page);
                 break;
+            case LeaderboardGet:
+                OnLeaderboardGet(player);
+                break;
             // A server event sent by a client is ignored, like an unknown type.
         }
     }
@@ -198,6 +201,33 @@ public sealed class GameHost
             {
                 Console.WriteLine($"Could not read match history for {playerId}: {ex.Message}");
                 reply = new Error { Code = ErrorCodes.Unknown, Message = "Match history couldn't be loaded. Try again." };
+            }
+            Post(new HostInput.DatabaseReply(playerId, reply));
+        });
+    }
+
+    // Not personal, so guests may ask too. A server with no database has no
+    // rows; otherwise they're read off the loop.
+    private void OnLeaderboardGet(PlayerRecord player)
+    {
+        if (_database == null)
+        {
+            Send(new[] { Outbound.ToPlayer(player.Id, new Leaderboard()) });
+            return;
+        }
+
+        string playerId = player.Id;
+        _database.Enqueue(database =>
+        {
+            ProtocolMessage reply;
+            try
+            {
+                reply = database.GetLeaderboard();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not read the leaderboard for {playerId}: {ex.Message}");
+                reply = new Error { Code = ErrorCodes.Unknown, Message = "The leaderboard couldn't be loaded. Try again." };
             }
             Post(new HostInput.DatabaseReply(playerId, reply));
         });

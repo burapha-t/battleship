@@ -47,7 +47,7 @@ public class ProtocolJsonTests
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(19, types.Count);
+        Assert.Equal(21, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
     }
 
@@ -74,6 +74,36 @@ public class ProtocolJsonTests
             "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1}]," +
             "\"more\":true}";
         Assert.Equal(frame, ProtocolJson.Serialize(history));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void LeaderboardGet_RoundTrips()
+    {
+        const string frame = "{\"type\":\"leaderboardGet\"}";
+        Assert.IsType<LeaderboardGet>(ProtocolJson.Parse(frame));
+        Assert.Equal(frame, ProtocolJson.Serialize(new LeaderboardGet()));
+    }
+
+    [Fact]
+    public void Leaderboard_WritesRowsInWireOrder()
+    {
+        var leaderboard = new Leaderboard
+        {
+            Rows = new[]
+            {
+                new LeaderboardRow { Rank = 1, Name = "Alice", Points = 11, Accuracy = 62.5 },
+                new LeaderboardRow { Rank = 1, Name = "Bob", Points = 11, Accuracy = 62.5 },
+                new LeaderboardRow { Rank = 3, Name = "Carol", Points = 0, Accuracy = 0 },
+            },
+        };
+
+        const string frame =
+            "{\"type\":\"leaderboard\",\"rows\":[" +
+            "{\"rank\":1,\"name\":\"Alice\",\"points\":11,\"accuracy\":62.5}," +
+            "{\"rank\":1,\"name\":\"Bob\",\"points\":11,\"accuracy\":62.5}," +
+            "{\"rank\":3,\"name\":\"Carol\",\"points\":0,\"accuracy\":0}]}";
+        Assert.Equal(frame, ProtocolJson.Serialize(leaderboard));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
     }
 

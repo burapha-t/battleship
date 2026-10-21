@@ -33,7 +33,13 @@ export type HistoryStats = { matchCount: number; winCount: number; loseCount: nu
 /** One saved match from my side. `endedAt` is UTC ISO 8601; show it in local time. */
 export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; accuracy: number }
 
-/** The 13 server → client events (§4). */
+/**
+ * One ranked account. `points` = wins; `accuracy` = hits ÷ shots as a percentage
+ * with one decimal, 0 with no shots. Ties on both share a `rank` (1, 1, 3).
+ */
+export type LeaderboardRow = { rank: number; name: string; points: number; accuracy: number }
+
+/** The 14 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -59,9 +65,11 @@ export type ServerEvent =
   | { type: 'reset' }
   // My match history, one page of 20, newest first; `more` = an older page exists.
   | { type: 'history'; page: number; stats: HistoryStats; matches: HistoryMatch[]; more: boolean }
+  // The all-time leaderboard, at most 50 rows, best first.
+  | { type: 'leaderboard'; rows: LeaderboardRow[] }
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 7 client → server verbs (§5). */
+/** The 8 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
@@ -72,6 +80,8 @@ export type ClientVerb =
   | { type: 'leave' }
   // One page of my match history, 1 = newest; the reply is `history`.
   | { type: 'historyList'; page: number }
+  // The leaderboard; the reply is `leaderboard`.
+  | { type: 'leaderboardGet' }
 
 /**
  * Call in the `default` of a `switch (event.type)`. If a case is missing,

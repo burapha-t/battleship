@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (7 verbs) · `S→C` server to client (13 events)
+`C→S` client to server (8 verbs) · `S→C` server to client (14 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -95,6 +95,8 @@ either side.
 | `reset` | S→C | The dashboard RESET button was pressed |
 | `historyList` | C→S | Player opens Match history, or scrolls to the next page |
 | `history` | S→C | Reply to `historyList` |
+| `leaderboardGet` | C→S | Player opens the Leaderboard |
+| `leaderboard` | S→C | Reply to `leaderboardGet` |
 | `error` | S→C | A client message was rejected |
 
 ---
@@ -341,6 +343,32 @@ Only finished matches between two logged-in players are saved
 `more: false`. For now every shot counts toward accuracy, timeout auto-shots
 included; whether they should is an open question (`database.md` §8).
 
+### `leaderboard`
+
+The reply to `leaderboardGet`, sent only to the player who asked. Added with
+LB-1, under the ignore-unknown rules (§1).
+
+```json
+{"type":"leaderboard","rows":[
+  {"rank":1,"name":"Alice","points":11,"accuracy":62.5},
+  {"rank":1,"name":"Bob","points":11,"accuracy":62.5},
+  {"rank":3,"name":"Carol","points":7,"accuracy":48.0}
+]}
+```
+
+| Field | Meaning |
+|---|---|
+| `rows` | Up to 50 players, best first; empty when nobody has a saved match |
+| `rank` | 1 for the best. Players tied on `points` and `accuracy` share a rank: 1, 1, 3 |
+| `name` | The account's username |
+| `points` | Total wins over all the player's saved matches |
+| `accuracy` | hits ÷ shots over all their saved matches, a percentage with one decimal; `0` with no shots |
+
+All-time, from every saved match (`docs/implement/database.md`); a dashboard
+RESET doesn't change it. Only accounts with at least one saved match are listed.
+Rows are ordered by `points`, then `accuracy` (both highest first), then `name`
+A–Z ignoring case. Every shot counts toward accuracy, timeout auto-shots included.
+
 ### `error`
 
 ```json
@@ -358,7 +386,7 @@ Errors never change client state — the client stays where it was.
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
-| `unknown` | Anything else, e.g. the match history couldn't be read |
+| `unknown` | Anything else, e.g. the match history or the leaderboard couldn't be read |
 
 ---
 
@@ -443,6 +471,15 @@ Asks for one page of the sender's own match history; the server replies with
 `history`. `page` starts at 1 (the newest 20 matches); a missing `page`, or one
 below 1, means 1. Valid in any state and changes none. There is no way to ask
 for another player's history.
+
+### `leaderboardGet`
+
+```json
+{"type":"leaderboardGet"}
+```
+
+Asks for the leaderboard; the server replies with `leaderboard`. Valid in any
+state and changes none. A guest may ask too: the leaderboard isn't personal.
 
 ---
 
@@ -535,7 +572,8 @@ export type ClientVerb =
   | { type: "fire"; row: number; col: number }
   | { type: "rematch" }
   | { type: "leave" }
-  | { type: "historyList"; page: number };
+  | { type: "historyList"; page: number }
+  | { type: "leaderboardGet" };
 ```
 
 ### C# — `Battleship.Core`
@@ -558,7 +596,7 @@ while chunk := sock.recv(4096).decode("utf-8"):
 ```
 
 The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
-`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history` included. It must send
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history` and `leaderboard` included. It must send
 `findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
 will never be paired.
 

@@ -264,3 +264,47 @@ describe('match history', () => {
     expect(gameReducer(placing, { type: 'openHistory' }).screen).toBe('placement')
   })
 })
+
+describe('leaderboard', () => {
+  const lobby = fold([
+    { type: 'connected', id: 'p1', protocolVersion: 1 },
+    { type: 'welcome', id: 'p1', nickname: 'Alice' },
+  ])
+  const rows = [
+    { rank: 1, name: 'Mira', points: 11, accuracy: 62.5 },
+    { rank: 1, name: 'Bob', points: 11, accuracy: 62.5 },
+    { rank: 3, name: 'Alice', points: 8, accuracy: 48.7 },
+  ]
+  const open = gameReducer(lobby, { type: 'openLeaderboard' })
+
+  it('opens from the lobby and waits for the reply', () => {
+    expect(open.screen).toBe('leaderboard')
+    expect(open.leaderboard).toBeNull()
+  })
+
+  it('a leaderboard message fills the table', () => {
+    const state = gameReducer(open, { type: 'leaderboard', rows })
+    expect(state.leaderboard).toEqual(rows)
+    expect(state.leaderboardFailed).toBe(false)
+  })
+
+  it('no ranked players is an empty table, not an error', () => {
+    const state = gameReducer(open, { type: 'leaderboard', rows: [] })
+    expect(state.leaderboard).toEqual([])
+    expect(state.leaderboardFailed).toBe(false)
+  })
+
+  it('an error while loading marks the load failed, and reopening clears it', () => {
+    const failed = gameReducer(open, { type: 'error', code: 'unknown', message: 'x' })
+    expect(failed.leaderboardFailed).toBe(true)
+    const retried = gameReducer(failed, { type: 'openLeaderboard' })
+    expect(retried.leaderboardFailed).toBe(false)
+    expect(retried.screen).toBe('leaderboard')
+  })
+
+  it('Home goes to the lobby; the leaderboard only opens from the lobby', () => {
+    expect(gameReducer(open, { type: 'closeLeaderboard' }).screen).toBe('lobby')
+    const placing = gameReducer(lobby, { type: 'matchStart', matchId: 'm1', players: [], firstPlayerId: 'p1' })
+    expect(gameReducer(placing, { type: 'openLeaderboard' }).screen).toBe('placement')
+  })
+})

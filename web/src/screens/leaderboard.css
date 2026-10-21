@@ -1,0 +1,248 @@
+/* Leaderboard (LB-2): the top three on a podium, then the list. Sizes from
+   docs/frontend/8_leaderboard.html. */
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-bottom: 72px; /* clear of the waves */
+}
+
+.leaderboard-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+}
+
+.leaderboard-head .title {
+  margin: 0;
+  outline: none;
+  transform: rotate(-2deg);
+  transform-origin: left;
+}
+
+.leaderboard-sub {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.leaderboard-head .btn {
+  margin-left: auto;
+  align-self: center;
+}
+
+.leaderboard-head .btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---- Podium: 2nd, 1st, 3rd ---- */
+
+.podium {
+  display: grid;
+  gap: 22px;
+  justify-content: center;
+  align-items: end;
+  list-style: none;
+}
+
+.podium-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.podium-spot .avatar {
+  width: 58px;
+  height: 58px;
+  font-size: 26px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.podium-spot.you .avatar {
+  outline: 4px solid var(--sun);
+  outline-offset: 3px;
+}
+
+.podium-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin: 4px 0 6px;
+  font: 800 21px / 1.2 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.podium-name .pill,
+.leaderboard-name .pill {
+  padding: 1px 9px;
+  font-size: 12px;
+  background: var(--sun);
+}
+
+.podium-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  padding: 0 8px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 16px 16px 6px 6px;
+  box-shadow: 5px 5px 0 var(--ink);
+  text-align: center;
+}
+
+.podium-block b {
+  font: 800 42px / 1 var(--font-display);
+}
+
+.podium-block span {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.podium-1 .podium-block { height: 112px; background: var(--sun); }
+.podium-1 .podium-block span { color: var(--ink); }
+.podium-2 .podium-block { height: 88px; }
+.podium-3 .podium-block { height: 68px; }
+.podium-3 .podium-block b { font-size: 32px; }
+
+/* ---- The list: rank 4 onward ---- */
+
+.leaderboard-list {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.leaderboard-scroll {
+  max-height: max(240px, calc(100vh - 500px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 80px 110px;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 24px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.leaderboard-scroll li + li {
+  border-top: 2px dashed var(--rule);
+}
+
+.leaderboard-row.me {
+  background: color-mix(in srgb, var(--sun) 30%, var(--paper));
+}
+
+.leaderboard-columns {
+  padding-top: 10px;
+  padding-bottom: 8px;
+  background: var(--mist);
+  border-bottom: 3px solid var(--ink);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.leaderboard-rank {
+  font: 800 22px / 1 var(--font-display);
+  color: var(--muted);
+}
+
+.leaderboard-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.leaderboard-name .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  border-width: 2.5px;
+}
+
+.leaderboard-points,
+.leaderboard-accuracy {
+  font: 800 22px / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard-accuracy {
+  color: var(--muted);
+}
+
+/* ---- Loading, failed, empty ---- */
+
+.leaderboard-note {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.leaderboard-note h3 {
+  font-size: 28px;
+  color: var(--ink);
+}
+
+/* ---- Narrow screens ---- */
+
+@media (max-width: 760px) {
+  .leaderboard-head .title {
+    font-size: 38px;
+  }
+
+  .podium {
+    gap: 10px;
+  }
+  .podium-name {
+    font-size: 17px;
+  }
+  .podium-block b {
+    font-size: 32px;
+  }
+  .podium-block span {
+    font-size: 13px;
+  }
+
+  .leaderboard-scroll {
+    max-height: none;
+  }
+  .leaderboard-row {
+    grid-template-columns: 36px minmax(0, 1fr) 40px 64px;
+    gap: 10px;
+    padding: 8px 14px;
+  }
+  .leaderboard-name .avatar {
+    display: none;
+  }
+  .leaderboard-points,
+  .leaderboard-accuracy {
+    font-size: 18px;
+  }
+}
