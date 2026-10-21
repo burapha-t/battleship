@@ -15,9 +15,15 @@ const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 
-type Props = { state: GameState; onStartGame: () => void; onOpenHistory: () => void; onOpenLeaderboard: () => void }
+type Props = {
+  state: GameState
+  onStartGame: () => void
+  onOpenHistory: () => void
+  onOpenLeaderboard: () => void
+  onOpenBadges: () => void
+}
 
-export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboard }: Props) {
+export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboard, onOpenBadges }: Props) {
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
@@ -48,6 +54,9 @@ export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboa
           </button>
           <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenLeaderboard}>
             Leaderboard
+          </button>
+          <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenBadges}>
+            Badges
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

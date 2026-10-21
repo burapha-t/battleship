@@ -2,12 +2,12 @@
 // server is authoritative, so the only local actions are `myShips` — the ships I
 // sent in `place`, which the server never sends back — `wentHome`, opening,
 // paging and closing the match history screen, and opening and closing the
-// leaderboard.
+// leaderboard and the badges screen.
 
 import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
+import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ServerEvent } from './protocol'
 
-export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'placement' | 'game' | 'end'
+export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'badges' | 'placement' | 'game' | 'end'
 
 export type Shot = Extract<ServerEvent, { type: 'fireResult' }>
 export type Turn = Omit<Extract<ServerEvent, { type: 'turn' }>, 'type'>
@@ -19,7 +19,9 @@ export type WentHomeAction = { type: 'wentHome' }
 export type HistoryAction = { type: 'openHistory' } | { type: 'loadMoreHistory' } | { type: 'closeHistory' }
 /** Leaderboard: open it from the lobby (I send `leaderboardGet`), or again to retry; go back. */
 export type LeaderboardAction = { type: 'openLeaderboard' } | { type: 'closeLeaderboard' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction
+/** Badges (#41): open them from the lobby (I send `achievementsGet`), or again to retry; go back. */
+export type BadgesAction = { type: 'openBadges' } | { type: 'closeBadges' }
+export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | BadgesAction
 
 /** The pages of `history` received so far, joined into one list. */
 export type HistoryView = {
@@ -55,6 +57,10 @@ export type GameState = {
   winnerId: string | null
   /** Ids that have a `rematchPending`. */
   rematchFrom: string[]
+  /** From `matchEnd`, to match the `achievementUnlocked` that may follow it. */
+  matchId: string | null
+  /** Badges this match earned me, for the end screen. */
+  unlocked: BadgeUnlock[]
   /**
    * Set by Home. While true a `matchStart` is ignored (the opponent's rematch
    * can start a new match just as I leave). Cleared by the first `lobby` that
@@ -73,6 +79,10 @@ export type GameState = {
   leaderboard: LeaderboardRow[] | null
   /** An `error` came while the leaderboard was loading. */
   leaderboardFailed: boolean
+  /** Null until the `achievements` reply after opening the badges screen. */
+  achievements: AchievementsView | null
+  /** An `error` came while my badges were loading. */
+  achievementsFailed: boolean
 }
 
 const noMatch = {
@@ -82,6 +92,8 @@ const noMatch = {
   shots: [],
   winnerId: null,
   rematchFrom: [],
+  matchId: null,
+  unlocked: [],
 } satisfies Partial<GameState>
 
 export const initialState: GameState = {
@@ -100,6 +112,8 @@ export const initialState: GameState = {
   historyFailed: false,
   leaderboard: null,
   leaderboardFailed: false,
+  achievements: null,
+  achievementsFailed: false,
 }
 
 export function gameReducer(state: GameState, event: GameAction): GameState {
@@ -151,6 +165,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return {
         ...state,
         screen: 'end',
+        matchId: event.matchId,
         players: event.players,
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
         winnerId: event.winnerId,
@@ -193,8 +208,24 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
     case 'leaderboard':
       return { ...state, leaderboard: event.rows }
 
+    case 'achievements': {
+      const { wins, bestAccuracy, bestStreak, badges } = event
+      return { ...state, achievements: { wins, bestAccuracy, bestStreak, badges } }
+    }
+
+    // Only for the match on the end screen; one that came late is dropped.
+    case 'achievementUnlocked': {
+      if (state.screen !== 'end' || event.matchId !== state.matchId) return state
+      const fresh = event.badges.filter((b) => !state.unlocked.some((u) => u.code === b.code))
+      return fresh.length === 0 ? state : { ...state, unlocked: [...state.unlocked, ...fresh] }
+    }
+
     case 'error': {
       const lastError = { code: event.code, message: event.message, seq: (state.lastError?.seq ?? 0) + 1 }
+      // The badges screen sends nothing but achievementsGet.
+      if (state.screen === 'badges' && state.achievements === null) {
+        return { ...state, lastError, achievementsFailed: true }
+      }
       // Likewise the leaderboard screen sends nothing but leaderboardGet.
       if (state.screen === 'leaderboard' && state.leaderboard === null) {
         return { ...state, lastError, leaderboardFailed: true }
@@ -233,6 +264,15 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
 
     case 'closeLeaderboard':
       return state.screen === 'leaderboard' ? { ...state, screen: 'lobby' } : state
+
+    // From the lobby, or again from the badges screen to retry a failed load.
+    case 'openBadges':
+      return state.screen === 'lobby' || state.screen === 'badges'
+        ? { ...state, screen: 'badges', achievements: null, achievementsFailed: false, notice: null }
+        : state
+
+    case 'closeBadges':
+      return state.screen === 'badges' ? { ...state, screen: 'lobby' } : state
 
     case 'myShips':
       return { ...state, myShips: event.ships }
