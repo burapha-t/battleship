@@ -5,10 +5,11 @@ import hitUrl from './assets/sounds/hit.mp3'
 import loseUrl from './assets/sounds/lose.mp3'
 import missUrl from './assets/sounds/miss.mp3'
 import musicUrl from './assets/sounds/music.mp3'
+import streakUrl from './assets/sounds/streak.mp3'
 import sunkUrl from './assets/sounds/sunk.mp3'
 import winUrl from './assets/sounds/win.mp3'
 
-export type Sound = 'hit' | 'miss' | 'sunk' | 'win' | 'lose'
+export type Sound = 'hit' | 'miss' | 'sunk' | 'streak' | 'win' | 'lose'
 
 /** Where the player is: the music is quieter once a match has begun. */
 export type Scene = 'menu' | 'match' | 'result'
@@ -17,6 +18,7 @@ const CLIPS: Record<Sound | 'music', string> = {
   hit: hitUrl,
   miss: missUrl,
   sunk: sunkUrl,
+  streak: streakUrl,
   win: winUrl,
   lose: loseUrl,
   music: musicUrl,
