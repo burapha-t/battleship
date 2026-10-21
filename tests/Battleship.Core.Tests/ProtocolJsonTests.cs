@@ -47,7 +47,7 @@ public class ProtocolJsonTests
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(21, types.Count);
+        Assert.Equal(27, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
     }
 
@@ -74,6 +74,97 @@ public class ProtocolJsonTests
             "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1}]," +
             "\"more\":true}";
         Assert.Equal(frame, ProtocolJson.Serialize(history));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void AchievementsGet_RoundTrips()
+    {
+        const string frame = "{\"type\":\"achievementsGet\"}";
+        Assert.IsType<AchievementsGet>(ProtocolJson.Parse(frame));
+        Assert.Equal(frame, ProtocolJson.Serialize(new AchievementsGet()));
+    }
+
+    [Fact]
+    public void Achievements_WritesStatsAndBadgesInWireOrder()
+    {
+        var list = new AchievementList
+        {
+            Wins = 12,
+            BestAccuracy = 64.3,
+            BestStreak = 7,
+            Badges = new[] { new BadgeUnlock { Code = "wins-5", UnlockedAt = "2026-10-19T07:00:00Z" } },
+        };
+
+        const string frame =
+            "{\"type\":\"achievements\",\"wins\":12,\"bestAccuracy\":64.3,\"bestStreak\":7," +
+            "\"badges\":[{\"code\":\"wins-5\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}]}";
+        Assert.Equal(frame, ProtocolJson.Serialize(list));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void AchievementUnlocked_WritesMatchIdAndBadgesInWireOrder()
+    {
+        var unlocked = new AchievementUnlocked
+        {
+            MatchId = "m1",
+            Badges = new[]
+            {
+                new BadgeUnlock { Code = "accuracy-40", UnlockedAt = "2026-10-19T07:00:00Z" },
+                new BadgeUnlock { Code = "streak-4", UnlockedAt = "2026-10-19T07:00:00Z" },
+            },
+        };
+
+        const string frame =
+            "{\"type\":\"achievementUnlocked\",\"matchId\":\"m1\",\"badges\":[" +
+            "{\"code\":\"accuracy-40\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}," +
+            "{\"code\":\"streak-4\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}]}";
+        Assert.Equal(frame, ProtocolJson.Serialize(unlocked));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void ProfileGet_RoundTrips()
+    {
+        const string frame = "{\"type\":\"profileGet\"}";
+        Assert.IsType<ProfileGet>(ProtocolJson.Parse(frame));
+        Assert.Equal(frame, ProtocolJson.Serialize(new ProfileGet()));
+    }
+
+    [Fact]
+    public void ProfileUpdate_ReadsAvatarAndBadgesInOrder()
+    {
+        const string frame =
+            "{\"type\":\"profileUpdate\",\"avatar\":\"pufferfish\",\"shownBadges\":[\"streak-6\",\"wins-5\"]}";
+
+        var update = Assert.IsType<ProfileUpdate>(ProtocolJson.Parse(frame));
+
+        Assert.Equal("pufferfish", update.Avatar);
+        Assert.Equal(new[] { "streak-6", "wins-5" }, update.ShownBadges);
+        Assert.Equal(frame, ProtocolJson.Serialize(update));
+    }
+
+    // Missing fields stay null so the server can refuse them, rather than
+    // reading as "no picture, no badges".
+    [Fact]
+    public void ProfileUpdate_WithoutItsFields_LeavesThemNull()
+    {
+        var update = Assert.IsType<ProfileUpdate>(ProtocolJson.Parse("{\"type\":\"profileUpdate\"}"));
+
+        Assert.Null(update.Avatar);
+        Assert.Null(update.ShownBadges);
+    }
+
+    [Fact]
+    public void Profile_WritesEveryFieldInWireOrder()
+    {
+        var profile = new Profile { Avatar = "pufferfish", ShownBadges = new[] { "wins-5", "accuracy-70", "streak-6" }, Rank = 3, Wins = 8 };
+
+        const string frame =
+            "{\"type\":\"profile\",\"guest\":false,\"avatar\":\"pufferfish\"," +
+            "\"shownBadges\":[\"wins-5\",\"accuracy-70\",\"streak-6\"],\"rank\":3,\"wins\":8}";
+        Assert.Equal(frame, ProtocolJson.Serialize(profile));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
     }
 

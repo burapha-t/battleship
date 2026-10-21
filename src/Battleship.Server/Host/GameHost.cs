@@ -37,7 +37,7 @@ public sealed class GameHost
     /// <param name="database">Accounts and match history; null keeps nothing (tests, or a file that failed to open).</param>
     public GameHost(TimeSpan turnDuration, Random random, GameDatabase? database = null)
     {
-        _database = database == null ? null : new DatabaseWorker(database);
+        _database = database == null ? null : new DatabaseWorker(database, (id, reply) => Post(new HostInput.DatabaseReply(id, reply)));
         _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random, _database);
     }
 
@@ -146,6 +146,15 @@ public sealed class GameHost
             case LeaderboardGet:
                 OnLeaderboardGet(player);
                 break;
+            case AchievementsGet:
+                OnAchievementsGet(player);
+                break;
+            case ProfileGet:
+                OnProfile(player, null);
+                break;
+            case ProfileUpdate update:
+                OnProfile(player, update);
+                break;
             // A server event sent by a client is ignored, like an unknown type.
         }
     }
@@ -228,6 +237,73 @@ public sealed class GameHost
             {
                 Console.WriteLine($"Could not read the leaderboard for {playerId}: {ex.Message}");
                 reply = new Error { Code = ErrorCodes.Unknown, Message = "The leaderboard couldn't be loaded. Try again." };
+            }
+            Post(new HostInput.DatabaseReply(playerId, reply));
+        });
+    }
+
+    // Only ever the asking player's own badges (#41). A guest (or a server with
+    // no database) has none, so gets zeros at once; an account's are read off the loop.
+    private void OnAchievementsGet(PlayerRecord player)
+    {
+        if (player.UserId is not long userId || _database == null)
+        {
+            Send(new[] { Outbound.ToPlayer(player.Id, new AchievementList()) });
+            return;
+        }
+
+        string playerId = player.Id;
+        _database.Enqueue(database =>
+        {
+            ProtocolMessage reply;
+            try
+            {
+                reply = database.GetAchievements(userId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not read badges for {playerId}: {ex.Message}");
+                reply = new Error { Code = ErrorCodes.Unknown, Message = "Your badges couldn't be loaded. Try again." };
+            }
+            Post(new HostInput.DatabaseReply(playerId, reply));
+        });
+    }
+
+    // Only ever the asking player's own profile (#42), read or saved off the
+    // loop. A guest gets an empty one at once and can't save; a server with no
+    // database can't do either.
+    private void OnProfile(PlayerRecord player, ProfileUpdate? update)
+    {
+        if (player.UserId is not long userId)
+        {
+            Send(new[] { update == null
+                ? Outbound.ToPlayer(player.Id, new Profile { Guest = true })
+                : Outbound.Error(player.Id, ErrorCodes.NotLoggedIn, "Log in to save your profile.") });
+            return;
+        }
+        if (_database == null)
+        {
+            Send(new[] { Outbound.Error(player.Id, ErrorCodes.Unknown, "Your profile couldn't be loaded or saved. Try again.") });
+            return;
+        }
+
+        string playerId = player.Id;
+        _database.Enqueue(database =>
+        {
+            ProtocolMessage reply;
+            try
+            {
+                if (update != null) database.SetProfile(userId, update.Avatar, update.ShownBadges);
+                reply = database.GetProfile(userId);
+            }
+            catch (ArgumentException ex)
+            {
+                reply = new Error { Code = ErrorCodes.InvalidProfile, Message = ex.Message };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not read or save the profile for {playerId}: {ex.Message}");
+                reply = new Error { Code = ErrorCodes.Unknown, Message = "Your profile couldn't be loaded or saved. Try again." };
             }
             Post(new HostInput.DatabaseReply(playerId, reply));
         });

@@ -72,7 +72,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (8 verbs) · `S→C` server to client (14 events)
+`C→S` client to server (11 verbs) · `S→C` server to client (17 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -97,6 +97,12 @@ either side.
 | `history` | S→C | Reply to `historyList` |
 | `leaderboardGet` | C→S | Player opens the Leaderboard |
 | `leaderboard` | S→C | Reply to `leaderboardGet` |
+| `achievementsGet` | C→S | Player opens Badges |
+| `achievements` | S→C | Reply to `achievementsGet` |
+| `achievementUnlocked` | S→C | A saved match earned the player new badges |
+| `profileGet` | C→S | Player opens Profile |
+| `profileUpdate` | C→S | Player presses Save profile |
+| `profile` | S→C | Reply to `profileGet` or `profileUpdate` |
 | `error` | S→C | A client message was rejected |
 
 ---
@@ -340,8 +346,7 @@ about that player. Added with HIST-1, under the ignore-unknown rules (§1).
 
 Only finished matches between two logged-in players are saved
 (`docs/implement/database.md`), so a guest always gets zeros, no matches and
-`more: false`. For now every shot counts toward accuracy, timeout auto-shots
-included; whether they should is an open question (`database.md` §8).
+`more: false`. Every shot counts toward accuracy, timeout auto-shots included.
 
 ### `leaderboard`
 
@@ -369,6 +374,85 @@ RESET doesn't change it. Only accounts with at least one saved match are listed.
 Rows are ordered by `points`, then `accuracy` (both highest first), then `name`
 A–Z ignoring case. Every shot counts toward accuracy, timeout auto-shots included.
 
+### `achievements`
+
+The reply to `achievementsGet`, sent only to the player who asked, and only ever
+about that player. Added with ACH-1 (#41), under the ignore-unknown rules (§1).
+
+```json
+{"type":"achievements","wins":12,"bestAccuracy":64.3,"bestStreak":7,"badges":[
+  {"code":"wins-5","unlockedAt":"2026-10-12T07:00:00Z"},
+  {"code":"accuracy-40","unlockedAt":"2026-10-15T19:42:00Z"}
+]}
+```
+
+| Field | Meaning |
+|---|---|
+| `wins` | Total wins over all the player's saved matches |
+| `bestAccuracy` | Best hits ÷ shots in one match, a percentage with one decimal; `0` with no matches |
+| `bestStreak` | Longest run of hits in a row in one match; `0` with no matches |
+| `badges` | Every badge the player owns, oldest first; badges unlocked together are in the order of the table below |
+| `code` | One of the 15 badge codes below |
+| `unlockedAt` | When it was unlocked (the end of the match that earned it), UTC, ISO 8601 (`…Z`) |
+
+There are 15 badges in three groups of five. Each is owned at most once.
+
+| Codes | Earned when |
+|---|---|
+| `wins-5`, `wins-10`, `wins-20`, `wins-50`, `wins-100` | Total wins reach the number |
+| `accuracy-40`, `accuracy-50`, `accuracy-60`, `accuracy-70`, `accuracy-80` | Accuracy in one match is strictly over the number (40.0% is not over 40) |
+| `streak-4`, `streak-6`, `streak-8`, `streak-10`, `streak-12` | The longest run of hits in one match reaches the number |
+
+Every shot counts toward accuracy, timeout auto-shots included. A timeout
+auto-shot breaks a hit streak, even one that hits, the same as the in-game
+streak (#40). The loser of a match can earn
+accuracy and streak badges. Only saved matches count, so a guest always gets
+zeros and no badges (`docs/implement/database.md`).
+
+### `achievementUnlocked`
+
+Sent after `matchEnd`, only to a player whose match was saved and earned them
+badges they didn't own yet. Never sent to guests, nor when nothing is new.
+Added with ACH-1 (#41).
+
+```json
+{"type":"achievementUnlocked","matchId":"m1","badges":[
+  {"code":"accuracy-40","unlockedAt":"2026-10-19T07:00:00Z"},
+  {"code":"streak-4","unlockedAt":"2026-10-19T07:00:00Z"}
+]}
+```
+
+| Field | Meaning |
+|---|---|
+| `matchId` | The `matchId` from that match's `matchEnd` |
+| `badges` | Only the new badges, in the order of the `achievements` table. One match can earn several |
+
+The server saves the match first and checks badges afterwards, off the game
+loop, so this arrives a moment after `matchEnd` and may come after a rematch's
+`matchStart`. The UI shows it with the result of `matchId` and ignores it
+otherwise; the badges are owned either way.
+
+### `profile`
+
+The reply to `profileGet`, and to a `profileUpdate` that was saved. Sent only to
+the player who asked, and only ever about that player. Added with #42, under the
+ignore-unknown rules (§1).
+
+```json
+{"type":"profile","guest":false,"avatar":"pufferfish","shownBadges":["wins-5","accuracy-70","streak-6"],"rank":3,"wins":8}
+```
+
+| Field | Meaning |
+|---|---|
+| `guest` | `true` when the player isn't logged in. A guest can't save a profile, so the UI disables Save |
+| `avatar` | The chosen picture, one of the codes under `profileUpdate`, or `""` for none (the UI shows the name's first letter) |
+| `shownBadges` | 0–3 badge codes to show, in the player's order |
+| `rank` | The player's place on the leaderboard (`leaderboard`), counted over every account, not only the top 50; `null` with no saved match |
+| `wins` | Total wins over all the player's saved matches |
+
+Earned badges and best accuracy and streak are in `achievements`; the profile
+screen asks for both. A guest gets `"guest":true`, `""`, `[]`, `null` and `0`.
+
 ### `error`
 
 ```json
@@ -386,7 +470,9 @@ Errors never change client state — the client stays where it was.
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
-| `unknown` | Anything else, e.g. the match history or the leaderboard couldn't be read |
+| `invalid-profile` | `profileUpdate` broke a rule under it — `message` says which. Nothing was saved |
+| `not-logged-in` | A guest sent `profileUpdate` |
+| `unknown` | Anything else, e.g. the match history, the leaderboard, the badges or the profile couldn't be read or saved |
 
 ---
 
@@ -481,6 +567,43 @@ for another player's history.
 Asks for the leaderboard; the server replies with `leaderboard`. Valid in any
 state and changes none. A guest may ask too: the leaderboard isn't personal.
 
+### `achievementsGet`
+
+```json
+{"type":"achievementsGet"}
+```
+
+Asks for the sender's own badges and best stats; the server replies with
+`achievements`. Valid in any state and changes none. There is no way to ask for
+another player's badges.
+
+### `profileGet`
+
+```json
+{"type":"profileGet"}
+```
+
+Asks for the sender's own profile; the server replies with `profile`. Valid in
+any state and changes none. A guest gets an empty profile with `"guest":true`.
+
+### `profileUpdate`
+
+```json
+{"type":"profileUpdate","avatar":"pufferfish","shownBadges":["wins-5","accuracy-70","streak-6"]}
+```
+
+Saves the sender's picture and the badges they show, both at once; the server
+replies with the saved `profile`. Valid in any state; changes no game state.
+Both fields are required:
+
+- `avatar`: `""` (no picture) or one of `whale`, `octopus`, `crab`,
+  `pufferfish`, `turtle`, `jellyfish`, `starfish`, `shark`. Case matters.
+- `shownBadges`: at most 3 codes, no repeats, each one a badge the player has
+  earned (`achievements`).
+
+Anything else gets `error` `invalid-profile` and saves nothing. A guest gets
+`error` `not-logged-in`.
+
 ---
 
 ## 6. Full match sequence
@@ -573,7 +696,10 @@ export type ClientVerb =
   | { type: "rematch" }
   | { type: "leave" }
   | { type: "historyList"; page: number }
-  | { type: "leaderboardGet" };
+  | { type: "leaderboardGet" }
+  | { type: "achievementsGet" }
+  | { type: "profileGet" }
+  | { type: "profileUpdate"; avatar: string; shownBadges: string[] };
 ```
 
 ### C# — `Battleship.Core`
@@ -596,7 +722,7 @@ while chunk := sock.recv(4096).decode("utf-8"):
 ```
 
 The bot needs `connected`, `welcome`, `matchStart`, `turn`, `fireResult`,
-`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history` and `leaderboard` included. It must send
+`matchEnd`, `opponentLeft`, and `reset`. It may ignore the rest, `history`, `leaderboard`, `profile` and the badge messages included. It must send
 `findMatch` after `welcome`, and again after `opponentLeft` or `reset`, or it
 will never be paired.
 

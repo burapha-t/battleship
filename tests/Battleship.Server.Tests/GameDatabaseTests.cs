@@ -16,7 +16,7 @@ public class GameDatabaseTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -42,7 +42,7 @@ public class GameDatabaseTests : IDisposable
         long alice = first.CreateUser("Alice", Salt, Hash, 1000)!.Value;
         long bob = first.CreateUser("Bob", Salt, Hash, 1000)!.Value;
         first.SaveMatch(Match(alice, bob, winner: alice, Shots((1, alice, true))));
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_path);
 
         var second = new GameDatabase(_path);
 
@@ -246,21 +246,23 @@ public class GameDatabaseTests : IDisposable
     }
 
     [Fact]
-    public void SaveMatch_AutoShotsAreCountedAndKeepTheirFlag()
+    public void SaveMatch_AutoShotsCountTowardAccuracy_ButBreakTheStreak()
     {
         var db = new GameDatabase(_path);
         long alice = db.CreateUser("Alice", Salt, Hash, 1000)!.Value;
         long bob = db.CreateUser("Bob", Salt, Hash, 1000)!.Value;
+        // H, auto H, H: 3 of 3 hit, but the auto hit breaks the run.
         var shots = new[]
         {
-            new ShotRecord(1, alice, new Coord(0, 0), Hit: true, Auto: true),
-            new ShotRecord(3, alice, new Coord(0, 1), Hit: true, Auto: false),
+            new ShotRecord(1, alice, new Coord(0, 0), Hit: true, Auto: false),
+            new ShotRecord(3, alice, new Coord(0, 1), Hit: true, Auto: true),
+            new ShotRecord(5, alice, new Coord(0, 2), Hit: true, Auto: false),
         };
 
         db.SaveMatch(Match(alice, bob, winner: alice, shots));
 
-        Assert.Equal(new[] { "1|1", "3|0" }, Rows("SELECT turn, auto FROM shots ORDER BY turn"));
-        Assert.Equal($"{alice}|2|2|2",
+        Assert.Equal(new[] { "1|0", "3|1", "5|0" }, Rows("SELECT turn, auto FROM shots ORDER BY turn"));
+        Assert.Equal($"{alice}|3|3|1",
             Rows($"SELECT user_id, shots, hits, best_streak FROM match_players WHERE user_id = {alice}").Single());
     }
 

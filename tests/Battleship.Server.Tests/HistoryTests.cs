@@ -1,7 +1,6 @@
 using Battleship.Core;
 using Battleship.Core.Protocol;
 using Battleship.Server.Data;
-using Microsoft.Data.Sqlite;
 
 namespace Battleship.Server.Tests;
 
@@ -25,7 +24,7 @@ public class HistoryTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(_database.Path);
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 

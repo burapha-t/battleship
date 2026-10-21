@@ -25,6 +25,8 @@ export type ErrorCode =
   | 'already-fired'
   | 'out-of-range'
   | 'not-in-match'
+  | 'invalid-profile'
+  | 'not-logged-in'
   | 'unknown'
 
 /** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
@@ -39,7 +41,24 @@ export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; ac
  */
 export type LeaderboardRow = { rank: number; name: string; points: number; accuracy: number }
 
-/** The 14 server → client events (§4). */
+/** One badge I own (#41): `code` from the catalogue in badges.ts, `unlockedAt` UTC ISO 8601. */
+export type BadgeUnlock = { code: string; unlockedAt: string }
+
+/**
+ * My badges and the stats they're earned from (#41): total wins, best
+ * single-match accuracy (a percentage with one decimal) and best hit streak.
+ * `badges` is oldest first.
+ */
+export type AchievementsView = { wins: number; bestAccuracy: number; bestStreak: number; badges: BadgeUnlock[] }
+
+/**
+ * My profile (#42). `guest`: not logged in, so I can't save. `avatar` is ''
+ * for none or a code from screens/profileText.ts; `shownBadges` 0–3 codes in
+ * my order; `rank` my leaderboard place, null with no saved match.
+ */
+export type ProfileView = { guest: boolean; avatar: string; shownBadges: string[]; rank: number | null; wins: number }
+
+/** The 17 server → client events (§4). */
 export type ServerEvent =
   | { type: 'connected'; id: string; protocolVersion: number }
   | { type: 'welcome'; id: string; nickname: string }
@@ -67,9 +86,15 @@ export type ServerEvent =
   | { type: 'history'; page: number; stats: HistoryStats; matches: HistoryMatch[]; more: boolean }
   // The all-time leaderboard, at most 50 rows, best first.
   | { type: 'leaderboard'; rows: LeaderboardRow[] }
+  // My badges and best stats; a guest gets zeros and none.
+  | ({ type: 'achievements' } & AchievementsView)
+  // Badges the match `matchId` just earned me, sent after its `matchEnd`.
+  | { type: 'achievementUnlocked'; matchId: string; badges: BadgeUnlock[] }
+  // My profile; the reply to `profileGet` and to a saved `profileUpdate`.
+  | ({ type: 'profile' } & ProfileView)
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 8 client → server verbs (§5). */
+/** The 11 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
   | { type: 'findMatch' }
@@ -82,6 +107,12 @@ export type ClientVerb =
   | { type: 'historyList'; page: number }
   // The leaderboard; the reply is `leaderboard`.
   | { type: 'leaderboardGet' }
+  // My badges; the reply is `achievements`.
+  | { type: 'achievementsGet' }
+  // My profile; the reply is `profile`.
+  | { type: 'profileGet' }
+  // Save my picture ('' for none) and up to 3 earned badges; the reply is `profile` or `error`.
+  | { type: 'profileUpdate'; avatar: string; shownBadges: string[] }
 
 /**
  * Call in the `default` of a `switch (event.type)`. If a case is missing,

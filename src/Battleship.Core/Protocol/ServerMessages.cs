@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-// The 14 server → client events (protocol.md §4). Property order is wire order.
+// The 17 server → client events (protocol.md §4). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary>First frame on every connection.</summary>
@@ -204,6 +204,74 @@ namespace Battleship.Core.Protocol
         public double Accuracy { get; set; }
     }
 
+    /// <summary>
+    /// <c>achievements</c>: the answer to <c>achievementsGet</c> (#41), only
+    /// about the player who asked. A guest gets zeros and no badges. Named
+    /// AchievementList because <see cref="Battleship.Core.Achievements"/> holds the rules.
+    /// </summary>
+    public sealed class AchievementList : ProtocolMessage
+    {
+        public AchievementList() : base("achievements") { }
+
+        /// <summary>Wins over all my saved matches.</summary>
+        public int Wins { get; set; }
+
+        /// <summary>My best single-match hits / shots, a percentage with one decimal.</summary>
+        public double BestAccuracy { get; set; }
+
+        /// <summary>My longest run of hits in one match.</summary>
+        public int BestStreak { get; set; }
+
+        /// <summary>Every badge I own, oldest first.</summary>
+        public IReadOnlyList<BadgeUnlock> Badges { get; set; } = Array.Empty<BadgeUnlock>();
+    }
+
+    /// <summary>
+    /// <c>achievementUnlocked</c>: badges the match <see cref="MatchId"/> just
+    /// earned me (#41), sent only to me after <c>matchEnd</c>.
+    /// </summary>
+    public sealed class AchievementUnlocked : ProtocolMessage
+    {
+        public AchievementUnlocked() : base("achievementUnlocked") { }
+
+        public string MatchId { get; set; } = "";
+        public IReadOnlyList<BadgeUnlock> Badges { get; set; } = Array.Empty<BadgeUnlock>();
+    }
+
+    /// <summary>
+    /// <c>profile</c>: the answer to <c>profileGet</c> or a saved
+    /// <c>profileUpdate</c> (#42), only about the player who asked. Earned
+    /// badges and best stats are in <see cref="AchievementList"/>.
+    /// </summary>
+    public sealed class Profile : ProtocolMessage
+    {
+        public Profile() : base("profile") { }
+
+        /// <summary>Not logged in, so Save is off. A guest's other fields are empty.</summary>
+        public bool Guest { get; set; }
+
+        /// <summary>"" for none, or a code from <see cref="Battleship.Core.Avatars.Catalogue"/>.</summary>
+        public string Avatar { get; set; } = "";
+
+        /// <summary>0–3 badge codes, in the order I chose.</summary>
+        public IReadOnlyList<string> ShownBadges { get; set; } = Array.Empty<string>();
+
+        /// <summary>My place on the leaderboard over every account; null with no saved match.</summary>
+        public int? Rank { get; set; }
+
+        /// <summary>Wins over all my saved matches.</summary>
+        public int Wins { get; set; }
+    }
+
+    /// <summary>One owned badge: a code from <see cref="Battleship.Core.Achievements.Catalogue"/>.</summary>
+    public sealed class BadgeUnlock
+    {
+        public string Code { get; set; } = "";
+
+        /// <summary>UTC, e.g. <c>2026-10-19T07:00:00Z</c>.</summary>
+        public string UnlockedAt { get; set; } = "";
+    }
+
     /// <summary>The dashboard RESET button was pressed.</summary>
     public sealed class Reset : ProtocolMessage
     {
@@ -228,6 +296,8 @@ namespace Battleship.Core.Protocol
         public const string AlreadyFired = "already-fired";
         public const string OutOfRange = "out-of-range";
         public const string NotInMatch = "not-in-match";
+        public const string InvalidProfile = "invalid-profile";
+        public const string NotLoggedIn = "not-logged-in";
         public const string Unknown = "unknown";
     }
 }

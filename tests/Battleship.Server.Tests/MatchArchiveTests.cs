@@ -11,12 +11,14 @@ namespace Battleship.Server.Tests;
 internal sealed class FakeArchive : IMatchArchive
 {
     public List<MatchRecord> Saved { get; } = new();
+    public List<(string MatchId, IReadOnlyList<string> PlayerIds)> Ids { get; } = new();
     public bool Fail { get; set; }
 
-    public void Save(MatchRecord match)
+    public void Save(MatchRecord match, string matchId, IReadOnlyList<string> playerIds)
     {
         if (Fail) throw new IOException("disk full");
         Saved.Add(match);
+        Ids.Add((matchId, playerIds));
     }
 }
 
@@ -29,7 +31,7 @@ public class MatchArchiveTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        GameDatabase.ClearPool(Path.Combine(_folder, "test.db"));
         if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
     }
 
@@ -183,7 +185,7 @@ public class MatchArchiveTests : IDisposable
 
         await worker.CompleteAsync();
 
-        using var connection = new SqliteConnection($"Data Source={database.Path}");
+        using var connection = new SqliteConnection($"Data Source={database.Path};Pooling=False");
         connection.Open();
         long Count(string sql) { using var c = connection.CreateCommand(); c.CommandText = sql; return (long)c.ExecuteScalar()!; }
         Assert.Equal(1, Count("SELECT COUNT(*) FROM matches"));
@@ -204,12 +206,12 @@ public class MatchArchiveTests : IDisposable
         var record = setup.Engine.Matches.Single().ToRecord(DateTimeOffset.UtcNow)!;
         bool ranAfter = false;
 
-        worker.Save(record);
+        worker.Save(record, "m1", new[] { "p1", "p2" });
         worker.Enqueue(_ => ranAfter = true);
         await worker.CompleteAsync();
 
         Assert.True(ranAfter);
-        using var connection = new SqliteConnection($"Data Source={database.Path}");
+        using var connection = new SqliteConnection($"Data Source={database.Path};Pooling=False");
         connection.Open();
         using var count = connection.CreateCommand();
         count.CommandText = "SELECT COUNT(*) FROM matches";

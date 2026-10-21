@@ -1,0 +1,7 @@
+/* Achievement unlock (#41): shown on the end screen only when a badge was earned. */
+.unlock-card { margin-bottom: 16px; padding: 10px 14px; max-height: 150px; overflow: auto; animation: badge-pop .2s ease-out; }
+.unlock-card h2 { font-size: 22px; line-height: 1.3; margin-bottom: 8px; }
+.unlock-card > div { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+.unlock-card > div > div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; line-height: 1.3; }
+@keyframes badge-pop { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .unlock-card { animation: none; } }

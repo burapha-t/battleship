@@ -6,39 +6,15 @@
   flex-direction: column;
   gap: 18px;
   width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
   padding-bottom: 72px; /* clear of the waves */
 }
 
-.leaderboard-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px 20px;
-  flex-wrap: wrap;
-}
-
-.leaderboard-head .title {
-  margin: 0;
-  outline: none;
-  transform: rotate(-2deg);
-  transform-origin: left;
-}
-
-.leaderboard-sub {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.leaderboard-head .btn {
-  margin-left: auto;
-  align-self: center;
-}
-
-.leaderboard-head .btn svg {
-  width: 22px;
-  height: 22px;
+/* Everything under the ScreenHead keeps the screen's width. :where() keeps
+   this at one class, so the narrower list and note below still win. */
+.leaderboard > :where(:not(.screen-head)) {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
 }
 
 /* ---- Podium: 2nd, 1st, 3rd ---- */
@@ -213,10 +189,6 @@
 /* ---- Narrow screens ---- */
 
 @media (max-width: 760px) {
-  .leaderboard-head .title {
-    font-size: 38px;
-  }
-
   .podium {
     gap: 10px;
   }

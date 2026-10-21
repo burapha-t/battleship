@@ -1,8 +1,7 @@
-import { useState } from 'react'
 import { Avatar } from '../components/Avatar'
 import { Hero } from '../components/Hero'
 import type { GameState } from '../gameReducer'
-import type { LobbyClient, LobbyStatus } from '../protocol'
+import type { LobbyStatus } from '../protocol'
 import './screens.css'
 
 const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
@@ -15,20 +14,14 @@ const STATUS: Record<LobbyStatus, { label: string; dot: string }> = {
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 
-type Props = { state: GameState; onStartGame: () => void; onOpenHistory: () => void; onOpenLeaderboard: () => void }
+type Props = {
+  state: GameState
+  /** I'm waiting to be paired (App works it out, so the header's buttons can follow it too). */
+  searching: boolean
+  onStartGame: () => void
+}
 
-export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboard }: Props) {
-  // The lobby list I had when I pressed Start game. Until the server sends a
-  // new one, trust the press; after that, trust my status in the list.
-  const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
-  const myStatus = state.lobby.find((c) => c.id === state.myId)?.status
-  const searching = myStatus === 'searching' || pressedAt === state.lobby
-
-  const start = () => {
-    setPressedAt(state.lobby)
-    onStartGame()
-  }
-
+export function LobbyScreen({ state, searching, onStartGame }: Props) {
   return (
     <main className="home">
       <Hero />
@@ -40,14 +33,8 @@ export function LobbyScreen({ state, onStartGame, onOpenHistory, onOpenLeaderboa
               ? 'You will be paired with the next captain who presses Start game.'
               : "Press Start game when you're ready to play."}
           </p>
-          <button type="button" className="btn wide" disabled={searching} onClick={start}>
+          <button type="button" className="btn wide" disabled={searching} onClick={onStartGame}>
             {searching ? 'Looking for an opponent…' : 'Start game'}
-          </button>
-          <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenHistory}>
-            Match history
-          </button>
-          <button type="button" className="btn white wide join-history" disabled={searching} onClick={onOpenLeaderboard}>
-            Leaderboard
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { Avatar } from '../components/Avatar'
+import { ScreenHead } from '../components/ScreenHead'
 import type { LeaderboardRow } from '../protocol'
 import { percent } from './historyText'
 import type { Language } from './historyText'
@@ -23,23 +23,10 @@ type Props = {
 export function LeaderboardScreen({ rows, failed, myName, onHome, onRetry }: Props) {
   const { language } = useSettings()
   const t = leaderboardText(language)
-  const title = useRef<HTMLHeadingElement>(null)
-  useEffect(() => title.current?.focus(), [])
 
   return (
     <main className="leaderboard">
-      <div className="leaderboard-head">
-        <h1 ref={title} tabIndex={-1} className="title">{t('title')}</h1>
-        <span className="leaderboard-sub">{t('subtitle')}</span>
-        <button type="button" className="btn white small" onClick={onHome}>
-          <svg viewBox="0 0 24 24" aria-hidden>
-            <path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5.5 10v9.5h13V10" fill="#fff" stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" />
-            <rect x="10" y="13.5" width="4" height="6" rx="1" fill="var(--sun)" stroke="currentColor" strokeWidth="2" />
-          </svg>
-          {t('home')}
-        </button>
-      </div>
+      <ScreenHead title={t('title')} subtitle={t('subtitle')} home={t('home')} onHome={onHome} />
 
       {rows === null ? (
         <section className="card leaderboard-note" role={failed ? 'alert' : 'status'}>
