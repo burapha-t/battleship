@@ -35,9 +35,9 @@ export function historyText(language: Language): (key: TextKey) => string {
   return (key) => TEXT[key][language === 'th' ? 1 : 0]
 }
 
-/** 66.7 → "66.7%", 50 → "50%". */
+/** 66.7 → "66.7%", 50 → "50.0%". */
 export function percent(value: number, language: Language): string {
-  return `${new Intl.NumberFormat(locale(language), { maximumFractionDigits: 1 }).format(value)}%`
+  return `${new Intl.NumberFormat(locale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}%`
 }
 
 /** UTC ISO time → local "Oct 19, 14:31", with the year when it isn't this year. */
