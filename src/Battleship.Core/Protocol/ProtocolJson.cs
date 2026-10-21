@@ -29,6 +29,7 @@ namespace Battleship.Core.Protocol
             ["leave"] = typeof(Leave),
             ["historyList"] = typeof(HistoryList),
             ["leaderboardGet"] = typeof(LeaderboardGet),
+            ["achievementsGet"] = typeof(AchievementsGet),
             ["connected"] = typeof(Connected),
             ["welcome"] = typeof(Welcome),
             ["lobby"] = typeof(LobbyUpdate),
@@ -42,6 +43,8 @@ namespace Battleship.Core.Protocol
             ["reset"] = typeof(Reset),
             ["history"] = typeof(History),
             ["leaderboard"] = typeof(Leaderboard),
+            ["achievements"] = typeof(AchievementList),
+            ["achievementUnlocked"] = typeof(AchievementUnlocked),
             ["error"] = typeof(Error),
         };
 

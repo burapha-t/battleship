@@ -70,4 +70,10 @@ namespace Battleship.Core.Protocol
     {
         public LeaderboardGet() : base("leaderboardGet") { }
     }
+
+    /// <summary><c>achievementsGet</c>: my badges and best stats (#41). A guest gets zeros.</summary>
+    public sealed class AchievementsGet : ProtocolMessage
+    {
+        public AchievementsGet() : base("achievementsGet") { }
+    }
 }
