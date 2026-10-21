@@ -9,5 +9,7 @@ namespace Battleship.Server.Engine;
 /// </summary>
 public interface IMatchArchive
 {
-    void Save(MatchRecord match);
+    /// <param name="matchId">The wire id, for <c>achievementUnlocked</c>.</param>
+    /// <param name="playerIds">Connection ids in the order of <c>match.Players</c>.</param>
+    void Save(MatchRecord match, string matchId, IReadOnlyList<string> playerIds);
 }

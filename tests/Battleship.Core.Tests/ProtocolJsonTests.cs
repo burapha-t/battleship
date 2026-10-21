@@ -47,7 +47,7 @@ public class ProtocolJsonTests
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(21, types.Count);
+        Assert.Equal(24, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
     }
 
@@ -74,6 +74,53 @@ public class ProtocolJsonTests
             "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1}]," +
             "\"more\":true}";
         Assert.Equal(frame, ProtocolJson.Serialize(history));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void AchievementsGet_RoundTrips()
+    {
+        const string frame = "{\"type\":\"achievementsGet\"}";
+        Assert.IsType<AchievementsGet>(ProtocolJson.Parse(frame));
+        Assert.Equal(frame, ProtocolJson.Serialize(new AchievementsGet()));
+    }
+
+    [Fact]
+    public void Achievements_WritesStatsAndBadgesInWireOrder()
+    {
+        var list = new AchievementList
+        {
+            Wins = 12,
+            BestAccuracy = 64.3,
+            BestStreak = 7,
+            Badges = new[] { new BadgeUnlock { Code = "wins-5", UnlockedAt = "2026-10-19T07:00:00Z" } },
+        };
+
+        const string frame =
+            "{\"type\":\"achievements\",\"wins\":12,\"bestAccuracy\":64.3,\"bestStreak\":7," +
+            "\"badges\":[{\"code\":\"wins-5\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}]}";
+        Assert.Equal(frame, ProtocolJson.Serialize(list));
+        Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void AchievementUnlocked_WritesMatchIdAndBadgesInWireOrder()
+    {
+        var unlocked = new AchievementUnlocked
+        {
+            MatchId = "m1",
+            Badges = new[]
+            {
+                new BadgeUnlock { Code = "accuracy-40", UnlockedAt = "2026-10-19T07:00:00Z" },
+                new BadgeUnlock { Code = "streak-4", UnlockedAt = "2026-10-19T07:00:00Z" },
+            },
+        };
+
+        const string frame =
+            "{\"type\":\"achievementUnlocked\",\"matchId\":\"m1\",\"badges\":[" +
+            "{\"code\":\"accuracy-40\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}," +
+            "{\"code\":\"streak-4\",\"unlockedAt\":\"2026-10-19T07:00:00Z\"}]}";
+        Assert.Equal(frame, ProtocolJson.Serialize(unlocked));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
     }
 

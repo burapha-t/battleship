@@ -11,7 +11,8 @@ const DELAY_MS = 350
 /** How long the end screen shows before the transcript's rematch. */
 const END_SCREEN_MS = 3000
 
-type Line = { from: string; to: string; frame: ServerEvent | ClientVerb }
+/** `example` lines are hand-written wire examples, not part of the story (tests/fixtures/README.md). */
+type Line = { example?: boolean; from: string; to: string; frame: ServerEvent | ClientVerb }
 
 /**
  * Every frame the server sent to `player`, in order. The player's own `place`
@@ -22,7 +23,8 @@ export function replayActions(player: string): GameAction[] {
   const actions: GameAction[] = []
   for (const text of transcript.split('\n')) {
     if (!text.trim()) continue
-    const { from, to, frame } = JSON.parse(text) as Line
+    const { example, from, to, frame } = JSON.parse(text) as Line
+    if (example) continue
     if (to === player) actions.push(frame as ServerEvent)
     else if (from === player && frame.type === 'place') actions.push({ type: 'myShips', ships: frame.ships })
   }

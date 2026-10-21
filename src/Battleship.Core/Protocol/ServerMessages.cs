@@ -204,6 +204,49 @@ namespace Battleship.Core.Protocol
         public double Accuracy { get; set; }
     }
 
+    /// <summary>
+    /// <c>achievements</c>: the answer to <c>achievementsGet</c> (#41), only
+    /// about the player who asked. A guest gets zeros and no badges. Named
+    /// AchievementList because <see cref="Battleship.Core.Achievements"/> holds the rules.
+    /// </summary>
+    public sealed class AchievementList : ProtocolMessage
+    {
+        public AchievementList() : base("achievements") { }
+
+        /// <summary>Wins over all my saved matches.</summary>
+        public int Wins { get; set; }
+
+        /// <summary>My best single-match hits / shots, a percentage with one decimal.</summary>
+        public double BestAccuracy { get; set; }
+
+        /// <summary>My longest run of hits in one match.</summary>
+        public int BestStreak { get; set; }
+
+        /// <summary>Every badge I own, oldest first.</summary>
+        public IReadOnlyList<BadgeUnlock> Badges { get; set; } = Array.Empty<BadgeUnlock>();
+    }
+
+    /// <summary>
+    /// <c>achievementUnlocked</c>: badges the match <see cref="MatchId"/> just
+    /// earned me (#41), sent only to me after <c>matchEnd</c>.
+    /// </summary>
+    public sealed class AchievementUnlocked : ProtocolMessage
+    {
+        public AchievementUnlocked() : base("achievementUnlocked") { }
+
+        public string MatchId { get; set; } = "";
+        public IReadOnlyList<BadgeUnlock> Badges { get; set; } = Array.Empty<BadgeUnlock>();
+    }
+
+    /// <summary>One owned badge: a code from <see cref="Battleship.Core.Achievements.Catalogue"/>.</summary>
+    public sealed class BadgeUnlock
+    {
+        public string Code { get; set; } = "";
+
+        /// <summary>UTC, e.g. <c>2026-10-19T07:00:00Z</c>.</summary>
+        public string UnlockedAt { get; set; } = "";
+    }
+
     /// <summary>The dashboard RESET button was pressed.</summary>
     public sealed class Reset : ProtocolMessage
     {

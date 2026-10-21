@@ -376,6 +376,94 @@ public sealed class GameDatabase
         return new Leaderboard { Rows = rows };
     }
 
+    /// <summary>
+    /// Badges (#41): checks one saved match against <see cref="Achievements"/>
+    /// and stores each badge the player doesn't own yet, unlocked by that
+    /// match. Wins count every saved match; accuracy and streak only this one.
+    /// Returns only the new badges, in catalogue order.
+    /// </summary>
+    public IReadOnlyList<BadgeUnlock> UnlockAchievements(long userId, long matchId, DateTimeOffset unlockedAt)
+    {
+        using var connection = Open();
+        using var transaction = connection.BeginTransaction();
+        IReadOnlyList<string> earned;
+        using (var command = Command(connection, transaction, """
+            SELECT (SELECT COALESCE(SUM(won), 0) FROM match_players WHERE user_id = $userId),
+                   shots, hits, best_streak
+            FROM match_players WHERE user_id = $userId AND match_id = $matchId;
+            """))
+        {
+            command.Parameters.AddWithValue("$userId", userId);
+            command.Parameters.AddWithValue("$matchId", matchId);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) return Array.Empty<BadgeUnlock>();
+            earned = Achievements.Earned(reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3));
+        }
+
+        var result = new List<BadgeUnlock>();
+        foreach (var code in earned)
+        {
+            using var command = Command(connection, transaction, """
+                INSERT OR IGNORE INTO achievements (user_id, code, unlocked_at, match_id)
+                VALUES ($userId, $code, $time, $matchId);
+                """);
+            command.Parameters.AddWithValue("$userId", userId);
+            command.Parameters.AddWithValue("$code", code);
+            command.Parameters.AddWithValue("$time", Format(unlockedAt));
+            command.Parameters.AddWithValue("$matchId", matchId);
+            if (command.ExecuteNonQuery() == 1) result.Add(new BadgeUnlock { Code = code, UnlockedAt = WireTime(unlockedAt) });
+        }
+        transaction.Commit();
+        return result;
+    }
+
+    /// <summary>
+    /// One player's badges, oldest first (badges from one match in catalogue
+    /// order), and the stats they're earned from: total wins, best single-match
+    /// accuracy and best streak (#41). A player with no matches gets zeros.
+    /// </summary>
+    public AchievementList GetAchievements(long userId)
+    {
+        using var connection = Open();
+        var list = new AchievementList();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                SELECT COALESCE(SUM(won), 0), COALESCE(MAX(100.0 * hits / NULLIF(shots, 0)), 0),
+                       COALESCE(MAX(best_streak), 0)
+                FROM match_players WHERE user_id = $userId;
+                """;
+            command.Parameters.AddWithValue("$userId", userId);
+            using var reader = command.ExecuteReader();
+            reader.Read();
+            list.Wins = reader.GetInt32(0);
+            list.BestAccuracy = Math.Round(reader.GetDouble(1), 1, MidpointRounding.AwayFromZero);
+            list.BestStreak = reader.GetInt32(2);
+        }
+
+        var badges = new List<BadgeUnlock>();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT code, unlocked_at FROM achievements WHERE user_id = $userId;";
+            command.Parameters.AddWithValue("$userId", userId);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                badges.Add(new BadgeUnlock
+                {
+                    Code = reader.GetString(0),
+                    UnlockedAt = WireTime(DateTimeOffset.Parse(reader.GetString(1), CultureInfo.InvariantCulture)),
+                });
+            }
+        }
+        var catalogue = Achievements.Catalogue.ToList();
+        list.Badges = badges
+            .OrderBy(b => b.UnlockedAt, StringComparer.Ordinal)
+            .ThenBy(b => catalogue.IndexOf(b.Code))
+            .ToList();
+        return list;
+    }
+
     /// <summary>part / whole as a percentage with one decimal; 0 when whole is 0.</summary>
     private static double Percent(long part, long whole) =>
         whole == 0 ? 0 : Math.Round(100.0 * part / whole, 1, MidpointRounding.AwayFromZero);
@@ -416,4 +504,8 @@ public sealed class GameDatabase
     /// <summary>Times are stored as ISO 8601 text in UTC, which sorts correctly as text.</summary>
     private static string Format(DateTimeOffset time) =>
         time.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture);
+
+    /// <summary>Times on the wire: UTC to the second, e.g. 2026-10-19T07:00:00Z.</summary>
+    private static string WireTime(DateTimeOffset time) =>
+        time.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
 }

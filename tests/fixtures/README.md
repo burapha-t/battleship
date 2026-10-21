@@ -33,8 +33,9 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 1. **Lobby.** All three connect and join. Bob's first nickname (`"   "`) gets
    `bad-nickname`. `p3`, a guest, asks for its match history (`historyList`)
    and gets zeros and no matches (`history`), then asks for the leaderboard
-   (`leaderboardGet`) and gets no rows (`leaderboard`): the server under test
-   has no database.
+   (`leaderboardGet`) and gets no rows (`leaderboard`), then asks for its
+   badges (`achievementsGet`) and gets zeros and none (`achievements`): the
+   server under test has no database.
 2. **Match `m1`, played to the end.** Bob moves first. On the way:
    `invalid-placement` (Bob), `not-your-turn` (Alice), `not-in-match` (`p3`),
    `out-of-range` and `already-fired` (Alice), and one of Bob's turns times out
@@ -45,7 +46,8 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 5. **Match `m3`.** Its `matchStart` shows both scores back at 0. Alice places,
    then Bob disconnects → `opponentLeft` to Alice, who ends idle in the lobby.
 
-Every message type except `leave` and all five lobby statuses appear. The `unknown` error
+Every message type except `leave` and all five lobby statuses appear.
+`achievementUnlocked` appears only as an example line (below). The `unknown` error
 code does not, because `protocol.md` gives no trigger for it.
 
 ### Don't depend on
@@ -57,3 +59,11 @@ code does not, because `protocol.md` gives no trigger for it.
 
 A protocol change updates this file in the same PR as `protocol.md`,
 `web/src/protocol.ts` and the C# DTOs.
+
+### Example lines
+
+A line with `"example": true` is a hand-written wire example, not part of the
+story. The `achievementUnlocked` line after `m1`'s `matchEnd` shows what an
+account would get (#41); the players here are guests, who earn nothing. The
+protocol round-trip tests read it; the replay against the real server and the
+web `?replay=` skip it. `example` is line metadata, not part of the frame.
