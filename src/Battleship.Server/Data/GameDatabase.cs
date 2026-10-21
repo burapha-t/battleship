@@ -274,7 +274,7 @@ public sealed class GameDatabase
     /// matches, and <see cref="History.PageSize"/> matches, newest first.
     /// Page 1 is the newest; a page below 1 counts as 1. A player with no
     /// matches gets zeros. Every shot counts toward accuracy, timeout shots
-    /// included (database.md, open question).
+    /// included (database.md rule 7).
     /// </summary>
     public History GetHistory(long userId, int page)
     {
