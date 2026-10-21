@@ -24,6 +24,10 @@
 {"from":"server","to":"p3","frame":{"type":"leaderboard","rows":[]}}
 {"from":"p3","to":"server","frame":{"type":"achievementsGet"}}
 {"from":"server","to":"p3","frame":{"type":"achievements","wins":0,"bestAccuracy":0,"bestStreak":0,"badges":[]}}
+{"from":"p3","to":"server","frame":{"type":"profileGet"}}
+{"from":"server","to":"p3","frame":{"type":"profile","guest":true,"avatar":"","shownBadges":[],"rank":null,"wins":0}}
+{"from":"p3","to":"server","frame":{"type":"profileUpdate","avatar":"whale","shownBadges":[]}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"not-logged-in","message":"Log in to save your profile."}}
 {"from":"p1","to":"server","frame":{"type":"findMatch"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"searching"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

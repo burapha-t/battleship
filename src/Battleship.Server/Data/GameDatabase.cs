@@ -32,7 +32,7 @@ public sealed record MatchRecord(
 /// </summary>
 public sealed class GameDatabase
 {
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
 
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS users (
@@ -109,8 +109,10 @@ public sealed class GameDatabase
 
         // One step per version, oldest first; a new file runs them all. Schema is
         // version 1, so leave it as is: to change a table, raise SchemaVersion and
-        // add "if (found < N) { ALTER ... }" below.
+        // add "if (found < N) { ALTER ... }" below. Version 2: shown badges (#42).
         if (found < 1) Execute(connection, transaction, Schema);
+        if (found < 2) Execute(connection, transaction,
+            "ALTER TABLE users ADD COLUMN shown_badges TEXT NOT NULL DEFAULT '';");
         Execute(connection, transaction, $"PRAGMA user_version = {SchemaVersion};");
         transaction.Commit();
     }
@@ -341,39 +343,49 @@ public sealed class GameDatabase
     public Leaderboard GetLeaderboard()
     {
         using var connection = Open();
+        return new Leaderboard { Rows = RankAll(connection).Take(Leaderboard.MaxRows).Select(r => r.Row).ToList() };
+    }
+
+    /// <summary>
+    /// Every account with a saved match, ranked as on the leaderboard, with
+    /// its user id. Shared by <see cref="GetLeaderboard"/> and <see cref="GetProfile"/>.
+    /// </summary>
+    private static List<(long UserId, LeaderboardRow Row)> RankAll(SqliteConnection connection)
+    {
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT u.username, SUM(mp.won), SUM(mp.hits), SUM(mp.shots)
+            SELECT u.id, u.username, SUM(mp.won), SUM(mp.hits), SUM(mp.shots)
             FROM match_players mp JOIN users u ON u.id = mp.user_id
             GROUP BY u.id;
             """;
 
-        var players = new List<LeaderboardRow>();
+        var players = new List<(long UserId, LeaderboardRow Row)>();
         using (var reader = command.ExecuteReader())
         {
             while (reader.Read())
             {
-                players.Add(new LeaderboardRow
+                players.Add((reader.GetInt64(0), new LeaderboardRow
                 {
-                    Name = reader.GetString(0),
-                    Points = reader.GetInt32(1),
-                    Accuracy = Percent(reader.GetInt64(2), reader.GetInt64(3)),
-                });
+                    Name = reader.GetString(1),
+                    Points = reader.GetInt32(2),
+                    Accuracy = Percent(reader.GetInt64(3), reader.GetInt64(4)),
+                }));
             }
         }
 
-        var rows = players
-            .OrderByDescending(p => p.Points)
-            .ThenByDescending(p => p.Accuracy)
-            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-            .Take(Leaderboard.MaxRows)
+        var ranked = players
+            .OrderByDescending(p => p.Row.Points)
+            .ThenByDescending(p => p.Row.Accuracy)
+            .ThenBy(p => p.Row.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
-        for (int i = 0; i < rows.Count; i++)
+        for (int i = 0; i < ranked.Count; i++)
         {
-            bool tied = i > 0 && rows[i].Points == rows[i - 1].Points && rows[i].Accuracy == rows[i - 1].Accuracy;
-            rows[i].Rank = tied ? rows[i - 1].Rank : i + 1;
+            var row = ranked[i].Row;
+            var above = i > 0 ? ranked[i - 1].Row : null;
+            bool tied = above != null && row.Points == above.Points && row.Accuracy == above.Accuracy;
+            row.Rank = tied ? above!.Rank : i + 1;
         }
-        return new Leaderboard { Rows = rows };
+        return ranked;
     }
 
     /// <summary>
@@ -462,6 +474,75 @@ public sealed class GameDatabase
             .ThenBy(b => catalogue.IndexOf(b.Code))
             .ToList();
         return list;
+    }
+
+    /// <summary>
+    /// One player's profile (#42): picture ("" for none), shown badges in
+    /// their order, leaderboard rank over every account (null with no saved
+    /// match) and total wins. Throws if the account doesn't exist.
+    /// </summary>
+    public Profile GetProfile(long userId)
+    {
+        using var connection = Open();
+        var profile = new Profile();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                SELECT COALESCE(avatar, ''), shown_badges,
+                       (SELECT COALESCE(SUM(won), 0) FROM match_players WHERE user_id = $userId)
+                FROM users WHERE id = $userId;
+                """;
+            command.Parameters.AddWithValue("$userId", userId);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) throw new InvalidOperationException($"Account {userId} doesn't exist.");
+            profile.Avatar = reader.GetString(0);
+            profile.ShownBadges = reader.GetString(1).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            profile.Wins = reader.GetInt32(2);
+        }
+        profile.Rank = RankAll(connection).Where(r => r.UserId == userId).Select(r => (int?)r.Row.Rank).FirstOrDefault();
+        return profile;
+    }
+
+    /// <summary>
+    /// Saves a player's picture and shown badges together (#42). The picture is
+    /// "" or in <see cref="Avatars.Catalogue"/>; at most 3 badges, no repeats,
+    /// each one the player owns. Anything else throws ArgumentException, whose
+    /// message is safe to show, and saves nothing.
+    /// </summary>
+    public void SetProfile(long userId, string? avatar, IReadOnlyList<string>? shownBadges)
+    {
+        if (avatar == null || (avatar != "" && !Avatars.Catalogue.Contains(avatar)))
+            throw new ArgumentException("Choose one of the profile pictures.");
+        if (shownBadges == null)
+            throw new ArgumentException("Say which badges to show.");
+        if (shownBadges.Count > 3)
+            throw new ArgumentException("Choose at most 3 badges to show.");
+        if (shownBadges.Distinct(StringComparer.Ordinal).Count() != shownBadges.Count)
+            throw new ArgumentException("Each badge can be shown only once.");
+        if (shownBadges.Any(code => !Achievements.Catalogue.Contains(code)))
+            throw new ArgumentException("That badge doesn't exist.");
+
+        using var connection = Open();
+        using var transaction = connection.BeginTransaction();
+        foreach (var code in shownBadges)
+        {
+            using var owned = Command(connection, transaction,
+                "SELECT COUNT(*) FROM achievements WHERE user_id = $userId AND code = $code;");
+            owned.Parameters.AddWithValue("$userId", userId);
+            owned.Parameters.AddWithValue("$code", code);
+            if ((long)owned.ExecuteScalar()! == 0)
+                throw new ArgumentException("You can only show badges you have earned.");
+        }
+        using (var command = Command(connection, transaction,
+            "UPDATE users SET avatar = $avatar, shown_badges = $badges WHERE id = $userId;"))
+        {
+            command.Parameters.AddWithValue("$userId", userId);
+            command.Parameters.AddWithValue("$avatar", avatar);
+            command.Parameters.AddWithValue("$badges", string.Join(",", shownBadges));
+            if (command.ExecuteNonQuery() != 1)
+                throw new InvalidOperationException($"Account {userId} doesn't exist.");
+        }
+        transaction.Commit();
     }
 
     /// <summary>part / whole as a percentage with one decimal; 0 when whole is 0.</summary>

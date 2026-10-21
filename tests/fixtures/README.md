@@ -34,7 +34,9 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
    `bad-nickname`. `p3`, a guest, asks for its match history (`historyList`)
    and gets zeros and no matches (`history`), then asks for the leaderboard
    (`leaderboardGet`) and gets no rows (`leaderboard`), then asks for its
-   badges (`achievementsGet`) and gets zeros and none (`achievements`): the
+   badges (`achievementsGet`) and gets zeros and none (`achievements`), then
+   asks for its profile (`profileGet`) and gets an empty one marked `guest`
+   (`profile`); trying to save one (`profileUpdate`) gets `not-logged-in`: the
    server under test has no database.
 2. **Match `m1`, played to the end.** Bob moves first. On the way:
    `invalid-placement` (Bob), `not-your-turn` (Alice), `not-in-match` (`p3`),
@@ -48,7 +50,8 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 
 Every message type except `leave` and all five lobby statuses appear.
 `achievementUnlocked` appears only as an example line (below). The `unknown` error
-code does not, because `protocol.md` gives no trigger for it.
+code does not, because `protocol.md` gives no trigger for it, and neither does
+`invalid-profile`, which needs a logged-in player.
 
 ### Don't depend on
 

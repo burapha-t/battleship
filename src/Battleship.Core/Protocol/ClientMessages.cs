@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 8 client → server verbs (protocol.md §5). Property order is wire order.
+// The 11 client → server verbs (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary><c>join</c>: the player submits a nickname.</summary>
@@ -75,5 +75,26 @@ namespace Battleship.Core.Protocol
     public sealed class AchievementsGet : ProtocolMessage
     {
         public AchievementsGet() : base("achievementsGet") { }
+    }
+
+    /// <summary><c>profileGet</c>: my picture, shown badges, rank and wins (#42). A guest gets an empty one.</summary>
+    public sealed class ProfileGet : ProtocolMessage
+    {
+        public ProfileGet() : base("profileGet") { }
+    }
+
+    /// <summary>
+    /// <c>profileUpdate</c>: save my picture and the badges I show (#42). Both
+    /// are required; a missing one is <c>invalid-profile</c>, not "no change".
+    /// </summary>
+    public sealed class ProfileUpdate : ProtocolMessage
+    {
+        public ProfileUpdate() : base("profileUpdate") { }
+
+        /// <summary>"" for none, or a code from <see cref="Battleship.Core.Avatars.Catalogue"/>.</summary>
+        public string? Avatar { get; set; }
+
+        /// <summary>At most 3 earned badge codes, no repeats, in display order.</summary>
+        public IReadOnlyList<string>? ShownBadges { get; set; }
     }
 }
