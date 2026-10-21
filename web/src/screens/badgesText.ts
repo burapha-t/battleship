@@ -7,7 +7,8 @@ import type { Language } from './historyText'
 
 const TEXT = {
   title: ['Badges', 'เหรียญตรา'],
-  back: ['Back to lobby', 'กลับไปล็อบบี้'],
+  subtitle: ['Earn them in battle', 'สะสมได้จากการรบ'],
+  home: ['Home', 'หน้าหลัก'],
   wins: ['Win count', 'จำนวนชัยชนะ'],
   accuracy: ['Accuracy', 'ความแม่นยำ'],
   streak: ['Hit streak', 'ยิงโดนต่อเนื่อง'],

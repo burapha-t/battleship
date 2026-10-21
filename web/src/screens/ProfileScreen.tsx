@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { BADGES, GROUPS } from '../badges'
 import { Avatar } from '../components/Avatar'
 import { Medal } from '../components/Medal'
+import { ScreenHead } from '../components/ScreenHead'
 import { SeaAvatar } from '../components/SeaAvatar'
 import { MAX_SHOWN, profileDirty, toggleBadge } from '../profile'
 import type { AchievementsView, ProfileView } from '../protocol'
@@ -31,23 +32,10 @@ type Props = {
 export function ProfileScreen({ profile, achievements, failed, saving, myName, onHome, onRetry, onSave }: Props) {
   const { language } = useSettings()
   const t = profileText(language)
-  const title = useRef<HTMLHeadingElement>(null)
-  useEffect(() => title.current?.focus(), [])
 
   return (
     <main className="profile">
-      <div className="profile-head">
-        <h1 ref={title} tabIndex={-1} className="title">{t('title')}</h1>
-        <span className="profile-sub">{t('subtitle')}</span>
-        <button type="button" className="btn white small" onClick={onHome}>
-          <svg viewBox="0 0 24 24" aria-hidden>
-            <path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5.5 10v9.5h13V10" fill="#fff" stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" />
-            <rect x="10" y="13.5" width="4" height="6" rx="1" fill="var(--sun)" stroke="currentColor" strokeWidth="2" />
-          </svg>
-          {t('home')}
-        </button>
-      </div>
+      <ScreenHead title={t('title')} subtitle={t('subtitle')} home={t('home')} onHome={onHome} />
 
       {profile === null || achievements === null ? (
         <section className="card profile-note" role={failed ? 'alert' : 'status'}>

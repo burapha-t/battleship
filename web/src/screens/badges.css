@@ -5,26 +5,14 @@
   flex-direction: column;
   gap: 18px;
   width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
   padding-bottom: 72px; /* clear of the waves */
 }
 
-.badges-head {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.badges-head h1 {
-  font-size: 44px;
-  outline: none;
-}
-
-.badges-head .btn svg {
-  width: 18px;
-  height: 18px;
+/* Everything under the ScreenHead keeps the screen's width. */
+.badges > :not(.screen-head) {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
 }
 
 .badges-note {
@@ -143,10 +131,6 @@
 /* ---- Narrow screens: progress stacks, medals shrink ---- */
 
 @media (max-width: 760px) {
-  .badges-head h1 {
-    font-size: 34px;
-  }
-
   .badge-group {
     padding: 16px;
   }

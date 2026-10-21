@@ -1,0 +1,33 @@
+/* The top row of the profile, leaderboard and badges screens. It spans the
+   full content width, so Home lines up with the header's settings icon; the
+   screen below keeps its own max-width. */
+
+.screen-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+}
+
+.screen-head .title {
+  margin: 0;
+  outline: none;
+  transform: rotate(-2deg);
+  transform-origin: left;
+}
+
+.screen-sub {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.screen-head .btn {
+  margin-left: auto;
+  align-self: center;
+}
+
+.screen-head .btn svg {
+  width: 22px;
+  height: 22px;
+}

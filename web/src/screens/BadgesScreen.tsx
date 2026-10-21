@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react'
 import { BADGES, GROUPS, groupProgress } from '../badges'
 import type { BadgeGroup } from '../badges'
 import { Medal } from '../components/Medal'
+import { ScreenHead } from '../components/ScreenHead'
 import type { AchievementsView } from '../protocol'
 import { useSettings } from '../useSettings'
 import { badgeLabel, badgesText, earnedText, nextText, statText } from './badgesText'
@@ -20,20 +20,10 @@ type Props = {
 export function BadgesScreen({ achievements, failed, onBack, onRetry }: Props) {
   const { language } = useSettings()
   const t = badgesText(language)
-  const title = useRef<HTMLHeadingElement>(null)
-  useEffect(() => title.current?.focus(), [])
 
   return (
     <main className="badges">
-      <div className="badges-head">
-        <button type="button" className="btn white small" onClick={onBack}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-          {t('back')}
-        </button>
-        <h1 ref={title} tabIndex={-1}>{t('title')}</h1>
-      </div>
+      <ScreenHead title={t('title')} subtitle={t('subtitle')} home={t('home')} onHome={onBack} />
 
       {achievements === null ? (
         <section className="card badges-note" role={failed ? 'alert' : 'status'}>
