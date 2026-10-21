@@ -269,13 +269,47 @@ h4 {
   background: var(--sun);
 }
 
-.sound {
+/* Icon buttons at the right of the header (docs/frontend/1_home.html .topnav). */
+.topnav {
   margin-left: auto;
+  display: flex;
+  gap: 12px;
 }
 
-.sound svg {
-  width: 20px;
-  height: 20px;
+.iconbtn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 13px;
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+}
+
+.iconbtn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.iconbtn:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+.iconbtn:focus-visible {
+  outline: 3px solid var(--sea);
+  outline-offset: 3px;
+}
+
+.iconbtn:disabled {
+  cursor: default;
+  background: var(--mist);
+  border-color: var(--off);
+  box-shadow: 0 4px 0 var(--off);
+  opacity: 0.6;
 }
 
 /* Link status, notices and error toasts float over the screen. */

@@ -7,7 +7,7 @@ import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './endDelay'
 import { gameReducer, initialState } from './gameReducer'
 import type { BadgesAction, GameState, HistoryAction, LeaderboardAction, ProfileAction } from './gameReducer'
-import type { Cell, ClientVerb } from './protocol'
+import type { Cell, ClientVerb, LobbyClient } from './protocol'
 import { BadgesScreen } from './screens/BadgesScreen'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
@@ -26,6 +26,31 @@ export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const { send, link } = useGameSocket(dispatch)
   const screen = useEndDelay(state.screen)
+  // The lobby list I had when I pressed Start game. Until the server sends a
+  // new one, trust the press; after that, trust my status in the list.
+  const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
+  const myStatus = state.lobby.find((c) => c.id === state.myId)?.status
+  const searching = myStatus === 'searching' || pressedAt === state.lobby
+
+  const openHistory = () => {
+    dispatch({ type: 'openHistory' })
+    send({ type: 'historyList', page: 1 })
+  }
+  const openLeaderboard = () => {
+    dispatch({ type: 'openLeaderboard' })
+    send({ type: 'leaderboardGet' })
+  }
+  const openBadges = () => {
+    dispatch({ type: 'openBadges' })
+    send({ type: 'achievementsGet' })
+  }
+  // The profile shows my badges too, so it asks for both.
+  const openProfile = () => {
+    dispatch({ type: 'openProfile' })
+    send({ type: 'profileGet' })
+    send({ type: 'achievementsGet' })
+  }
+  const open = { history: openHistory, leaderboard: openLeaderboard, badges: openBadges, profile: openProfile }
 
   // Full music on the nickname and home screens, lowered once a match begins.
   useEffect(() => {
@@ -38,7 +63,13 @@ export default function App() {
         <path d="M0 40 Q 80 10 160 40 T 320 40 T 480 40 T 640 40 T 800 40 T 960 40 T 1120 40 T 1280 40 V110 H0Z" fill="#9CCDF3" />
         <path d="M0 68 Q 80 42 160 68 T 320 68 T 480 68 T 640 68 T 800 68 T 960 68 T 1120 68 T 1280 68 V110 H0Z" fill="#2F8FE0" stroke="#14325A" strokeWidth="3" />
       </svg>
-      <Header state={state} onOpenSettings={() => setSettingsOpen(true)} />
+      <Header
+        state={state}
+        nav={!state.fatal && screen === 'lobby'
+          ? { disabled: searching, onHistory: openHistory, onLeaderboard: openLeaderboard, onBadges: openBadges, onProfile: openProfile }
+          : null}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
       <LinkBanner link={link} connected={state.myId !== null} />
       <Notice notice={state.notice} />
       {state.fatal ? (
@@ -47,7 +78,10 @@ export default function App() {
           <p>{state.fatal}</p>
         </main>
       ) : (
-        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} placeShips={(ships) => {
+        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open} searching={searching} startGame={() => {
+          setPressedAt(state.lobby)
+          send({ type: 'findMatch' })
+        }} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
           send({ type: 'place', ships })
@@ -67,33 +101,19 @@ type ScreenProps = {
   state: GameState
   send: (verb: ClientVerb) => void
   dispatch: (action: HistoryAction | LeaderboardAction | BadgesAction | ProfileAction) => void
+  /** Opens (or retries) the lobby's screens. */
+  open: { history: () => void; leaderboard: () => void; badges: () => void; profile: () => void }
+  searching: boolean
+  startGame: () => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
 
-function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
-  const openHistory = () => {
-    dispatch({ type: 'openHistory' })
-    send({ type: 'historyList', page: 1 })
-  }
+function Screen({ state, send, dispatch, open, searching, startGame, placeShips, goHome }: ScreenProps) {
   const loadMore = () => {
     if (!state.history?.more || state.history.loadingMore) return
     dispatch({ type: 'loadMoreHistory' })
     send({ type: 'historyList', page: state.history.page + 1 })
-  }
-  const openLeaderboard = () => {
-    dispatch({ type: 'openLeaderboard' })
-    send({ type: 'leaderboardGet' })
-  }
-  const openBadges = () => {
-    dispatch({ type: 'openBadges' })
-    send({ type: 'achievementsGet' })
-  }
-  // The profile shows my badges too, so it asks for both.
-  const openProfile = () => {
-    dispatch({ type: 'openProfile' })
-    send({ type: 'profileGet' })
-    send({ type: 'achievementsGet' })
   }
 
   switch (state.screen) {
@@ -108,14 +128,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
       )
     case 'lobby':
       return (
-        <LobbyScreen
-          state={state}
-          onStartGame={() => send({ type: 'findMatch' })}
-          onOpenHistory={openHistory}
-          onOpenLeaderboard={openLeaderboard}
-          onOpenBadges={openBadges}
-          onOpenProfile={openProfile}
-        />
+        <LobbyScreen state={state} searching={searching} onStartGame={startGame} />
       )
     case 'history':
       return (
@@ -124,7 +137,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           failed={state.historyFailed}
           onBack={() => dispatch({ type: 'closeHistory' })}
           onLoadMore={loadMore}
-          onRetry={state.history ? loadMore : openHistory}
+          onRetry={state.history ? loadMore : open.history}
         />
       )
     case 'leaderboard':
@@ -134,7 +147,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           failed={state.leaderboardFailed}
           myName={state.myName}
           onHome={() => dispatch({ type: 'closeLeaderboard' })}
-          onRetry={openLeaderboard}
+          onRetry={open.leaderboard}
         />
       )
     case 'badges':
@@ -143,7 +156,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           achievements={state.achievements}
           failed={state.achievementsFailed}
           onBack={() => dispatch({ type: 'closeBadges' })}
-          onRetry={openBadges}
+          onRetry={open.badges}
         />
       )
     case 'profile':
@@ -155,7 +168,7 @@ function Screen({ state, send, dispatch, placeShips, goHome }: ScreenProps) {
           saving={state.profileSaving}
           myName={state.myName}
           onHome={() => dispatch({ type: 'closeProfile' })}
-          onRetry={openProfile}
+          onRetry={open.profile}
           onSave={(avatar, shownBadges) => {
             dispatch({ type: 'saveProfile' })
             send({ type: 'profileUpdate', avatar, shownBadges })
