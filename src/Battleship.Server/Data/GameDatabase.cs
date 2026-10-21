@@ -564,13 +564,17 @@ public sealed class GameDatabase
     private static double Percent(long part, long whole) =>
         whole == 0 ? 0 : Math.Round(100.0 * part / whole, 1, MidpointRounding.AwayFromZero);
 
-    /// <summary>The longest run of hits in a row among one player's shots, in turn order.</summary>
+    /// <summary>
+    /// The longest run of hits in a row among one player's shots, in turn order.
+    /// A miss or a timeout auto-shot, even one that hits, breaks the run, as in
+    /// the in-game streak (web/src/streak.ts).
+    /// </summary>
     private static int BestStreak(IEnumerable<ShotRecord> shots)
     {
         int best = 0, current = 0;
         foreach (var shot in shots)
         {
-            current = shot.Hit ? current + 1 : 0;
+            current = shot.Hit && !shot.Auto ? current + 1 : 0;
             best = Math.Max(best, current);
         }
         return best;

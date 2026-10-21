@@ -9,8 +9,9 @@
   padding-bottom: 72px; /* clear of the waves */
 }
 
-/* Everything under the ScreenHead keeps the screen's width. */
-.leaderboard > :not(.screen-head) {
+/* Everything under the ScreenHead keeps the screen's width. :where() keeps
+   this at one class, so the narrower list and note below still win. */
+.leaderboard > :where(:not(.screen-head)) {
   width: 100%;
   max-width: 1040px;
   margin-inline: auto;

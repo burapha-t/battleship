@@ -118,7 +118,7 @@ Each badge at most once per player (#41). The 15 codes, and when each is earned,
 4. Dashboard RESET clears the current session scores only. It never deletes accounts, history or badges.
 5. Usernames are unique ignoring case: Alice and alice cannot both exist. The name is shown as it was typed.
 6. Passwords are never stored, only a salted hash.
-7. Every shot keeps its auto flag (fired by the 10-second timeout). Timeout shots count toward accuracy and hit streaks like any other shot (decided with #41); the flag stays so that can change later.
+7. Every shot keeps its auto flag (fired by the 10-second timeout). Timeout shots count toward accuracy like any other shot, but break a hit streak even when they hit, matching the in-game streak (#40) (decided with #41); the flag stays so that can change later.
 8. Schema version: the file has user_version = 2. Whoever changes a table must raise the version and add an upgrade step. A server refuses a file made by a newer version instead of changing it. Version 2 (#42) added users.shown_badges; a version 1 file is upgraded in place and keeps its accounts and matches.
 
 ## 5. How each feature uses it

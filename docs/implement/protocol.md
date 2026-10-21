@@ -403,7 +403,9 @@ There are 15 badges in three groups of five. Each is owned at most once.
 | `accuracy-40`, `accuracy-50`, `accuracy-60`, `accuracy-70`, `accuracy-80` | Accuracy in one match is strictly over the number (40.0% is not over 40) |
 | `streak-4`, `streak-6`, `streak-8`, `streak-10`, `streak-12` | The longest run of hits in one match reaches the number |
 
-Every shot counts, timeout auto-shots included. The loser of a match can earn
+Every shot counts toward accuracy, timeout auto-shots included. A timeout
+auto-shot breaks a hit streak, even one that hits, the same as the in-game
+streak (#40). The loser of a match can earn
 accuracy and streak badges. Only saved matches count, so a guest always gets
 zeros and no badges (`docs/implement/database.md`).
 

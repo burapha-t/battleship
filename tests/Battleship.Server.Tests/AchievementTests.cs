@@ -96,6 +96,17 @@ public class AchievementTests : IDisposable
     }
 
     [Fact]
+    public void ATimeoutAutoShot_BreaksTheStreakEvenWhenItHits_ButCountsTowardAccuracy()
+    {
+        // H H H, auto H, H H H: 7 of 7 hit, but the longest run is 3.
+        long match = Save(Shots(hits: 7, misses: 0), aliceWins: false, autoAt: 3);
+
+        Assert.Equal(new[] { "accuracy-40", "accuracy-50", "accuracy-60", "accuracy-70", "accuracy-80" },
+            Unlock(_alice, match).Select(b => b.Code));
+        Assert.Equal(3, _database.GetAchievements(_alice).BestStreak);
+    }
+
+    [Fact]
     public void OneMatch_CanEarnSeveralBadges_AllAtTheMatchEnd()
     {
         // 16 hits from 16 shots: 100% accuracy and a run of 16.
@@ -247,13 +258,16 @@ public class AchievementTests : IDisposable
     private static bool[] Shots(int hits, int misses) =>
         Enumerable.Repeat(true, hits).Concat(Enumerable.Repeat(false, misses)).ToArray();
 
-    /// <summary>Saves one Alice vs Bob match, a minute after the last; Bob fires 3 misses.</summary>
-    private long Save(bool[] aliceShots, bool aliceWins)
+    /// <summary>
+    /// Saves one Alice vs Bob match, a minute after the last; Bob fires 3 misses.
+    /// Alice's shot at index <paramref name="autoAt"/>, if any, is a timeout auto-shot.
+    /// </summary>
+    private long Save(bool[] aliceShots, bool aliceWins, int autoAt = -1)
     {
         _minutes++;
         var shots = new List<ShotRecord>();
         int turn = 1;
-        for (int i = 0; i < aliceShots.Length; i++) shots.Add(new ShotRecord(turn++, _alice, new Coord(i / 8, i % 8), aliceShots[i], false));
+        for (int i = 0; i < aliceShots.Length; i++) shots.Add(new ShotRecord(turn++, _alice, new Coord(i / 8, i % 8), aliceShots[i], i == autoAt));
         for (int i = 0; i < 3; i++) shots.Add(new ShotRecord(turn++, _bob, new Coord(7, i), false, false));
         var ended = Start.AddMinutes(_minutes);
         return _database.SaveMatch(new MatchRecord(ended.AddMinutes(-3), ended, aliceWins ? _alice : _bob,
