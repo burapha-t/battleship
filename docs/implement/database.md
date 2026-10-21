@@ -190,7 +190,6 @@ Issue codes after DB-1 are proposals until the issues are created.
 
 ## 8. Open questions
 
-- Do timeout (auto) shots count toward accuracy?
 - Password length: the planning doc's Description tab says 4–16 characters; older drafts used 8–64 and 8–128. Pick one.
 - Hit-streak badge tiers are listed as 5, 7, 6, 8, 9. Probably meant 5, 6, 7, 8, 9?
 - Badge codes (names) for the achievements table.

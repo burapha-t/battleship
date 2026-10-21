@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Avatar } from '../components/Avatar'
 import type { LeaderboardRow } from '../protocol'
-import { historyLanguage, percent } from './historyText'
+import { percent } from './historyText'
 import type { Language } from './historyText'
 import { leaderboardText, wins } from './leaderboardText'
+import { useSettings } from '../useSettings'
 import './leaderboard.css'
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
@@ -20,7 +21,7 @@ type Props = {
 
 /** The mockup layout (8_leaderboard): the top three on a podium, everyone else in a list. */
 export function LeaderboardScreen({ rows, failed, myName, onHome, onRetry }: Props) {
-  const [language] = useState(historyLanguage)
+  const { language } = useSettings()
   const t = leaderboardText(language)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => title.current?.focus(), [])

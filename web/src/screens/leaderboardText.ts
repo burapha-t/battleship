@@ -1,6 +1,5 @@
-// English and Thai text for the leaderboard screen, picked the way the match
-// history screen picks it (historyLanguage). Swap for the redesign's t() once
-// feat/extra-features-ui merges.
+// English and Thai text for the leaderboard screen. The screen passes in the
+// language from the device settings (#43).
 
 import type { Language } from './historyText'
 
