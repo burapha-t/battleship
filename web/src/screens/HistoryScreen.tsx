@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { Avatar } from '../components/Avatar'
+import { ScreenHead } from '../components/ScreenHead'
 import type { HistoryView } from '../gameReducer'
 import type { HistoryMatch } from '../protocol'
 import { historyText, localTime, percent } from './historyText'
@@ -22,8 +22,6 @@ type Props = {
 export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: Props) {
   const { language } = useSettings()
   const t = historyText(language)
-  const title = useRef<HTMLHeadingElement>(null)
-  useEffect(() => title.current?.focus(), [])
 
   const stats = history?.stats
   const cells: [label: string, value: string, tone?: string][] = [
@@ -36,15 +34,7 @@ export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: 
 
   return (
     <main className="history">
-      <div className="history-head">
-        <button type="button" className="btn white small" onClick={onBack}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-          {t('back')}
-        </button>
-        <h1 ref={title} tabIndex={-1}>{t('title')}</h1>
-      </div>
+      <ScreenHead title={t('title')} subtitle={t('subtitle')} home={t('home')} onHome={onBack} />
 
       <dl className="card history-stats">
         {cells.map(([label, value, tone]) => (

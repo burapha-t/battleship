@@ -11,7 +11,7 @@ type Props = {
 
 /**
  * The top row of a screen opened from the lobby (profile, leaderboard,
- * badges): a tilted title, a subtitle beside it, and Home at the right,
+ * badges, match history): a tilted title, a subtitle beside it, and Home at the right,
  * lined up with the header's settings icon. Focus moves to the title when
  * the screen opens.
  */

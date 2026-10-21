@@ -5,26 +5,14 @@
   flex-direction: column;
   gap: 18px;
   width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
   padding-bottom: 72px; /* clear of the waves */
 }
 
-.history-head {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.history-head h1 {
-  font-size: 44px;
-  outline: none;
-}
-
-.history-head .btn svg {
-  width: 18px;
-  height: 18px;
+/* Everything under the ScreenHead keeps the screen's width. */
+.history > :not(.screen-head) {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
 }
 
 /* ---- Stats: one card, five cells ---- */
@@ -224,10 +212,6 @@
 /* ---- Narrow screens: the page scrolls, rows stack ---- */
 
 @media (max-width: 760px) {
-  .history-head h1 {
-    font-size: 34px;
-  }
-
   /* Three on top, two below. */
   .history-stats {
     grid-template-columns: repeat(6, minmax(0, 1fr));
