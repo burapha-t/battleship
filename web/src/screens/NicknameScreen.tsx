@@ -1,4 +1,6 @@
+import { useTranslation } from '../useTranslation'
 import { useState } from 'react'
+import { localizeError } from '../localizeMessage'
 import type { FormEvent } from 'react'
 import { Hero } from '../components/Hero'
 import type { GameState } from '../gameReducer'
@@ -14,13 +16,14 @@ type Props = {
 }
 
 export function NicknameScreen({ connected, lastError, onJoin }: Props) {
+  const { t, language } = useTranslation('game')
   const [nickname, setNickname] = useState('')
   // The lastError at the moment I pressed Join: until it changes, the join is
   // still in flight (a `welcome` moves on to the lobby, an `error` comes back).
   const [sentWith, setSentWith] = useState<GameState['lastError'] | undefined>(undefined)
   const pending = sentWith !== undefined && lastError === sentWith
   const answered = sentWith !== undefined && lastError !== sentWith
-  const badNickname = answered && lastError?.code === 'bad-nickname' ? lastError.message : null
+  const badNickname = answered && lastError?.code === 'bad-nickname' ? localizeError(lastError, language) : null
 
   const join = (e: FormEvent) => {
     e.preventDefault()
@@ -33,15 +36,15 @@ export function NicknameScreen({ connected, lastError, onJoin }: Props) {
       <Hero />
       <aside className="home-side">
         <form className="card join" onSubmit={join}>
-          <h2>Ahoy, captain!</h2>
-          <p className="hint">Choose a nickname your opponent will see.</p>
+          <h2>{t('ahoy')}</h2>
+          <p className="hint">{t('nicknameHint')}</p>
           <input
             className="field"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             maxLength={MAX_NICKNAME}
-            placeholder="Your nickname"
-            aria-label="Nickname"
+            placeholder={t('nicknamePlaceholder')}
+            aria-label={t('nickname')}
             aria-invalid={badNickname !== null}
             aria-describedby={badNickname ? 'nickname-error' : undefined}
             autoFocus
@@ -53,11 +56,11 @@ export function NicknameScreen({ connected, lastError, onJoin }: Props) {
             </p>
           )}
           <button type="submit" className="btn wide" disabled={!connected || pending || !nickname.trim()}>
-            {pending ? 'Joining…' : 'Join'}
+            {pending ? t('joining') : t('join')}
           </button>
           <p className="conn">
             <span className={connected ? 'dot' : 'dot sun'} />
-            {connected ? 'Connected to game server automatically' : 'Connecting to game server…'}
+            {connected ? t('connected') : t('connectingServer')}
           </p>
         </form>
       </aside>

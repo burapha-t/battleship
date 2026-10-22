@@ -7,6 +7,8 @@ import '@fontsource/nunito/latin-800.css'
 import '@fontsource/nunito/latin-900.css'
 import './theme.css'
 import './index.css'
+import './language.css'
+import { getSettings } from './settings'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -15,6 +17,8 @@ import { BoardPreview } from './dev/BoardPreview.tsx'
 import { HistoryPreview } from './dev/HistoryPreview.tsx'
 import { LeaderboardPreview } from './dev/LeaderboardPreview.tsx'
 import { ProfilePreview } from './dev/ProfilePreview.tsx'
+
+document.documentElement.lang = getSettings().language
 
 const preview = new URLSearchParams(window.location.search).get('preview')
 

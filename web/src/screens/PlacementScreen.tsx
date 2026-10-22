@@ -1,4 +1,6 @@
+import { useTranslation } from '../useTranslation'
 import { useEffect, useState } from 'react'
+import { localizeError, localizePlacement } from '../localizeMessage'
 import { Avatar } from '../components/Avatar'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
@@ -22,8 +24,9 @@ type Props = { state: GameState; onReady: (ships: Cell[][]) => void }
  * ship (or its row in the fleet list) to pick it up again, R rotates.
  */
 export function PlacementScreen({ state, onReady }: Props) {
+  const { t, language } = useTranslation('game')
   const { opponent } = matchSides(state)
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('yourOpponent')
 
   const [ships, setShips] = useState<Slots>(EMPTY)
   const [held, setHeld] = useState<number | null>(0)
@@ -37,12 +40,12 @@ export function PlacementScreen({ state, onReady }: Props) {
   const pending = sentWith !== undefined && state.lastError === sentWith && !iPlaced
   const serverError =
     sentWith !== undefined && state.lastError !== sentWith && state.lastError?.code === 'invalid-placement'
-      ? state.lastError.message
+      ? localizeError(state.lastError, language)
       : null
   const locked = iPlaced || pending
 
   const placedCount = ships.filter(Boolean).length
-  const problem = placedCount === SHIP_COUNT ? validatePlacement(ships) : null
+  const problem = placedCount === SHIP_COUNT ? localizePlacement(validatePlacement(ships), language) : null
   const canReady = !locked && placedCount === SHIP_COUNT && problem === null
 
   // The ship in hand follows the pointer, shifted back so it stays on the grid.
@@ -109,26 +112,25 @@ export function PlacementScreen({ state, onReady }: Props) {
 
   const remaining = SHIP_COUNT - placedCount
   const readyLabel = iPlaced
-    ? `Waiting for ${opponentName}…`
+    ? t('waitingFor', { name: opponentName })
     : pending
-      ? 'Sending…'
+      ? t('sending')
       : remaining > 0
-        ? `Place ${remaining} more ship${remaining === 1 ? '' : 's'}`
+        ? t(remaining === 1 ? 'placeMoreOne' : 'placeMore', { count: remaining })
         : problem
-          ? 'Fix your fleet'
-          : 'Ready!'
+          ? t('fixFleet')
+          : t('ready')
 
   return (
     <main className="placement">
-      <h1 className="title">Place your ships</h1>
+      <h1 className="title">{t('placeTitle')}</h1>
       <p className="sub">
-        Place your 4 ships on your grid. Each ship fills 4 slots in a straight line. {opponentName} can't see where
-        you put them.
+        {t('placeHint', { name: opponentName })}
       </p>
       <div className="placement-lay">
         <div>
           <Board
-            label="Your grid"
+            label={t('yourGrid')}
             ships={boardShips}
             disabled={locked}
             onCellClick={clickCell}
@@ -136,16 +138,16 @@ export function PlacementScreen({ state, onReady }: Props) {
           />
           <p className="board-hint">
             {iPlaced
-              ? 'Your fleet is locked in.'
+              ? t('fleetLocked')
               : held !== null
-                ? `Click the grid to drop Ship ${held + 1} · R rotates · click a placed ship to move it`
-                : 'Click a placed ship to move it'}
+                ? t('dropShip', { number: held + 1 })
+                : t('moveShip')}
           </p>
         </div>
 
         <div className="placement-side">
           <div className="card panel">
-            <h3>Your fleet</h3>
+            <h3>{t('yourFleet')}</h3>
             <ul className="fleet">
               {shown.map((ship, i) => {
                 const inHand = !iPlaced && held === i
@@ -163,8 +165,8 @@ export function PlacementScreen({ state, onReady }: Props) {
                         <i />
                         <i />
                       </span>
-                      Ship {i + 1}
-                      <span className="st">{ship ? '✓ Placed' : inHand ? `Placing… ${horizontal ? '↔' : '↕'}` : 'Not placed'}</span>
+                      {t('shipNumber', { number: i + 1 })}
+                      <span className="st">{ship ? t('placed') : inHand ? t('placingShip', { direction: horizontal ? '↔' : '↕' }) : t('notPlaced')}</span>
                     </button>
                   </li>
                 )
@@ -172,13 +174,13 @@ export function PlacementScreen({ state, onReady }: Props) {
             </ul>
             <div className="tools">
               <button type="button" className="btn white small" onClick={rotate} disabled={locked || held === null}>
-                ↻ Rotate
+                {t('rotate')}
               </button>
               <button type="button" className="btn white small" onClick={shuffle} disabled={locked}>
-                Shuffle
+                {t('shuffle')}
               </button>
               <button type="button" className="btn white small" onClick={clear} disabled={locked}>
-                Clear
+                {t('clear')}
               </button>
             </div>
             <button type="button" className={`btn wide${iPlaced ? ' pressed' : ''}`} disabled={!canReady} onClick={ready}>
@@ -194,8 +196,8 @@ export function PlacementScreen({ state, onReady }: Props) {
           <div className="card opp">
             <Avatar name={opponentName} color="var(--lilac)" />
             <div>
-              <b>{opponentPlaced ? `${opponentName} is ready!` : `${opponentName} is placing ships`}</b>
-              <span>The match starts when you're both ready</span>
+              <b>{opponentPlaced ? t('opponentReady', { name: opponentName }) : t('opponentPlacing', { name: opponentName })}</b>
+              <span>{t('bothReady')}</span>
             </div>
             <span className={`dot ${opponentPlaced ? '' : 'sun'}`} />
           </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from '../useTranslation'
 import { useEffect, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
@@ -22,9 +23,10 @@ type Props = { state: GameState; onFire: (cell: Cell) => void }
  * come only from `fireResult`, never from my own click.
  */
 export function GameScreen({ state, onFire }: Props) {
+  const { t } = useTranslation('game')
   const { me, opponent } = matchSides(state)
   const myId = state.myId
-  const opponentName = opponent?.name ?? 'Your opponent'
+  const opponentName = opponent?.name ?? t('yourOpponent')
   const nameOf = (id: string) => (id === me?.id ? me.name : id === opponent?.id ? opponent.name : id)
 
   // The turn I fired on: no second shot until the next `turn`.
@@ -77,16 +79,16 @@ export function GameScreen({ state, onFire }: Props) {
       <div className={`banner${(over ? iWon : myTurn) ? '' : ' theirs'}`} role="status">
         {over
           ? iWon
-            ? `You sank ${opponentName}'s last ship!`
-            : `${opponentName} sank your last ship`
+            ? t('sankLast', { name: opponentName })
+            : t('lostLast', { name: opponentName })
           : myTurn
-            ? `Your turn! Pick one slot in ${opponentName}'s waters`
-            : `${opponentName}'s turn`}
+            ? t('yourTurn', { name: opponentName })
+            : t('opponentTurn', { name: opponentName })}
       </div>
       <p className="auto-note" role="status">
         {last?.auto && (
           <span>
-            {nameOf(last.by)} ran out of time — the server fired at {cellName([last.row, last.col])}.
+            {t('timeoutShot', { name: nameOf(last.by), cell: cellName([last.row, last.col]) })}
           </span>
         )}
       </p>
@@ -94,19 +96,19 @@ export function GameScreen({ state, onFire }: Props) {
       <div className="field2">
         <section className="side">
           <h3>
-            Your fleet
+            {t('yourFleet')}
             <span className="pill">
               <span className="dot" />
-              {SHIP_COUNT - sunkAtMe.length} of {SHIP_COUNT} afloat
+              {t('afloat', { count: SHIP_COUNT - sunkAtMe.length, total: SHIP_COUNT })}
             </span>
           </h3>
-          <Board label="Your fleet" ships={ownShips} shots={incoming} />
+          <Board label={t('yourFleet')} ships={ownShips} shots={incoming} />
         </section>
 
         <div className="mid">
           {over ? (
             // Counts down the pause before the Win/Lost screen.
-            <Countdown seconds={END_DELAY_MS / 1000} turnNumber={-1} label="results in" />
+            <Countdown seconds={END_DELAY_MS / 1000} turnNumber={-1} label={t('resultsIn')} />
           ) : (
             turn && <Countdown seconds={turn.seconds} turnNumber={turn.turnNumber} />
           )}
@@ -114,20 +116,20 @@ export function GameScreen({ state, onFire }: Props) {
             {/* Over the top of the log: it covers neither board nor the timer. */}
             <StreakNotification myShots={myShots} myId={myId} />
             <div className="card log">
-              <h4>Last shots</h4>
-              {state.shots.length === 0 && <p className="empty">No shots yet</p>}
+              <h4>{t('lastShots')}</h4>
+              {state.shots.length === 0 && <p className="empty">{t('noShots')}</p>}
               {state.shots
                 .slice(-LOG_LENGTH)
                 .reverse()
                 .map((s) => (
                   <p key={`${s.by}-${s.row},${s.col}`}>
                     <span className={`tag ${s.sunk ? 's' : s.result === 'hit' ? 'h' : 'm'}`}>
-                      {s.sunk ? 'Sunk' : s.result === 'hit' ? 'Hit' : 'Miss'}
+                      {t(s.sunk ? 'sunk' : s.result === 'hit' ? 'hit' : 'miss')}
                     </span>
                     {s.auto
-                      ? `${nameOf(s.by)} ran out of time → ${cellName([s.row, s.col])}`
+                      ? t('timeoutLog', { name: nameOf(s.by), cell: cellName([s.row, s.col]) })
                       : s.sunk
-                        ? `${nameOf(s.by)} sank ${nameOf(s.target)}'s ship`
+                        ? t('sunkLog', { name: nameOf(s.by), target: nameOf(s.target) })
                         : `${nameOf(s.by)} → ${cellName([s.row, s.col])}`}
                   </p>
                 ))}
@@ -136,29 +138,29 @@ export function GameScreen({ state, onFire }: Props) {
           <StreakLevels />
           <div className="legend">
             <span>
-              <i className="sw hit">✕</i>Hit
+              <i className="sw hit">✕</i>{t('hit')}
             </span>
             <span>
               <i className="sw miss" />
-              Miss
+              {t('miss')}
             </span>
             <span>
               <i className="sw sunk" />
-              Sunk ship
+              {t('sunkShip')}
             </span>
           </div>
         </div>
 
         <section className={`side${canFire ? ' active' : ''}`}>
           <h3>
-            {opponentName}'s waters
+            {t('waters', { name: opponentName })}
             <span className="pill">
               <span className="dot coral" />
-              {SHIP_COUNT - sunkByMe.length} of {SHIP_COUNT} afloat
+              {t('afloat', { count: SHIP_COUNT - sunkByMe.length, total: SHIP_COUNT })}
             </span>
           </h3>
           <Board
-            label={`${opponentName}'s waters`}
+            label={t('waters', { name: opponentName })}
             enemy
             ships={sunkByMe.map((cells) => ({ cells, sunk: true }))}
             shots={myShots}

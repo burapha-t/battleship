@@ -2,9 +2,9 @@ import { Avatar } from '../components/Avatar'
 import { ScreenHead } from '../components/ScreenHead'
 import type { LeaderboardRow } from '../protocol'
 import { percent } from './historyText'
-import type { Language } from './historyText'
-import { leaderboardText, wins } from './leaderboardText'
-import { useSettings } from '../useSettings'
+import type { Language } from '../settings'
+import { wins } from './leaderboardText'
+import { useTranslation } from '../useTranslation'
 import './leaderboard.css'
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
@@ -21,8 +21,7 @@ type Props = {
 
 /** The mockup layout (8_leaderboard): the top three on a podium, everyone else in a list. */
 export function LeaderboardScreen({ rows, failed, myName, onHome, onRetry }: Props) {
-  const { language } = useSettings()
-  const t = leaderboardText(language)
+  const { language, t } = useTranslation('leaderboard')
 
   return (
     <main className="leaderboard">
@@ -80,7 +79,7 @@ export function LeaderboardScreen({ rows, failed, myName, onHome, onRetry }: Pro
   )
 }
 
-type T = ReturnType<typeof leaderboardText>
+type T = ReturnType<typeof useTranslation<'leaderboard'>>['t']
 
 /** 2nd, 1st, 3rd from left to right, only the spots that exist. */
 function Podium({ top, myName, language, t }: { top: LeaderboardRow[]; myName: string | null; language: Language; t: T }) {

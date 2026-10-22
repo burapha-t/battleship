@@ -2,9 +2,9 @@ import { Avatar } from '../components/Avatar'
 import { ScreenHead } from '../components/ScreenHead'
 import type { HistoryView } from '../gameReducer'
 import type { HistoryMatch } from '../protocol'
-import { historyText, localTime, percent } from './historyText'
-import type { Language } from './historyText'
-import { useSettings } from '../useSettings'
+import { localTime, percent } from './historyText'
+import type { Language } from '../settings'
+import { useTranslation } from '../useTranslation'
 import './history.css'
 
 const OPPONENT_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
@@ -20,8 +20,7 @@ type Props = {
 
 /** The spec layout: my five stats on top, my matches below, newest first. */
 export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: Props) {
-  const { language } = useSettings()
-  const t = historyText(language)
+  const { language, t } = useTranslation('history')
 
   const stats = history?.stats
   const cells: [label: string, value: string, tone?: string][] = [
@@ -85,7 +84,7 @@ export function HistoryScreen({ history, failed, onBack, onLoadMore, onRetry }: 
   )
 }
 
-type T = ReturnType<typeof historyText>
+type T = ReturnType<typeof useTranslation<'history'>>['t']
 
 function MatchRow({ match, language, t }: { match: HistoryMatch; language: Language; t: T }) {
   const color = OPPONENT_COLORS[[...match.opponent].reduce((sum, c) => sum + c.charCodeAt(0), 0) % OPPONENT_COLORS.length]
