@@ -20,7 +20,7 @@ const TEXT = {
   saving: ['Saving…', 'กำลังบันทึก…'],
   guest: ['Log in to save your picture and badges.', 'เข้าสู่ระบบเพื่อบันทึกรูปและเหรียญตรา'],
   pictures: ['Choose your profile picture', 'เลือกรูปโปรไฟล์'],
-  badges: ['Choose 3 badges to show', 'เลือกเหรียญตรา 3 เหรียญที่จะแสดง'],
+  badges: ['Choose up to 3 badges to show', 'เลือกเหรียญตราที่จะแสดง (สูงสุด 3 เหรียญ)'],
   locked: ['Locked', 'ยังไม่ได้รับ'],
   loading: ['Loading your profile…', 'กำลังโหลดโปรไฟล์ของคุณ…'],
   failed: ["Your profile couldn't be loaded.", 'โหลดโปรไฟล์ไม่สำเร็จ'],

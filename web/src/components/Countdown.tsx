@@ -37,12 +37,12 @@ export function Countdown({
       className={`timer${left <= 3 ? ' urgent' : ''}`}
       style={{ background: `conic-gradient(var(--coral) 0 ${filled}%, #fff ${filled}% 100%)` }}
       role="timer"
-      aria-label={t('timerLabel', { label: label ?? t('timeLeft'), count: left })}
+      aria-label={t(left === 1 ? 'timerLabelOne' : 'timerLabel', { label: label ?? t('timeLeft'), count: left })}
     >
       <div>
         <span>{label ?? t('timeLeft')}</span>
         <b key={left}>{left}</b>
-        <span>{t('seconds')}</span>
+        <span>{t(left === 1 ? 'secondsOne' : 'seconds')}</span>
       </div>
     </div>
   )

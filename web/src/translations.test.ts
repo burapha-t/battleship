@@ -27,6 +27,8 @@ it('interpolates whole phrases without changing player names or coordinates', ()
   expect(t('timeoutShot', { name: 'Bob', cell: 'A8' })).toContain('Bob หมดเวลา')
   expect(t('timeoutShot', { name: 'Bob', cell: 'A8' })).toContain('A8')
   expect(translator('en', 'game')('welcome', { name: 'Alice' })).toBe('Welcome, Alice.')
+  expect(translator('en', 'game')('timerLabelOne', { label: 'Time left', count: 1 })).toBe('Time left: 1 second')
+  expect(translator('en', 'game')('secondsOne')).toBe('second')
 })
 it('retains the existing history and leaderboard APIs for PR65', () => {
   expect(historyText('th')('title')).toBe('ประวัติการแข่งขัน')
@@ -53,6 +55,8 @@ it('translates error codes first and safely handles unfamiliar server messages',
   expect(localizeError({ code: 'future-code', message: 'Future English' }, 'th')).toBe('เกิดข้อผิดพลาด โปรดลองอีกครั้ง')
   expect(localizeError({ code: 'invalid-profile', message: 'You can only show badges you have earned.' }, 'th')).toBe('คุณแสดงได้เฉพาะเหรียญตราที่ได้รับแล้ว')
   expect(localizeError({ code: 'unknown', message: "Match history couldn't be loaded. Try again." }, 'th')).toContain('ประวัติการแข่งขัน')
+  expect(localizeError({ code: 'unknown', message: "Your badges couldn't be loaded. Try again." }, 'th')).toBe('โหลดเหรียญตราไม่สำเร็จ โปรดลองอีกครั้ง')
+  expect(localizeError({ code: 'unknown', message: "Your profile couldn't be loaded or saved. Try again." }, 'th')).toBe('โหลดหรือบันทึกโปรไฟล์ไม่สำเร็จ โปรดลองอีกครั้ง')
   expect(localizeError({ code: 'future', message: 'Keep English detail' }, 'en')).toBe('Keep English detail')
 })
 it('translates every placement reason while preserving its numbers', () => {
@@ -67,6 +71,7 @@ it('retranslates existing notices and fatal errors without changing reducer stat
   const notice = { text: "Captain O'Brien left the game" }
   expect(localizeMessage(notice.text, 'th')).toBe("Captain O'Brien ออกจากเกมแล้ว")
   expect(notice.text).toBe("Captain O'Brien left the game")
+  expect(localizeMessage('Your opponent left the game', 'th')).toBe('คู่แข่งของคุณ ออกจากเกมแล้ว')
   expect(localizeMessage('The server was reset', 'th')).toBe('เซิร์ฟเวอร์ถูกรีเซ็ต')
   expect(localizeMessage('This page speaks protocol v1, but the server speaks v2.', 'th')).toBe('หน้านี้รองรับโพรโทคอลรุ่น 1 แต่เซิร์ฟเวอร์ใช้รุ่น 2')
 })

@@ -42,6 +42,8 @@ export function localizeMessage(message: string, language: Language): string {
   const t = translator(language, 'game')
   for (const key of ['protocolMismatch', 'reset', 'leftGame'] as const) {
     const values = parameters(translations.game[key][0], message)
+    // gameReducer's nameOf stores this English fallback when the name is unknown.
+    if (values?.name === translations.game.yourOpponent[0]) values.name = t('yourOpponent')
     if (values) return t(key, values)
   }
   return translator(language, 'errors')('unknown')
