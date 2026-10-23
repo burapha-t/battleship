@@ -105,7 +105,7 @@ Every action in the game works this way.
 ## 4. The player's journey
 
 ```
- Nickname ──► Lobby ──► press Start game ──► Place ships ──► Battle ──► Match over
+ Log in   ──► Lobby ──► press Start game ──► Place ships ──► Battle ──► Match over
                 ▲                                                           │
                 │                                                           ├─ both press Rematch ──► Place ships
                 └────────────── opponent leaves / server RESET ─────────────┘
@@ -114,15 +114,21 @@ Every action in the game works this way.
 Back in the lobby, a player must press **Start game** again before they can be
 matched. A rematch skips the lobby and goes straight to placing ships.
 
-### Step 1 — Enter a nickname
+### Step 1 — Log in, sign up, or play as a guest
 
-- **Player sees:** a box asking for a nickname.
-- **Player does:** types a name (1–16 characters) and submits.
-- **Behind the scenes:** browser sends `join` → server accepts it and replies
-  `welcome`.
-- **Result:** the screen shows **"Welcome, Alice."** The server may change the
-  name slightly (for example `Alice (2)` if the name is taken) — the screen shows
-  the name the server sent back.
+- **Player sees:** a card with two tabs, **Log in** and **Sign up**, each with a
+  username and a password (the eye button shows or hides it), and a **Play as
+  guest** link that opens a box asking for a nickname.
+- **Player does:** types a username (1–16 characters) and a password (4–16
+  characters) and submits, or plays as a guest with a nickname (1–16 characters).
+- **Behind the scenes:** browser sends `signup` or `login` (a guest sends `join`)
+  → the server checks the password off the game loop and replies `welcome`, or an
+  `error` the card shows: name taken, wrong username or password, or already
+  logged in somewhere else.
+- **Result:** the screen shows **"Welcome, Alice."** An account shows its
+  username as stored (logging in as `alice` shows `Alice`); a guest's name may be
+  changed slightly (for example `Alice (2)` if the name is taken). Only matches
+  between two logged-in players are saved.
 
 ### Step 2 — Lobby
 
