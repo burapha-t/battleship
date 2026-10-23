@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using System.Text;
 using Battleship.Client;
 using Battleship.Core.Protocol;
+using Battleship.Server.Data;
 using Microsoft.AspNetCore.Builder;
 
 namespace Battleship.IntegrationTests;
@@ -70,6 +71,31 @@ public class ClientRelayTests
         Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await ReceiveAsync(browser));
         Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}]}",
             await ReceiveAsync(browser));
+    }
+
+    // LOGIN-1: accounts work from any computer, because signup goes over the
+    // game connection like everything else.
+    [Fact]
+    public async Task Signup_ThroughTheRelay_IsWelcomed()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "battleship-relay-" + Guid.NewGuid().ToString("N"));
+        var database = new GameDatabase(Path.Combine(folder, "test.db"));
+        try
+        {
+            await using var server = await TestServer.StartAsync(database: database);
+            await using var client = await StartClientAsync(server.Port);
+            using var browser = await OpenAsync(client);
+            await ReceiveAsync(browser);
+
+            await SendAsync(browser, "{\"type\":\"signup\",\"username\":\"Alice\",\"password\":\"hunter22\"}");
+
+            Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await ReceiveAsync(browser));
+        }
+        finally
+        {
+            GameDatabase.ClearPool(database.Path);
+            if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true);
+        }
     }
 
     [Fact]

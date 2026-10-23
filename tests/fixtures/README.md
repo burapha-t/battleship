@@ -27,17 +27,21 @@ To replay one player's view, keep the lines where `to` is that player.
 
 ### The story
 
-Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
-"Alice (2)". `p3` stays idle in the lobby throughout.
+Cast: `p1` Alice, a guest; `p2` Bob, who signs up for an account; and `p3`, a
+guest who asks for "Alice" and is welcomed as "Alice (2)". `p3` stays idle in
+the lobby throughout.
 
-1. **Lobby.** All three connect and join. Bob's first nickname (`"   "`) gets
-   `bad-nickname`. `p3`, a guest, asks for its match history (`historyList`)
-   and gets zeros and no matches (`history`), then asks for the leaderboard
+1. **Lobby.** All three connect. Alice joins. Bob's first nickname (`"   "`) gets
+   `bad-nickname`; his `signup` with a 3-character password gets `invalid-input`;
+   then he signs up as "Bob" (`welcome`). `p3` tries to `login` as "bob" with
+   Bob's password (`already-logged-in`, since Bob is online), as "Bob" with a
+   wrong password (`bad-credentials`), and to `signup` as "BOB"
+   (`username-taken`), then joins as "Alice". `p3` asks for its match history
+   (`historyList`) and gets zeros and no matches (`history`), then asks for the leaderboard
    (`leaderboardGet`) and gets no rows (`leaderboard`), then asks for its
    badges (`achievementsGet`) and gets zeros and none (`achievements`), then
    asks for its profile (`profileGet`) and gets an empty one marked `guest`
-   (`profile`); trying to save one (`profileUpdate`) gets `not-logged-in`: the
-   server under test has no database.
+   (`profile`); trying to save one (`profileUpdate`) gets `not-logged-in`.
 2. **Match `m1`, played to the end.** Bob moves first. On the way:
    `invalid-placement` (Bob), `not-your-turn` (Alice), `not-in-match` (`p3`),
    `out-of-range` and `already-fired` (Alice), and one of Bob's turns times out
@@ -50,8 +54,13 @@ Cast: `p1` Alice, `p2` Bob, and `p3`, who asks for "Alice" and is welcomed as
 
 Every message type except `leave` and all five lobby statuses appear.
 `achievementUnlocked` appears only as an example line (below). The `unknown` error
-code does not, because `protocol.md` gives no trigger for it, and neither does
-`invalid-profile`, which needs a logged-in player.
+code does not, and neither does `invalid-profile`, which needs a logged-in player
+to send a bad profile.
+
+The server under test has a fresh, empty database, so Bob's account exists only
+for this story. Alice is a guest, so no match is saved, and a guest gets the same
+`history`, `leaderboard`, `achievements` and `profile` replies with a database as
+without one.
 
 ### Don't depend on
 
@@ -67,6 +76,6 @@ A protocol change updates this file in the same PR as `protocol.md`,
 
 A line with `"example": true` is a hand-written wire example, not part of the
 story. The `achievementUnlocked` line after `m1`'s `matchEnd` shows what an
-account would get (#41); the players here are guests, who earn nothing. The
-protocol round-trip tests read it; the replay against the real server and the
-web `?replay=` skip it. `example` is line metadata, not part of the frame.
+account would get (#41); here Alice is a guest, so no match is saved and nobody
+earns anything. The protocol round-trip tests read it; the replay against the
+real server and the web `?replay=` skip it. `example` is line metadata, not part of the frame.
