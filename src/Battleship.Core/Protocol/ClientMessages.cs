@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 11 client → server verbs (protocol.md §5). Property order is wire order.
+// The 13 client → server verbs (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary><c>join</c>: the player submits a nickname.</summary>
@@ -11,6 +11,33 @@ namespace Battleship.Core.Protocol
         public Join() : base("join") { }
 
         public string Nickname { get; set; } = "";
+    }
+
+    /// <summary>
+    /// <c>signup</c>: create an account and log in to it (LOGIN-1). A missing
+    /// or null field counts as empty. A plain class, so logging it prints only
+    /// its type name, never the password.
+    /// </summary>
+    public sealed class Signup : ProtocolMessage
+    {
+        public Signup() : base("signup") { }
+
+        public string Username { get; set; } = "";
+
+        public string Password { get; set; } = "";
+    }
+
+    /// <summary>
+    /// <c>login</c>: log in to an existing account (LOGIN-1). A missing or null
+    /// field counts as empty. A plain class, like <see cref="Signup"/>.
+    /// </summary>
+    public sealed class Login : ProtocolMessage
+    {
+        public Login() : base("login") { }
+
+        public string Username { get; set; } = "";
+
+        public string Password { get; set; } = "";
     }
 
     /// <summary><c>findMatch</c>: the player pressed <i>Start game</i>.</summary>
