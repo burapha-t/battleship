@@ -31,7 +31,8 @@ without extra work.
 1. **Ignore unknown `type` values.** Do not error, do not disconnect. This is what
    makes extra features additive rather than breaking.
 2. **Ignore unknown fields** in a known message. Same reason.
-3. **A malformed line is skipped, not fatal.** Log it; keep the connection open.
+3. **A malformed line is skipped, not fatal.** Log that it was skipped, never its
+   content (it may hold a password); keep the connection open.
 4. **Never assume frame boundaries match TCP reads.** One read may contain two
    messages, half a message, or both. Buffer until you see `\n`.
 
@@ -72,13 +73,15 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (11 verbs) · `S→C` server to client (17 events)
+`C→S` client to server (13 verbs) · `S→C` server to client (17 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
 | `connected` | S→C | Immediately on TCP accept |
-| `join` | C→S | Player submits a nickname |
-| `welcome` | S→C | Nickname accepted |
+| `join` | C→S | Player submits a nickname, as a guest |
+| `signup` | C→S | Player creates an account (instead of `join`) |
+| `login` | C→S | Player logs in to an account (instead of `join`) |
+| `welcome` | S→C | Nickname accepted, or signed up or logged in |
 | `lobby` | S→C | Any client connects, names itself, changes state, or leaves |
 | `findMatch` | C→S | Player presses *Start game* in the lobby |
 | `matchStart` | S→C | Two searching players are paired, or both asked for a rematch |
@@ -136,6 +139,9 @@ either side.
                                     leave / opponentLeft → IDLE
 ```
 
+`signup` and `login` take `CONNECTING` to `IDLE` exactly as `join` does, once
+`welcome` arrives.
+
 `PLACING` is entered on every `matchStart`, including rematches — boards are
 cleared and both players place again. A rematch goes straight from `MATCHEND` to
 `PLACING`; it never passes through `SEARCHING`.
@@ -167,7 +173,8 @@ and stop, rather than proceeding and failing confusingly later.
 
 The UI renders `"Welcome, Alice."` from this. The server may have altered the
 submitted nickname (trimming, de-duplication) — **use the value returned here**,
-not the one that was sent.
+not the one that was sent. After `signup` or `login`, `nickname` is the account's
+username as stored: logging in as `alice` to the account `Alice` welcomes `Alice`.
 
 ### `lobby`
 
@@ -472,7 +479,11 @@ Errors never change client state — the client stays where it was.
 | `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
 | `invalid-profile` | `profileUpdate` broke a rule under it — `message` says which. Nothing was saved |
 | `not-logged-in` | A guest sent `profileUpdate` |
-| `unknown` | Anything else, e.g. the match history, the leaderboard, the badges or the profile couldn't be read or saved |
+| `invalid-input` | `signup` or `login` broke a rule under `signup` (username 1–16, password 4–16) |
+| `username-taken` | `signup` for a name that exists, ignoring case |
+| `bad-credentials` | `login` with an unknown name or a wrong password. The message is the same either way |
+| `already-logged-in` | `login` to an account that is online in another session |
+| `unknown` | Anything else, e.g. the match history, the leaderboard, the badges or the profile couldn't be read or saved, accounts aren't available, or `join`, `signup` or `login` came after `welcome` |
 
 ---
 
@@ -486,7 +497,48 @@ Errors never change client state — the client stays where it was.
 
 Nickname is trimmed and must be 1–16 characters after trimming. The server may
 de-duplicate (`"Alice"` → `"Alice (2)"`); the authoritative result comes back in
-`welcome`. Sent once, in `CONNECTING`.
+`welcome`. Sent once, in `CONNECTING`. A player who joins this way is a guest, so
+nothing they play is saved; `signup` and `login` are the account alternatives.
+
+### `signup`
+
+```json
+{"type":"signup","username":"Alice","password":"hunter22"}
+```
+
+Creates an account and logs in to it; the server replies with `welcome`, then the
+usual `lobby`. Sent once, in `CONNECTING`, instead of `join`. Added with LOGIN-1
+(#46).
+
+- `username`: trimmed, then 1–16 characters, no control characters. Stored as
+  typed (after trimming). Unique ignoring case: `Alice` and `alice` are one name.
+- `password`: 4–16 characters, never trimmed, any characters. The server stores
+  only a salted hash.
+
+A missing or `null` field counts as empty. Breaking a rule gets `error`
+`invalid-input`; a name that exists gets `username-taken`.
+
+### `login`
+
+```json
+{"type":"login","username":"alice","password":"hunter22"}
+```
+
+Logs in to an existing account; the server replies with `welcome`, whose
+`nickname` is the username as stored (`Alice`), then the usual `lobby`. Sent once,
+in `CONNECTING`, instead of `join`. Added with LOGIN-1 (#46).
+
+The rules under `signup` apply here too, with the same `invalid-input`. The name
+is looked up ignoring case. An unknown name or a wrong password gets
+`bad-credentials`, with the same message either way. Once the password is right,
+an account that is online in another session gets `already-logged-in`; that
+session keeps playing.
+
+For both: the server checks the password off the game loop, so `welcome` comes a
+moment later; send nothing else until it does. After `welcome`, `join`, `signup`
+and `login` get `error` `unknown`. A server with no database answers both with
+`unknown` and the message
+`Accounts aren't available on this server. Play as a guest.`; `join` still works.
 
 ### `findMatch`
 
@@ -666,6 +718,9 @@ Server obligations, not client concerns, but every implementer should know them.
    a grader.
 4. **The server owns both boards.** A client that lies about a hit changes nothing.
 5. **Scores** persist across rematches and reset to zero only on `reset`.
+6. **Accounts.** One session per account at a time. Passwords are stored only as
+   a salted hash, and never logged or sent back. Only matches between two
+   logged-in players are saved (`docs/implement/database.md`); guests are not.
 
 ---
 
@@ -690,6 +745,8 @@ export type ServerEvent =
 
 export type ClientVerb =
   | { type: "join"; nickname: string }
+  | { type: "signup"; username: string; password: string }
+  | { type: "login"; username: string; password: string }
   | { type: "findMatch" }
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
@@ -740,3 +797,7 @@ the team picks its extra features:
 - **Placement time limit.** Only the 10-second turn timer is specified.
 - **Cancelling a search.** Once `findMatch` is sent the player stays searching.
   A cancel verb can be added later under the ignore-unknown rules.
+- **Encryption.** Every frame, passwords included, crosses the LAN in clear text
+  (raw TCP, no TLS). Acceptable for the classroom demo.
+- **Account management.** No log out, password change or reset, or account
+  deletion. A refreshed page is a new connection, so the player logs in again.

@@ -77,7 +77,8 @@ public sealed class ClientSession
             if (message != null)
                 _host.Post(new HostInput.Message(Id, message));
             else if (line.Length > 0)
-                Console.WriteLine($"[{Id}] skipped a line that isn't a known message: {Shorten(line)}");
+                // Only its length: a malformed login would print its password (protocol.md §1 rule 3).
+                Console.WriteLine($"[{Id}] skipped a line that isn't a known message ({line.Length} characters)");
         }
     }
 
@@ -102,5 +103,4 @@ public sealed class ClientSession
         }
     }
 
-    private static string Shorten(string line) => line.Length <= 80 ? line : line[..80] + "…";
 }

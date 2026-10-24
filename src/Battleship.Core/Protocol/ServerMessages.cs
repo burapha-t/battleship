@@ -298,6 +298,10 @@ namespace Battleship.Core.Protocol
         public const string NotInMatch = "not-in-match";
         public const string InvalidProfile = "invalid-profile";
         public const string NotLoggedIn = "not-logged-in";
+        public const string InvalidInput = "invalid-input";
+        public const string UsernameTaken = "username-taken";
+        public const string BadCredentials = "bad-credentials";
+        public const string AlreadyLoggedIn = "already-logged-in";
         public const string Unknown = "unknown";
     }
 }

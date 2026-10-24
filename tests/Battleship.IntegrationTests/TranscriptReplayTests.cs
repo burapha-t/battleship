@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Battleship.Core;
 using Battleship.Core.Protocol;
+using Battleship.Server.Data;
 using Battleship.Server.Host;
 
 namespace Battleship.IntegrationTests;
@@ -55,8 +56,11 @@ public class TranscriptReplayTests
     public async Task Server_SendsExactlyTheGoldenTranscript()
     {
         var random = new ScriptedRandom();
+        // A fresh database, so Bob can sign up; the hash cost is TestServer's low one.
+        string folder = Path.Combine(Path.GetTempPath(), "battleship-replay-" + Guid.NewGuid().ToString("N"));
+        var database = new GameDatabase(Path.Combine(folder, "test.db"));
         // Real timers never fire; the transcript's one timeout is posted by hand.
-        await using var server = await TestServer.StartAsync(TimeSpan.FromHours(1), random);
+        var server = await TestServer.StartAsync(TimeSpan.FromHours(1), random, database);
         var clients = new Dictionary<string, TestClient>();
         var shotAt = new Dictionary<string, HashSet<Coord>>();
         string matchId = "";
@@ -142,6 +146,9 @@ public class TranscriptReplayTests
         finally
         {
             foreach (var client in clients.Values) await client.DisposeAsync();
+            await server.DisposeAsync();
+            GameDatabase.ClearPool(database.Path);
+            if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true);
         }
     }
 }

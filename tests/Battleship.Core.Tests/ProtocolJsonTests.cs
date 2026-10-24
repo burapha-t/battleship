@@ -47,7 +47,7 @@ public class ProtocolJsonTests
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(27, types.Count);
+        Assert.Equal(29, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
     }
 
@@ -196,6 +196,54 @@ public class ProtocolJsonTests
             "{\"rank\":3,\"name\":\"Carol\",\"points\":0,\"accuracy\":0}]}";
         Assert.Equal(frame, ProtocolJson.Serialize(leaderboard));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
+    [Fact]
+    public void Signup_RoundTrips()
+    {
+        const string frame = "{\"type\":\"signup\",\"username\":\"Alice\",\"password\":\"hunter22\"}";
+
+        var signup = Assert.IsType<Signup>(ProtocolJson.Parse(frame));
+
+        Assert.Equal("Alice", signup.Username);
+        Assert.Equal("hunter22", signup.Password);
+        Assert.Equal(frame, ProtocolJson.Serialize(signup));
+    }
+
+    [Fact]
+    public void Login_RoundTrips()
+    {
+        const string frame = "{\"type\":\"login\",\"username\":\"Alice\",\"password\":\"hunter22\"}";
+
+        var login = Assert.IsType<Login>(ProtocolJson.Parse(frame));
+
+        Assert.Equal("Alice", login.Username);
+        Assert.Equal("hunter22", login.Password);
+        Assert.Equal(frame, ProtocolJson.Serialize(login));
+    }
+
+    // A missing field reads as "", so the server answers invalid-input rather
+    // than skipping the line.
+    [Fact]
+    public void Login_WithoutItsFields_ReadsThemAsEmpty()
+    {
+        var login = Assert.IsType<Login>(ProtocolJson.Parse("{\"type\":\"login\"}"));
+
+        Assert.Equal("", login.Username);
+        Assert.Equal("", login.Password);
+    }
+
+    // null is still a message; the rules treat it as empty.
+    [Fact]
+    public void Signup_WithANullPassword_StillParses()
+    {
+        Assert.IsType<Signup>(ProtocolJson.Parse("{\"type\":\"signup\",\"username\":\"Alice\",\"password\":null}"));
+    }
+
+    [Fact]
+    public void Login_WithANumberForAPassword_IsMalformed()
+    {
+        Assert.Null(ProtocolJson.Parse("{\"type\":\"login\",\"username\":\"Alice\",\"password\":123}"));
     }
 
     [Fact]

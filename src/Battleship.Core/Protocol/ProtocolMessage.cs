@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Battleship.Core.Protocol
 {
     /// <summary>
-    /// Base of the 28 wire messages in protocol.md. <see cref="Type"/> is the
+    /// Base of the 30 wire messages in protocol.md. <see cref="Type"/> is the
     /// <c>"type"</c> field and is always written first.
     /// </summary>
     public abstract class ProtocolMessage

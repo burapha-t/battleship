@@ -1,4 +1,5 @@
 import { useTranslation } from '../useTranslation'
+import { translator } from '../translations'
 import { useState } from 'react'
 import { localizeError } from '../localizeMessage'
 import type { FormEvent } from 'react'
@@ -13,9 +14,11 @@ type Props = {
   connected: boolean
   lastError: GameState['lastError']
   onJoin: (nickname: string) => void
+  /** Shows the login card instead. */
+  onLogin: () => void
 }
 
-export function NicknameScreen({ connected, lastError, onJoin }: Props) {
+export function NicknameScreen({ connected, lastError, onJoin, onLogin }: Props) {
   const { t, language } = useTranslation('game')
   const [nickname, setNickname] = useState('')
   // The lastError at the moment I pressed Join: until it changes, the join is
@@ -63,6 +66,9 @@ export function NicknameScreen({ connected, lastError, onJoin }: Props) {
             {connected ? t('connected') : t('connectingServer')}
           </p>
         </form>
+        <button type="button" className="switch-link" onClick={onLogin} disabled={pending}>
+          {translator(language, 'login')('logInOrSignUp')}
+        </button>
       </aside>
     </main>
   )

@@ -48,7 +48,7 @@ it('prepares all PR65 profile, creature, badge, rank and best-stat phrases', () 
   expect(translator('th', 'badges')('newBadge')).toBe('ได้เหรียญตราใหม่!')
 })
 it('translates error codes first and safely handles unfamiliar server messages', () => {
-  for (const code of ['unknown','bad-nickname','invalid-placement','not-your-turn','already-fired','out-of-range','not-in-match','invalid-profile','not-logged-in']) {
+  for (const code of ['unknown','bad-nickname','invalid-placement','not-your-turn','already-fired','out-of-range','not-in-match','invalid-profile','not-logged-in','invalid-input','username-taken','bad-credentials','already-logged-in']) {
     expect(localizeError({ code, message: 'A future server message' }, 'th')).toMatch(/[ก-๙]/)
   }
   expect(localizeError({ code: 'not-your-turn', message: 'You already fired at that cell.' }, 'th')).toBe('ยังไม่ถึงรอบยิงของคุณ')
@@ -58,6 +58,41 @@ it('translates error codes first and safely handles unfamiliar server messages',
   expect(localizeError({ code: 'unknown', message: "Your badges couldn't be loaded. Try again." }, 'th')).toBe('โหลดเหรียญตราไม่สำเร็จ โปรดลองอีกครั้ง')
   expect(localizeError({ code: 'unknown', message: "Your profile couldn't be loaded or saved. Try again." }, 'th')).toBe('โหลดหรือบันทึกโปรไฟล์ไม่สำเร็จ โปรดลองอีกครั้ง')
   expect(localizeError({ code: 'future', message: 'Keep English detail' }, 'en')).toBe('Keep English detail')
+})
+it('gives every login and sign-up answer its own sentence in both languages (#47)', () => {
+  // English is the server's message, byte for byte (protocol.md §4).
+  const english = {
+    'invalid-input': 'Usernames must be 1-16 characters and passwords 4-16 characters.',
+    'username-taken': 'That username is taken.',
+    'bad-credentials': 'Wrong username or password.',
+    'already-logged-in': 'That account is already logged in.',
+  }
+  const fallback = translator('th', 'errors')('unknown')
+  const thai = new Set<string>()
+  for (const [code, message] of Object.entries(english)) {
+    expect(Object.hasOwn(translations.errors, code), code).toBe(true)
+    expect(translations.errors[code as keyof typeof english][0]).toBe(message)
+    expect(localizeError({ code, message }, 'en')).toBe(message)
+    const th = localizeError({ code, message }, 'th')
+    expect(th, code).not.toBe(fallback)
+    thai.add(th)
+  }
+  expect(thai.size).toBe(4)
+  // The two `unknown` answers are matched by their English message.
+  for (const message of ["Accounts aren't available on this server. Play as a guest.", "Couldn't sign up or log in. Try again."]) {
+    const th = localizeError({ code: 'unknown', message }, 'th')
+    expect(th, message).toMatch(/[ก-๙]/)
+    expect(th, message).not.toBe(fallback)
+  }
+  expect(localizeError({ code: 'unknown', message: 'You have already joined.' }, 'th')).toBe('คุณเข้าร่วมแล้ว')
+})
+it('has every login card label in both languages (#47)', () => {
+  const en = translator('en', 'login')
+  expect([en('logIn'), en('signUp'), en('loggingIn'), en('signingUp')]).toEqual(['Log in', 'Sign up', 'Logging in…', 'Signing up…'])
+  expect(en('usernameRule')).toBe('Usernames must be 1–16 characters.')
+  expect(en('passwordRule')).toBe('Passwords must be 4–16 characters.')
+  const th = translator('th', 'login')
+  for (const key of Object.keys(translations.login) as (keyof typeof translations.login)[]) expect(th(key), key).toMatch(/[ก-๙]/)
 })
 it('translates every placement reason while preserving its numbers', () => {
   for (const message of ['Place exactly 4 ships.', 'Ship 2 must cover exactly 4 cells.', 'Ship 2 is off the grid.', 'Ship 2 uses a cell that is already taken.', 'Ship 2 is not in a straight line.', 'Ship 2 has a gap between its cells.']) {

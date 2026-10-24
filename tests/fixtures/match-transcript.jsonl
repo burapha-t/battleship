@@ -6,13 +6,21 @@
 {"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":null,"status":"connecting"}]}}
 {"from":"p2","to":"server","frame":{"type":"join","nickname":"   "}}
 {"from":"server","to":"p2","frame":{"type":"error","code":"bad-nickname","message":"Nickname must be 1-16 characters."}}
-{"from":"p2","to":"server","frame":{"type":"join","nickname":"Bob"}}
+{"from":"p2","to":"server","frame":{"type":"signup","username":"Bob","password":"abc"}}
+{"from":"server","to":"p2","frame":{"type":"error","code":"invalid-input","message":"Usernames must be 1-16 characters and passwords 4-16 characters."}}
+{"from":"p2","to":"server","frame":{"type":"signup","username":"Bob","password":"hunter22"}}
 {"from":"server","to":"p2","frame":{"type":"welcome","id":"p2","nickname":"Bob"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":2,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"}]}}
 {"from":"server","to":"p3","frame":{"type":"connected","id":"p3","protocolVersion":1}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":null,"status":"connecting"}]}}
+{"from":"p3","to":"server","frame":{"type":"login","username":"bob","password":"hunter22"}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"already-logged-in","message":"That account is already logged in."}}
+{"from":"p3","to":"server","frame":{"type":"login","username":"Bob","password":"hunter23"}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"bad-credentials","message":"Wrong username or password."}}
+{"from":"p3","to":"server","frame":{"type":"signup","username":"BOB","password":"letmein1"}}
+{"from":"server","to":"p3","frame":{"type":"error","code":"username-taken","message":"That username is taken."}}
 {"from":"p3","to":"server","frame":{"type":"join","nickname":"Alice"}}
 {"from":"server","to":"p3","frame":{"type":"welcome","id":"p3","nickname":"Alice (2)"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

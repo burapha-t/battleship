@@ -97,6 +97,31 @@
   color: var(--muted);
 }
 
+/* "Play as guest" under the login card, and back again under the nickname card. */
+.switch-link {
+  align-self: center;
+  padding: 4px 10px;
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.switch-link:focus-visible {
+  outline: 4px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.switch-link:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
 .lobby {
   padding: 20px 24px;
 }
