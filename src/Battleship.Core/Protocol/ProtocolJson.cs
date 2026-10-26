@@ -22,6 +22,8 @@ namespace Battleship.Core.Protocol
         private static readonly Dictionary<string, Type> Types = new Dictionary<string, Type>
         {
             ["join"] = typeof(Join),
+            ["signup"] = typeof(Signup),
+            ["login"] = typeof(Login),
             ["findMatch"] = typeof(FindMatch),
             ["place"] = typeof(Place),
             ["fire"] = typeof(Fire),

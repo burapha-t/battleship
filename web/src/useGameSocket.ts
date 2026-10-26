@@ -87,13 +87,14 @@ export function useGameSocket(onEvent: (event: GameAction) => void): {
   }, [replayPlayer])
 
   const send = useCallback((verb: ClientVerb) => {
+    // Only the type: `login` and `signup` carry a password, which never reaches a log.
     if (replayPlayer) {
-      console.info('[replay] send', verb)
+      console.info('[replay] send', verb.type)
       return
     }
     const ws = socket.current
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(verb))
-    else console.warn('Not connected; dropped', verb)
+    else console.warn('Not connected; dropped', verb.type)
   }, [replayPlayer])
 
   return { send, link }

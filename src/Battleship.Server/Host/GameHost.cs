@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using Battleship.Core;
 using Battleship.Core.Protocol;
+using Battleship.Server.Accounts;
 using Battleship.Server.Dashboard;
 using Battleship.Server.Data;
 using Battleship.Server.Engine;
@@ -25,6 +26,7 @@ public sealed class GameHost
     private readonly Roster _roster = new();
     private readonly MatchEngine _engine;
     private readonly DatabaseWorker? _database;
+    private readonly PasswordHasher _hasher;
     private readonly List<DashboardEvent> _activity = new();
     private DashboardSnapshot _snapshot = DashboardSnapshot.Empty;
 
@@ -35,8 +37,10 @@ public sealed class GameHost
     /// </param>
     /// <param name="random">First player and auto-fire cell; tests pass a seeded one.</param>
     /// <param name="database">Accounts and match history; null keeps nothing (tests, or a file that failed to open).</param>
-    public GameHost(TimeSpan turnDuration, Random random, GameDatabase? database = null)
+    /// <param name="hasher">Hashes passwords for <c>signup</c> and <c>login</c>; the default cost unless a test passes a low one.</param>
+    public GameHost(TimeSpan turnDuration, Random random, GameDatabase? database = null, PasswordHasher? hasher = null)
     {
+        _hasher = hasher ?? new PasswordHasher();
         _database = database == null ? null : new DatabaseWorker(database, (id, reply) => Post(new HostInput.DatabaseReply(id, reply)));
         _engine = new MatchEngine(_roster, new TurnTimer(Post, turnDuration), random, _database);
     }
@@ -98,6 +102,9 @@ public sealed class GameHost
             case HostInput.DatabaseReply reply:
                 Send(new[] { Outbound.ToPlayer(reply.PlayerId, reply.Reply) });
                 break;
+            case HostInput.AccountChecked outcome:
+                OnAccountChecked(outcome);
+                break;
         }
 
         string lobbyAfter = ProtocolJson.Serialize(_roster.BuildLobby());
@@ -124,6 +131,12 @@ public sealed class GameHost
         {
             case Join join:
                 OnJoin(player, join.Nickname);
+                break;
+            case Signup signup:
+                OnAccount(player, signup.Username, signup.Password, signUp: true);
+                break;
+            case Login login:
+                OnAccount(player, login.Username, login.Password, signUp: false);
                 break;
             case FindMatch:
                 Send(_engine.FindMatch(playerId));
@@ -178,6 +191,104 @@ public sealed class GameHost
         player.Status = LobbyStatus.Idle;
         Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = name }) });
         Log($"{player.Id} joined as {name}");
+    }
+
+    // signup and login (LOGIN-1). The rules are checked here; the slow part
+    // (hashing, and the account lookup or insert) runs as one database job,
+    // never on this loop, and its outcome comes back as AccountChecked.
+    private void OnAccount(PlayerRecord player, string? username, string? password, bool signUp)
+    {
+        if (player.HasJoined)
+        {
+            Send(new[] { Outbound.Error(player.Id, ErrorCodes.Unknown, "You have already joined.") });
+            return;
+        }
+        if (_database == null)
+        {
+            Send(new[] { Outbound.Error(player.Id, ErrorCodes.Unknown, "Accounts aren't available on this server. Play as a guest.") });
+            return;
+        }
+
+        string? name = AccountPolicy.NormalizeUsername(username);
+        if (name == null || !AccountPolicy.IsValidPassword(password))
+        {
+            Send(new[] { Outbound.Error(player.Id, ErrorCodes.InvalidInput,
+                $"Usernames must be 1-{AccountPolicy.UsernameMaxLength} characters and passwords " +
+                $"{AccountPolicy.PasswordMinLength}-{AccountPolicy.PasswordMaxLength} characters.") });
+            return;
+        }
+
+        string playerId = player.Id;
+        var hasher = _hasher;
+        _database.Enqueue(database =>
+        {
+            HostInput.AccountChecked outcome;
+            try
+            {
+                outcome = signUp
+                    ? SignUp(database, hasher, playerId, name, password)
+                    : LogIn(database, hasher, playerId, name, password);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not sign up or log in {playerId}: {ex.Message}");
+                outcome = HostInput.AccountChecked.Refused(playerId, ErrorCodes.Unknown, "Couldn't sign up or log in. Try again.");
+            }
+            Post(outcome);
+        });
+    }
+
+    // Runs in a database job. Jobs run one at a time, so two sign-ups for one
+    // name are settled by the UNIQUE constraint.
+    private static HostInput.AccountChecked SignUp(GameDatabase database, PasswordHasher hasher, string playerId, string name, string password)
+    {
+        var (salt, hash) = hasher.Hash(password);
+        return database.CreateUser(name, salt, hash, hasher.Iterations) is long userId
+            ? new HostInput.AccountChecked(playerId, true, userId, name, null)
+            : HostInput.AccountChecked.Refused(playerId, ErrorCodes.UsernameTaken, "That username is taken.");
+    }
+
+    // Runs in a database job. An unknown name still costs one full hash, so its
+    // reply takes as long as a wrong password's, and says the same.
+    private static HostInput.AccountChecked LogIn(GameDatabase database, PasswordHasher hasher, string playerId, string name, string password)
+    {
+        var user = database.FindUser(name);
+        if (user == null)
+        {
+            hasher.Hash(password);
+            return BadCredentials(playerId);
+        }
+        if (!PasswordHasher.Verify(password, user.Salt, user.Hash, user.Iterations)) return BadCredentials(playerId);
+        return new HostInput.AccountChecked(playerId, false, user.Id, user.Username, null);
+    }
+
+    private static HostInput.AccountChecked BadCredentials(string playerId) =>
+        HostInput.AccountChecked.Refused(playerId, ErrorCodes.BadCredentials, "Wrong username or password.");
+
+    // Back on the loop. The player may have left, or been welcomed by a join
+    // sent while the password was checked: then nothing changes and nothing is
+    // sent. One session per account, by id, never by name (a guest may share it).
+    private void OnAccountChecked(HostInput.AccountChecked outcome)
+    {
+        var player = _roster.Find(outcome.PlayerId);
+        if (player == null || player.HasJoined) return;
+
+        if (outcome.Error != null)
+        {
+            Send(new[] { Outbound.ToPlayer(player.Id, outcome.Error) });
+            return;
+        }
+        if (_roster.Players.Any(other => other.UserId == outcome.UserId))
+        {
+            Send(new[] { Outbound.Error(player.Id, ErrorCodes.AlreadyLoggedIn, "That account is already logged in.") });
+            return;
+        }
+
+        player.Name = outcome.Username;
+        player.UserId = outcome.UserId;
+        player.Status = LobbyStatus.Idle;
+        Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = outcome.Username }) });
+        Log($"{player.Id} {(outcome.SignedUp ? "signed up" : "logged in")} as {outcome.Username}");
     }
 
     private void OnLeave(PlayerRecord player)

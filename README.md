@@ -111,7 +111,8 @@ behind the scenes, and nobody types it.
 
 ### 6. Play
 
-1. Each player enters a nickname.
+1. Each player logs in or signs up, or picks **Play as guest** and enters a nickname.
+   Only matches between two logged-in players are saved.
 2. Each player clicks **Start game**.
 3. The server pairs two waiting players and the match starts.
 

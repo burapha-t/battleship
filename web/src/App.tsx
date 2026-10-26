@@ -14,6 +14,7 @@ import { GameScreen } from './screens/GameScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { LeaderboardScreen } from './screens/LeaderboardScreen'
 import { LobbyScreen } from './screens/LobbyScreen'
+import { LoginScreen } from './screens/LoginScreen'
 import { NicknameScreen } from './screens/NicknameScreen'
 import { PlacementScreen } from './screens/PlacementScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
@@ -114,6 +115,8 @@ type ScreenProps = {
 }
 
 function Screen({ state, send, dispatch, open, searching, startGame, placeShips, goHome }: ScreenProps) {
+  // The login card comes first; "Play as guest" swaps in the nickname card.
+  const [guest, setGuest] = useState(false)
   const loadMore = () => {
     if (!state.history?.more || state.history.loadingMore) return
     dispatch({ type: 'loadMoreHistory' })
@@ -123,11 +126,19 @@ function Screen({ state, send, dispatch, open, searching, startGame, placeShips,
   switch (state.screen) {
     case 'connecting':
     case 'nickname':
-      return (
+      return guest ? (
         <NicknameScreen
           connected={state.screen === 'nickname'}
           lastError={state.lastError}
           onJoin={(nickname) => send({ type: 'join', nickname })}
+          onLogin={() => setGuest(false)}
+        />
+      ) : (
+        <LoginScreen
+          connected={state.screen === 'nickname'}
+          lastError={state.lastError}
+          onSend={(mode, username, password) => send({ type: mode, username, password })}
+          onGuest={() => setGuest(true)}
         />
       )
     case 'lobby':

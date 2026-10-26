@@ -1,6 +1,6 @@
 # Database
 
-**Status:** DB-1 (#32) and DB-2 (#48) are built. The server saves every finished match between two logged-in players and unlocks their badges (#41). Login (LOGIN-1, #46) isn't built yet, so for now every player is a guest and nothing is saved.
+**Status:** DB-1 (#32), DB-2 (#48) and login (LOGIN-1, #46) are built. Players sign up or log in over the game connection, or play as guests. The server saves every finished match between two logged-in players and unlocks their badges (#41); guests are never saved.
 
 This file is the source of truth for the database. A copy for the whole team is in the planning
 Google Doc, tab **db_schema**:
@@ -125,7 +125,7 @@ Each badge at most once per player (#41). The 15 codes, and when each is earned,
 
 | Feature | Tables | How |
 |---|---|---|
-| Login | users | Find by username, check the password hash |
+| Login | users | Sign up: hash, then CreateUser (a taken name, ignoring case, is refused by the UNIQUE constraint). Log in: FindUser, then check the password against the stored salt, hash and iterations. Both run in one DatabaseWorker job, off the game loop |
 | Match history: stats | match_players | Matches = count, wins = sum of won, win rate = wins / matches, accuracy = hits / shots |
 | Match history: list | match_players, matches | My rows, newest first: win/lose, opponent, date and time, accuracy |
 | Leaderboard | match_players, users | All-time. Points = wins. Rank by points, then accuracy (hits / shots, timeout shots included), then name A–Z; ties on both share a rank. Top 50, accounts with a saved match only |
@@ -190,13 +190,13 @@ Issue codes after DB-1 are proposals until the issues are created.
 | Issue | What | Status |
 |---|---|---|
 | DB-1 (#32) | Database file, tables, GameDatabase | Built (PR #33) |
-| LOGIN-1 (#46) | Signup and login over the game connection, password hashing | Not started. Sets PlayerRecord.UserId |
-| DB-2 (#48) | Save each finished match with SaveMatch | Built. Saves nothing until LOGIN-1 sets UserId |
+| LOGIN-1 (#46) | Signup and login over the game connection, password hashing | Built. Sets PlayerRecord.UserId. PBKDF2-HMAC-SHA256, 16-byte salt, 32-byte hash, 600,000 iterations |
+| DB-2 (#48) | Save each finished match with SaveMatch | Built |
 | HIST-1 (#49) | History request and reply (`historyList` / `history`, protocol.md) | Built |
 | LB-1 (#44) | Leaderboard request and reply (`leaderboardGet` / `leaderboard`, protocol.md) | Built |
-| ACH-1 (#51) | Check badges at match end, tell the player (`achievementsGet` / `achievements` / `achievementUnlocked`, protocol.md) | Built. Earns nothing until LOGIN-1 sets UserId |
-| Profile (#42) | Picture and shown badges (`profileGet` / `profileUpdate` / `profile`, protocol.md) | Built. Guests can look but not save until LOGIN-1 sets UserId |
+| ACH-1 (#51) | Check badges at match end, tell the player (`achievementsGet` / `achievements` / `achievementUnlocked`, protocol.md) | Built |
+| Profile (#42) | Picture and shown badges (`profileGet` / `profileUpdate` / `profile`, protocol.md) | Built. Guests can look but not save |
 
 ## 8. Open questions
 
-- Password length: the planning doc's Description tab says 4–16 characters; older drafts used 8–64 and 8–128. Pick one.
+- ~~Password length~~: settled with LOGIN-1 (#35, #46) as 4–16 characters, never trimmed; usernames 1–16 after trimming.

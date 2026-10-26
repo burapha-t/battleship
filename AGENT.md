@@ -26,12 +26,12 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
-  `NicknamePolicy`, `GameRules`, `Achievements`, `Avatars`) and the protocol DTOs + `ProtocolJson`.
-- `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; dashboard on :8080 with RESET.
+  `NicknamePolicy`, `AccountPolicy`, `GameRules`, `Achievements`, `Avatars`) and the protocol DTOs + `ProtocolJson`.
+- `Battleship.Server`: complete — TCP :5050, lobby, matchmaking, 10 s turn timer with auto-fire, scoring, rematch; sign-up and log-in (#46: `signup` / `login`, `Accounts/PasswordHasher` runs on `DatabaseWorker`); dashboard on :8080 with RESET.
 - `Battleship.Client`: complete — `client.json`, serves `web/dist` as `wwwroot/`, `/ws` ↔ TCP relay (CLI-0), opens the browser; `--lan` also serves other devices on the Wi-Fi (CLI-1).
-- `web/`: complete — all five screens plus sound, and match history (HIST-2), leaderboard (LB-2), badges (ACH-2) and profile (#42) screens opened from the lobby; the end screen shows newly earned badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history`, `?preview=leaderboard`, `?preview=badges` and `?preview=profile` (also `-empty`, `-loading`; `badges-unlock` is the end screen's badge card, `profile-guest` a guest) show those screens with sample data.
+- `web/`: complete — the login page (#47: Log in / Sign up; **Play as guest** opens the nickname screen), all five screens plus sound, and match history (HIST-2), leaderboard (LB-2), badges (ACH-2) and profile (#42) screens opened from the lobby; the end screen shows newly earned badges. `?replay=p1|p2|p3` plays the golden transcript with no server; `?preview=board` shows every cell state; `?preview=history`, `?preview=leaderboard`, `?preview=badges` and `?preview=profile` (also `-empty`, `-loading`; `badges-unlock` is the end screen's badge card, `profile-guest` a guest) show those screens with sample data.
 - Settings (#43): header popup with independent music/effect volumes and EN/TH preference saved in browser storage; all current game screens use the shared catalogue/hook (#38); profile/badge phrases for pending PR #65 are prepared but its feature code is not included.
-- Database (DB-1, schema version 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop); until login sets `PlayerRecord.UserId`, everyone is a guest and nothing is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros). #42: `profileGet` / `profileUpdate` read and save my picture and shown badges; guests get an empty profile marked `guest` and can't save.
+- Database (DB-1, schema version 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop). LOGIN-1 (#46) sets `PlayerRecord.UserId` on `signup` / `login`; a player who `join`s is a guest and nothing of theirs is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros). #42: `profileGet` / `profileUpdate` read and save my picture and shown badges; guests get an empty profile marked `guest` and can't save.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
 - `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
 
@@ -42,6 +42,7 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - The server never sends a player's ship positions to their opponent.
 - Only the `GameHost` loop touches server state; sessions, the turn timer and the dashboard `Post` a `HostInput` to it.
 - `Engine/` and `Lobby/` stay socket-free, so `Battleship.Server.Tests` drives them directly.
+- Passwords are stored only as a salted PBKDF2 hash, hashed on `DatabaseWorker` (never the game loop), and never logged or sent.
 - A protocol change updates `protocol.md`, `web/src/protocol.ts`, the C# DTOs and
   `tests/fixtures/match-transcript.jsonl` in one PR — otherwise it is not a protocol change.
 

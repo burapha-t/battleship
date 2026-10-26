@@ -1,5 +1,7 @@
 using System.Net;
 using Battleship.Core;
+using Battleship.Core.Protocol;
+using Battleship.Server.Accounts;
 using Battleship.Server.Dashboard;
 using Battleship.Server.Data;
 using Battleship.Server.Host;
@@ -14,6 +16,9 @@ namespace Battleship.IntegrationTests;
 /// </summary>
 public sealed class TestServer : IAsyncDisposable
 {
+    /// <summary>PBKDF2 iterations for test accounts: low, so a login takes no time.</summary>
+    public const int HashIterations = 1_000;
+
     private readonly CancellationTokenSource _stop;
     private readonly Task _running;
     private readonly WebApplication _dashboard;
@@ -41,9 +46,13 @@ public sealed class TestServer : IAsyncDisposable
     /// wire still says <c>seconds: 10</c>.
     /// </param>
     /// <param name="database">Accounts and saved matches; none by default, so everyone is a guest.</param>
-    public static async Task<TestServer> StartAsync(TimeSpan? turnDuration = null, Random? random = null, GameDatabase? database = null)
+    /// <param name="hashIterations">The password hash cost; <see cref="HashIterations"/> by default.</param>
+    public static async Task<TestServer> StartAsync(
+        TimeSpan? turnDuration = null, Random? random = null, GameDatabase? database = null, int hashIterations = HashIterations)
     {
-        var host = new GameHost(turnDuration ?? TimeSpan.FromSeconds(GameRules.TurnSeconds), random ?? new Random(), database);
+        var host = new GameHost(
+            turnDuration ?? TimeSpan.FromSeconds(GameRules.TurnSeconds), random ?? new Random(), database,
+            new PasswordHasher(hashIterations));
         var acceptLoop = new TcpAcceptLoop(new IPEndPoint(IPAddress.Loopback, 0), host);
         int port = acceptLoop.Start();
         var dashboard = DashboardServer.Create(host, "http://127.0.0.1:0", port);
@@ -57,11 +66,21 @@ public sealed class TestServer : IAsyncDisposable
     public Task<TestClient> ConnectAsync() => TestClient.ConnectAsync(Port);
 
     /// <summary>Connects and joins; <c>welcome</c> has been read, the <c>lobby</c> after it hasn't.</summary>
-    public async Task<TestClient> JoinAsync(string nickname)
+    public Task<TestClient> JoinAsync(string nickname) => WelcomedAsync(new Join { Nickname = nickname });
+
+    /// <summary>Connects and signs up; <c>welcome</c> has been read, the <c>lobby</c> after it hasn't.</summary>
+    public Task<TestClient> SignUpAsync(string username, string password) =>
+        WelcomedAsync(new Signup { Username = username, Password = password });
+
+    /// <summary>Connects and logs in; <c>welcome</c> has been read, the <c>lobby</c> after it hasn't.</summary>
+    public Task<TestClient> LogInAsync(string username, string password) =>
+        WelcomedAsync(new Login { Username = username, Password = password });
+
+    private async Task<TestClient> WelcomedAsync(ProtocolMessage first)
     {
         var client = await ConnectAsync();
-        await client.SendAsync(new Core.Protocol.Join { Nickname = nickname });
-        var welcome = await client.NextAsync<Core.Protocol.Welcome>();
+        await client.SendAsync(first);
+        var welcome = await client.NextAsync<Welcome>();
         client.Name = welcome.Nickname;
         return client;
     }

@@ -27,6 +27,10 @@ export type ErrorCode =
   | 'not-in-match'
   | 'invalid-profile'
   | 'not-logged-in'
+  | 'invalid-input'
+  | 'username-taken'
+  | 'bad-credentials'
+  | 'already-logged-in'
   | 'unknown'
 
 /** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
@@ -94,9 +98,13 @@ export type ServerEvent =
   | ({ type: 'profile' } & ProfileView)
   | { type: 'error'; code: ErrorCode; message: string }
 
-/** The 11 client → server verbs (§5). */
+/** The 13 client → server verbs (§5). */
 export type ClientVerb =
   | { type: 'join'; nickname: string }
+  // Create an account and log in to it; the reply is `welcome` or `error`.
+  | { type: 'signup'; username: string; password: string }
+  // Log in to an existing account; the reply is `welcome` or `error`.
+  | { type: 'login'; username: string; password: string }
   | { type: 'findMatch' }
   | { type: 'place'; ships: Cell[][] }
   | { type: 'fire'; row: number; col: number }
