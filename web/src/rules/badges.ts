@@ -1,8 +1,8 @@
 // Badge catalogue (#41): the 15 codes in tier order and how each medal looks.
 // The server decides who earns what (Achievements in Battleship.Core); the UI
-// only draws it. Text lives in screens/badgesText.ts.
+// only draws it. Text lives in i18n/badgesText.ts.
 
-import type { AchievementsView } from './protocol'
+import type { AchievementsView } from '../protocol'
 
 export type BadgeGroup = 'wins' | 'accuracy' | 'streak'
 

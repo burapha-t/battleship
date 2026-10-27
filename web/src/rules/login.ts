@@ -1,7 +1,7 @@
 // Login and sign-up rules, kept out of React so they can be tested on their own.
 // Both tabs use the same rules, and the server checks them again (protocol.md §5).
 
-import type { ErrorCode } from './protocol'
+import type { ErrorCode } from '../protocol'
 
 /** Same as the server's NicknamePolicy.MaxLength. */
 export const USERNAME_MAX = 16

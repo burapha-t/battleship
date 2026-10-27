@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { translations, translator } from './translations'
 import { localizeError, localizeMessage, localizePlacement } from './localizeMessage'
-import { historyText } from './screens/historyText'
-import { leaderboardText, wins } from './screens/leaderboardText'
+import { historyText } from './historyText'
+import { leaderboardText, wins } from './leaderboardText'
 
 it('every phrase has both languages with matching placeholders', () => {
   const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort()
@@ -111,7 +111,7 @@ it('retranslates existing notices and fatal errors without changing reducer stat
   expect(localizeMessage('This page speaks protocol v1, but the server speaks v2.', 'th')).toBe('หน้านี้รองรับโพรโทคอลรุ่น 1 แต่เซิร์ฟเวอร์ใช้รุ่น 2')
 })
 it('keeps new JSX text and accessible labels in the shared translation system', () => {
-  const root = fileURLToPath(new URL('.', import.meta.url))
+  const root = fileURLToPath(new URL('..', import.meta.url))
   const allowed = new Set(['Battle', 'ship', 'Battleship', 'English'])
   const failures: string[] = []
   for (const file of readdirSync(root, { recursive: true }).map(String).filter(f => f.endsWith('.tsx'))) {

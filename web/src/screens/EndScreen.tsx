@@ -1,8 +1,8 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 import { useState } from 'react'
 import { UnlockCard } from '../components/UnlockCard'
-import { matchSides } from '../gameReducer'
-import type { GameState } from '../gameReducer'
+import { matchSides } from '../state/gameReducer'
+import type { GameState } from '../state/gameReducer'
 import './screens.css'
 
 const CONFETTI = ['var(--coral)', 'var(--kelp)', 'var(--lilac)', 'var(--sun)']

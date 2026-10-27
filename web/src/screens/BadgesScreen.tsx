@@ -1,12 +1,12 @@
-import { BADGES, GROUPS, groupProgress } from '../badges'
-import type { BadgeGroup } from '../badges'
+import { BADGES, GROUPS, groupProgress } from '../rules/badges'
+import type { BadgeGroup } from '../rules/badges'
 import { Medal } from '../components/Medal'
 import { ScreenHead } from '../components/ScreenHead'
 import type { AchievementsView } from '../protocol'
-import { useSettings } from '../useSettings'
-import { badgeLabel, badgesText, earnedText, nextText, statText } from './badgesText'
-import type { Language } from './historyText'
-import './badges.css'
+import { useSettings } from '../settings/useSettings'
+import { badgeLabel, badgesText, earnedText, nextText, statText } from '../i18n/badgesText'
+import type { Language } from '../i18n/historyText'
+import './BadgesScreen.css'
 
 type Props = {
   /** Null while loading. */

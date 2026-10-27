@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Shot } from './gameReducer'
+import type { Shot } from '../state/gameReducer'
 import { consecutiveHits } from './streak'
 
 const shot = (by: string, result: 'hit' | 'miss', auto = false): Shot => ({

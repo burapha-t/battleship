@@ -2,7 +2,7 @@
 // RandomPlacement. Same rules, same messages. The server re-checks every
 // placement, so this is a convenience for the player, never a trust boundary.
 
-import type { Cell } from './protocol'
+import type { Cell } from '../protocol'
 
 export const GRID_SIZE = 8
 export const SHIP_LENGTH = 4

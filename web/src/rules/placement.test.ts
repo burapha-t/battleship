@@ -2,7 +2,7 @@
 // so the UI and the server agree on every rule and every message.
 
 import { describe, expect, it } from 'vitest'
-import type { Cell } from './protocol'
+import type { Cell } from '../protocol'
 import { SHIP_LENGTH, randomPlacement, validatePlacement } from './placement'
 
 // Four cells starting at (row, col), going right or down.

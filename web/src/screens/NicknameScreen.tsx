@@ -1,10 +1,10 @@
-import { useTranslation } from '../useTranslation'
-import { translator } from '../translations'
+import { useTranslation } from '../i18n/useTranslation'
+import { translator } from '../i18n/translations'
 import { useState } from 'react'
-import { localizeError } from '../localizeMessage'
+import { localizeError } from '../i18n/localizeMessage'
 import type { FormEvent } from 'react'
 import { Hero } from '../components/Hero'
-import type { GameState } from '../gameReducer'
+import type { GameState } from '../state/gameReducer'
 import './screens.css'
 
 const MAX_NICKNAME = 16

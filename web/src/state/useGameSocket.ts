@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { GameAction } from './gameReducer'
-import type { ClientVerb, ServerEvent } from './protocol'
+import type { ClientVerb, ServerEvent } from '../protocol'
 import { startReplay } from './replay'
 
 export type Link = 'connecting' | 'open' | 'closed'

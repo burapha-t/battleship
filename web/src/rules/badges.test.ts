@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { BADGES, GROUPS, groupProgress } from './badges'
-import { gameReducer, initialState } from './gameReducer'
-import type { GameState } from './gameReducer'
-import type { AchievementsView, BadgeUnlock, ServerEvent } from './protocol'
-import { badgeLabel, nextText, statText } from './screens/badgesText'
-import { parseServerEvent } from './useGameSocket'
+import { gameReducer, initialState } from '../state/gameReducer'
+import type { GameState } from '../state/gameReducer'
+import type { AchievementsView, BadgeUnlock, ServerEvent } from '../protocol'
+import { badgeLabel, nextText, statText } from '../i18n/badgesText'
+import { parseServerEvent } from '../state/useGameSocket'
 
 const lobby: GameState = { ...initialState, screen: 'lobby', myId: 'p1', myName: 'Alice' }
 const at = '2026-10-19T07:00:00Z'

@@ -1,7 +1,7 @@
-import { localizeMessage } from '../localizeMessage'
-import { useTranslation } from '../useTranslation'
+import { localizeMessage } from '../i18n/localizeMessage'
+import { useTranslation } from '../i18n/useTranslation'
 import { useState } from 'react'
-import type { GameState } from '../gameReducer'
+import type { GameState } from '../state/gameReducer'
 
 /** "Bob left the game" / "The server was reset", over any screen until dismissed. */
 export function Notice({ notice }: { notice: GameState['notice'] }) {

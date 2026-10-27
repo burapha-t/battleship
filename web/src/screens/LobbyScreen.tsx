@@ -1,7 +1,7 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 import { Avatar } from '../components/Avatar'
 import { Hero } from '../components/Hero'
-import type { GameState } from '../gameReducer'
+import type { GameState } from '../state/gameReducer'
 import type { LobbyStatus } from '../protocol'
 import './screens.css'
 

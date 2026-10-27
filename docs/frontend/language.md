@@ -6,7 +6,7 @@ resetting drafts, restarting timers, or changing game state/protocol messages.
 
 ## Add text to a screen
 
-1. Put both complete phrases in `web/src/translations.ts`, under the feature's
+1. Put both complete phrases in `web/src/i18n/translations.ts`, under the feature's
    scope. Every entry is `[English, Thai]`; never leave one language empty.
 2. Import `useTranslation` and add one line in the component:
 

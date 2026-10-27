@@ -3,8 +3,8 @@
 // player, ?preview=badges-loading the load, and ?preview=badges-unlock the end
 // screen with the new-badge card. No server needed.
 
-import { initialState } from '../gameReducer'
-import type { GameState } from '../gameReducer'
+import { initialState } from '../state/gameReducer'
+import type { GameState } from '../state/gameReducer'
 import type { AchievementsView, BadgeUnlock } from '../protocol'
 import { BadgesScreen } from '../screens/BadgesScreen'
 import { EndScreen } from '../screens/EndScreen'

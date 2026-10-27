@@ -1,7 +1,7 @@
 // Shared catalogue adapter (#38) and wins formatting for leaderboard/PR #65.
 
-import type { Language } from '../settings'
-import { translator } from '../translations'
+import type { Language } from '../settings/settings'
+import { translator } from './translations'
 
 export const leaderboardText = (language: Language) => translator(language, 'leaderboard')
 

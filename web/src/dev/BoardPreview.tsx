@@ -1,11 +1,11 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 // Dev page at ?preview=board: every cell state from mock data, and a board
 // that reports the [row, col] of each click. No server needed.
 
 import { useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip, BoardShot } from '../components/Board'
-import { cellName } from '../placement'
+import { cellName } from '../rules/placement'
 import type { Cell } from '../protocol'
 import '../screens/screens.css'
 

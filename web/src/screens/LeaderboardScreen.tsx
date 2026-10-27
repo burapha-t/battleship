@@ -1,11 +1,11 @@
 import { Avatar } from '../components/Avatar'
 import { ScreenHead } from '../components/ScreenHead'
 import type { LeaderboardRow } from '../protocol'
-import { percent } from './historyText'
-import type { Language } from '../settings'
-import { wins } from './leaderboardText'
-import { useTranslation } from '../useTranslation'
-import './leaderboard.css'
+import { percent } from '../i18n/historyText'
+import type { Language } from '../settings/settings'
+import { wins } from '../i18n/leaderboardText'
+import { useTranslation } from '../i18n/useTranslation'
+import './LeaderboardScreen.css'
 
 const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
 

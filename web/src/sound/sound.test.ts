@@ -17,7 +17,7 @@ it('updates each audio channel independently and keeps music volume across scene
     }
   })
   const audio = await import('./sound')
-  const { updateSettings } = await import('./settings')
+  const { updateSettings } = await import('../settings/settings')
   updateSettings({ musicVolume: 50, effectsVolume: 100 })
   events.get('pointerdown')!()
   expect(gains[1].gain.value).toBeCloseTo(0.315)
@@ -47,7 +47,7 @@ it('defaults to 50% sliders at the same loudness as before', async () => {
     }
   })
   await import('./sound')
-  const { getSettings } = await import('./settings')
+  const { getSettings } = await import('../settings/settings')
   expect(getSettings()).toMatchObject({ musicVolume: 50, effectsVolume: 50 })
   events.get('pointerdown')!()
   expect(gains[1].gain.value).toBeCloseTo(0.315)

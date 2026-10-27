@@ -1,11 +1,11 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 // The "Hot streak ×N" badge and the levels card (#40, docs/frontend/7_hot_streak).
 // Started from feat/extra-features-ui's StreakNotification.tsx. The count
 // comes from my own `fireResult`s (streak.ts); the server sends nothing extra.
 
 import { useEffect, useState } from 'react'
-import type { Shot } from '../gameReducer'
-import { STREAK_MIN, consecutiveHits } from '../streak'
+import type { Shot } from '../state/gameReducer'
+import { STREAK_MIN, consecutiveHits } from '../rules/streak'
 
 /** How long the badge stays up after each hit of a streak. */
 export const STREAK_BADGE_MS = 2500

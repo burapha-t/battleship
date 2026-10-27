@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { GameState } from '../gameReducer'
-import { fieldsFor, initialOf, PASSWORD_MAX, USERNAME_MAX, validate } from '../login'
-import type { AuthField, AuthMode } from '../login'
-import { localizeError } from '../localizeMessage'
-import { translator } from '../translations'
-import { useTranslation } from '../useTranslation'
+import type { GameState } from '../state/gameReducer'
+import { fieldsFor, initialOf, PASSWORD_MAX, USERNAME_MAX, validate } from '../rules/login'
+import type { AuthField, AuthMode } from '../rules/login'
+import { localizeError } from '../i18n/localizeMessage'
+import { translator } from '../i18n/translations'
+import { useTranslation } from '../i18n/useTranslation'
 import './screens.css'
-import './login.css'
+import './LoginScreen.css'
 
 type Props = {
   /** False until `connected` arrives. */

@@ -1,10 +1,10 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 // The 8×8 grid shared by the placement and game screens. It draws what it is
 // given and reports clicks and hovers; it holds no game logic. Labels are
 // display only (A–H, 1–8); every callback uses the wire's 0-based [row, col].
 
 import type { CSSProperties } from 'react'
-import { GRID_SIZE, cellName, colName } from '../placement'
+import { GRID_SIZE, cellName, colName } from '../rules/placement'
 import type { Cell } from '../protocol'
 import './Board.css'
 

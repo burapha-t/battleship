@@ -1,6 +1,6 @@
 // #38: translate server error codes and existing stored messages at render time.
 // Game state and protocol frames retain their original values when language changes.
-import type { Language } from './settings'
+import type { Language } from '../settings/settings'
 import { translations, translator } from './translations'
 
 function parameters(template: string, message: string): Record<string, string> | null {

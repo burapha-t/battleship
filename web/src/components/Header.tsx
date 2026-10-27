@@ -1,7 +1,7 @@
-import { matchSides } from '../gameReducer'
-import type { GameState } from '../gameReducer'
+import { matchSides } from '../state/gameReducer'
+import type { GameState } from '../state/gameReducer'
 import type { ReactNode } from 'react'
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 import { Avatar } from './Avatar'
 
 /** The lobby's screens, opened from icon buttons in the header. Off while I'm searching for a match. */

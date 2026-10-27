@@ -1,7 +1,7 @@
 // Achievement notification (#41): server-approved badges for the current match.
 import type { BadgeUnlock } from '../protocol'
-import { useSettings } from '../useSettings'
-import { badgeLabel, badgesText } from '../screens/badgesText'
+import { useSettings } from '../settings/useSettings'
+import { badgeLabel, badgesText } from '../i18n/badgesText'
 import { Medal } from './Medal'
 import './UnlockCard.css'
 export function UnlockCard({ badges }: { badges: BadgeUnlock[] }) {

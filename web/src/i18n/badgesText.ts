@@ -1,7 +1,7 @@
 // English and Thai text for the badges screen and the end screen's unlock card
 // (#41). The screen passes in the language from the device settings (#43).
 
-import type { BadgeGroup, GroupProgress } from '../badges'
+import type { BadgeGroup, GroupProgress } from '../rules/badges'
 import { percent } from './historyText'
 import type { Language } from './historyText'
 
