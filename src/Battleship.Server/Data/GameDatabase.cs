@@ -567,7 +567,7 @@ public sealed class GameDatabase
     /// <summary>
     /// The longest run of hits in a row among one player's shots, in turn order.
     /// A miss or a timeout auto-shot, even one that hits, breaks the run, as in
-    /// the in-game streak (web/src/streak.ts).
+    /// the in-game streak (web/src/rules/streak.ts).
     /// </summary>
     private static int BestStreak(IEnumerable<ShotRecord> shots)
     {

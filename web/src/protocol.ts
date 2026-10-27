@@ -57,7 +57,7 @@ export type AchievementsView = { wins: number; bestAccuracy: number; bestStreak:
 
 /**
  * My profile (#42). `guest`: not logged in, so I can't save. `avatar` is ''
- * for none or a code from screens/profileText.ts; `shownBadges` 0–3 codes in
+ * for none or a code from i18n/profileText.ts; `shownBadges` 0–3 codes in
  * my order; `rank` my leaderboard place, null with no saved match.
  */
 export type ProfileView = { guest: boolean; avatar: string; shownBadges: string[]; rank: number | null; wins: number }
