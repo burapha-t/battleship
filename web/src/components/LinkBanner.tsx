@@ -1,5 +1,5 @@
-import { useTranslation } from '../useTranslation'
-import type { Link } from '../useGameSocket'
+import { useTranslation } from '../i18n/useTranslation'
+import type { Link } from '../state/useGameSocket'
 
 /**
  * *Connecting…* until the socket is open and `connected` has arrived;

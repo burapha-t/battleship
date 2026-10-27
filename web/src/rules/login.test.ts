@@ -1,15 +1,15 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App from '../App'
 import { fieldsFor, initialOf, PASSWORD_MAX, PASSWORD_MIN, USERNAME_MAX, validate } from './login'
-import { LoginScreen } from './screens/LoginScreen'
-import { NicknameScreen } from './screens/NicknameScreen'
+import { LoginScreen } from '../screens/LoginScreen'
+import { NicknameScreen } from '../screens/NicknameScreen'
 
 // The settings store has no server snapshot, so markup renders in English here.
-vi.mock('./useSettings', () => ({ useSettings: () => ({ language: 'en', musicVolume: 50, effectsVolume: 50 }) }))
+vi.mock('../settings/useSettings', () => ({ useSettings: () => ({ language: 'en', musicVolume: 50, effectsVolume: 50 }) }))
 // App reads the page's address for ?replay=; there is no page or socket here.
-vi.mock('./useGameSocket', () => ({ useGameSocket: () => ({ send: () => {}, link: 'connecting' }) }))
+vi.mock('../state/useGameSocket', () => ({ useGameSocket: () => ({ send: () => {}, link: 'connecting' }) }))
 
 describe('login and sign-up rules (#47)', () => {
   it('matches the server: usernames 1–16, passwords 4–16', () => {

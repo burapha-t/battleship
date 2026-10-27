@@ -1,4 +1,4 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 /** The big title and ship drawing on the nickname and lobby screens. */
 export function Hero() {
   const { t } = useTranslation('game')

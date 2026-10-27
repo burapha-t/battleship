@@ -1,7 +1,7 @@
-import { localizeError } from '../localizeMessage'
-import { useTranslation } from '../useTranslation'
+import { localizeError } from '../i18n/localizeMessage'
+import { useTranslation } from '../i18n/useTranslation'
 import { useEffect, useState } from 'react'
-import type { GameState } from '../gameReducer'
+import type { GameState } from '../state/gameReducer'
 
 const SHOW_MS = 4000
 

@@ -2,10 +2,10 @@
 // transcript instead of opening a socket, so the UI can be built and checked
 // with no server running.
 
-import transcript from '../../tests/fixtures/match-transcript.jsonl?raw'
+import transcript from '../../../tests/fixtures/match-transcript.jsonl?raw'
 import { END_DELAY_MS } from './endDelay'
 import type { GameAction } from './gameReducer'
-import type { ClientVerb, ServerEvent } from './protocol'
+import type { ClientVerb, ServerEvent } from '../protocol'
 
 const DELAY_MS = 350
 /** How long the end screen shows before the transcript's rematch. */

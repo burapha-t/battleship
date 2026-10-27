@@ -1,11 +1,11 @@
 import { Avatar } from '../components/Avatar'
 import { ScreenHead } from '../components/ScreenHead'
-import type { HistoryView } from '../gameReducer'
+import type { HistoryView } from '../state/gameReducer'
 import type { HistoryMatch } from '../protocol'
-import { localTime, percent } from './historyText'
-import type { Language } from '../settings'
-import { useTranslation } from '../useTranslation'
-import './history.css'
+import { localTime, percent } from '../i18n/historyText'
+import type { Language } from '../settings/settings'
+import { useTranslation } from '../i18n/useTranslation'
+import './HistoryScreen.css'
 
 const OPPONENT_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)', 'var(--sea)']
 

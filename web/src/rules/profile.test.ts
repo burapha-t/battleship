@@ -1,16 +1,16 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { gameReducer, initialState } from './gameReducer'
-import type { GameState } from './gameReducer'
+import { gameReducer, initialState } from '../state/gameReducer'
+import type { GameState } from '../state/gameReducer'
 import { MAX_SHOWN, profileDirty, toggleBadge } from './profile'
-import type { AchievementsView, ProfileView, ServerEvent } from './protocol'
-import { ProfileScreen } from './screens/ProfileScreen'
-import { bestText, chosenText, rankLine } from './screens/profileText'
-import { parseServerEvent } from './useGameSocket'
+import type { AchievementsView, ProfileView, ServerEvent } from '../protocol'
+import { ProfileScreen } from '../screens/ProfileScreen'
+import { bestText, chosenText, rankLine } from '../i18n/profileText'
+import { parseServerEvent } from '../state/useGameSocket'
 
 // The settings store has no server snapshot, so markup renders in English here.
-vi.mock('./useSettings', () => ({ useSettings: () => ({ language: 'en', musicVolume: 50, effectsVolume: 50 }) }))
+vi.mock('../settings/useSettings', () => ({ useSettings: () => ({ language: 'en', musicVolume: 50, effectsVolume: 50 }) }))
 
 const lobby: GameState = { ...initialState, screen: 'lobby', myId: 'p1', myName: 'Alice' }
 const at = '2026-10-19T07:00:00Z'

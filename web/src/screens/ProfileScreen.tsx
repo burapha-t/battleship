@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { BADGES, GROUPS } from '../badges'
+import { BADGES, GROUPS } from '../rules/badges'
 import { Avatar } from '../components/Avatar'
 import { Medal } from '../components/Medal'
 import { ScreenHead } from '../components/ScreenHead'
 import { SeaAvatar } from '../components/SeaAvatar'
-import { MAX_SHOWN, profileDirty, toggleBadge } from '../profile'
+import { MAX_SHOWN, profileDirty, toggleBadge } from '../rules/profile'
 import type { AchievementsView, ProfileView } from '../protocol'
-import { useSettings } from '../useSettings'
-import { badgeLabel, badgesText } from './badgesText'
-import type { Language } from './historyText'
-import { AVATARS, bestText, chosenText, profileText, rankLine } from './profileText'
-import './profile.css'
+import { useSettings } from '../settings/useSettings'
+import { badgeLabel, badgesText } from '../i18n/badgesText'
+import type { Language } from '../i18n/historyText'
+import { AVATARS, bestText, chosenText, profileText, rankLine } from '../i18n/profileText'
+import './ProfileScreen.css'
 
 type Props = {
   /** Null while loading. */

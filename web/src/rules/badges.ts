@@ -2,7 +2,7 @@
 // The server decides who earns what (Achievements in Battleship.Core); the UI
 // only draws it. Text lives in screens/badgesText.ts.
 
-import type { AchievementsView } from './protocol'
+import type { AchievementsView } from '../protocol'
 
 export type BadgeGroup = 'wins' | 'accuracy' | 'streak'
 

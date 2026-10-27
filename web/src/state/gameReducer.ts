@@ -4,8 +4,8 @@
 // paging and closing the match history screen, opening and closing the
 // leaderboard and the badges screen, and opening, saving and closing the profile.
 
-import { PROTOCOL_VERSION, assertNever } from './protocol'
-import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ProfileView, ServerEvent } from './protocol'
+import { PROTOCOL_VERSION, assertNever } from '../protocol'
+import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ProfileView, ServerEvent } from '../protocol'
 
 export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'badges' | 'profile' | 'placement' | 'game' | 'end'
 

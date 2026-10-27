@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { gameReducer, initialState, matchSides } from './gameReducer'
 import type { GameAction, GameState } from './gameReducer'
-import type { HistoryMatch, ServerEvent } from './protocol'
+import type { HistoryMatch, ServerEvent } from '../protocol'
 import { replayActions } from './replay'
 import { parseServerEvent } from './useGameSocket'
 

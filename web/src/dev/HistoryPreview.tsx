@@ -3,7 +3,7 @@
 // new player, ?preview=history-loading the first load. No server needed.
 
 import { useState } from 'react'
-import type { HistoryView } from '../gameReducer'
+import type { HistoryView } from '../state/gameReducer'
 import type { HistoryMatch } from '../protocol'
 import { HistoryScreen } from '../screens/HistoryScreen'
 

@@ -1,7 +1,7 @@
 // English and Thai text for the profile screen (#42). The screen passes in the
 // language from the device settings (#43). Badge names are in badgesText.ts.
 
-import type { BadgeGroup } from '../badges'
+import type { BadgeGroup } from '../rules/badges'
 import type { AchievementsView } from '../protocol'
 import { percent } from './historyText'
 import type { Language } from './historyText'

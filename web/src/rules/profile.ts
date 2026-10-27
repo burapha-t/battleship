@@ -2,7 +2,7 @@
 // on `profileUpdate`; these only keep the screen from offering what it would refuse.
 
 import { BADGES } from './badges'
-import type { ProfileView } from './protocol'
+import type { ProfileView } from '../protocol'
 
 /** Badges shown at most. */
 export const MAX_SHOWN = 3

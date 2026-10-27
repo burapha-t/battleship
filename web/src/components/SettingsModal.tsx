@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import { getSettings, updateSettings } from '../settings'
-import { useTranslation } from '../useTranslation'
+import { getSettings, updateSettings } from '../settings/settings'
+import { useTranslation } from '../i18n/useTranslation'
 import './SettingsModal.css'
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {

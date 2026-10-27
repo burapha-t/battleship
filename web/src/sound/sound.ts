@@ -1,13 +1,13 @@
 // Background music and sound effects, played from the clips in
 // assets/sounds through the Web Audio API. Device volumes come from #43.
-import { getSettings, subscribeSettings } from './settings'
-import hitUrl from './assets/sounds/hit.mp3'
-import loseUrl from './assets/sounds/lose.mp3'
-import missUrl from './assets/sounds/miss.mp3'
-import musicUrl from './assets/sounds/music.mp3'
-import streakUrl from './assets/sounds/streak.mp3'
-import sunkUrl from './assets/sounds/sunk.mp3'
-import winUrl from './assets/sounds/win.mp3'
+import { getSettings, subscribeSettings } from '../settings/settings'
+import hitUrl from '../assets/sounds/hit.mp3'
+import loseUrl from '../assets/sounds/lose.mp3'
+import missUrl from '../assets/sounds/miss.mp3'
+import musicUrl from '../assets/sounds/music.mp3'
+import streakUrl from '../assets/sounds/streak.mp3'
+import sunkUrl from '../assets/sounds/sunk.mp3'
+import winUrl from '../assets/sounds/win.mp3'
 
 export type Sound = 'hit' | 'miss' | 'sunk' | 'streak' | 'win' | 'lose'
 

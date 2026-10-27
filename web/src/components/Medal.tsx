@@ -1,6 +1,6 @@
 // Achievements (#41): the same medal on the badges screen, the unlock card and
 // the profile (#42), where `chosen` rings it and ticks it.
-import { BADGES } from '../badges'
+import { BADGES } from '../rules/badges'
 import './Medal.css'
 const ICONS = {
   wins: (<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4h10v4.5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5c0 2.4 1.2 4 3.2 4.2M17 6h2.5c0 2.4-1.2 4-3.2 4.2M12 13.5V17M8 20.5h8"/></svg>),

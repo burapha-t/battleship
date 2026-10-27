@@ -1,4 +1,4 @@
-import { useTranslation } from '../useTranslation'
+import { useTranslation } from '../i18n/useTranslation'
 import { useEffect, useState } from 'react'
 
 /**

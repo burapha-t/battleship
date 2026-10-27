@@ -1,6 +1,6 @@
 // Shared English/Thai catalogue (#38). Settings is the only language selector.
 // Profile/badge phrases are prepared from PR #65; that feature is not merged here.
-import type { Language } from './settings'
+import type { Language } from '../settings/settings'
 
 export const translations = {
   game: {

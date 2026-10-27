@@ -1,7 +1,7 @@
 // Hit streaks (#40), counted on the web from `fireResult`; the server knows
 // nothing about them. Started from feat/extra-features-ui's streak.ts.
 
-import type { Shot } from './gameReducer'
+import type { Shot } from '../state/gameReducer'
 
 /** Hits in a row before the badge, the streak sound and the ×2 level. */
 export const STREAK_MIN = 2

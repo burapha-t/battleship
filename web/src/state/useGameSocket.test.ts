@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ClientVerb } from './protocol'
+import type { ClientVerb } from '../protocol'
 import { useGameSocket } from './useGameSocket'
 
 /** The hook's `send`, from one server render; effects don't run, so no socket opens. */

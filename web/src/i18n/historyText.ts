@@ -1,9 +1,9 @@
 // Shared catalogue adapter (#38) and date/percentage formatting for history.
 // Keep historyText/Language compatible with the pending profile/badges PR #65.
 
-import type { Language } from '../settings'
-import { translator } from '../translations'
-export type { Language } from '../settings'
+import type { Language } from '../settings/settings'
+import { translator } from './translations'
+export type { Language } from '../settings/settings'
 
 export const historyText = (language: Language) => translator(language, 'history')
 
