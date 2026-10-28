@@ -552,6 +552,29 @@ player is searching. Sending it again while `SEARCHING` is idempotent — ignore
 not an error. There is no cancel in v1: a searching player stays searching until
 paired or disconnected.
 
+Optional `matchKey` selects a private matchmaking queue. It must be exactly 32
+hexadecimal characters; invalid values return `invalid-input`. Missing or null
+uses the normal public queue. Only players with identical keys are paired, in
+arrival order; private players never consume public searchers. Keys are not
+included in lobby or match events. A repeated search does not change its key.
+Disconnect and RESET remove pending keys. This is pairing isolation, not account
+authentication. Both server and client must include this extension for UI Ghost
+Fleet play.
+
+```json
+{"type":"findMatch","matchKey":"0123456789abcdef0123456789abcdef"}
+```
+
+The browser can send the **local relay-only** command `{"type":"playGhost"}`
+over `/ws`. It is not a TCP verb. From an idle joined session, the C# client
+launches one bundled Python bot with a fresh private key, waits up to eight
+seconds for it to join, then sends `findMatch` with that key on the player's
+existing TCP connection. Startup failure sends an ordinary `error` (`unknown`)
+to the browser and leaves the player idle. Duplicate launch requests are ignored.
+The client stops its bot on Home, RESET, opponent departure or socket closure;
+rematches reuse it. Python 3.9+ is required on the client host. Unexpected bot
+failure closes the player's connection to avoid leaving a private search stuck.
+
 ### `place`
 
 ```json

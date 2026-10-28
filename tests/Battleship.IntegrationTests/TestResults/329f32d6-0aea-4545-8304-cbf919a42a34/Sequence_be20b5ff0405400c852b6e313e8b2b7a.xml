@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<TestSequence>
+  <Test Name="Battleship.IntegrationTests.AuthTests.RegistrationRejectsDuplicatesAndInvalidInput_AndLoginLocksOut" DisplayName="Battleship.IntegrationTests.AuthTests.RegistrationRejectsDuplicatesAndInvalidInput_AndLoginLocksOut" Source="/Users/siprapapuprasert/battleship/tests/Battleship.IntegrationTests/bin/Debug/net8.0/Battleship.IntegrationTests.dll" Completed="False" />
+</TestSequence>

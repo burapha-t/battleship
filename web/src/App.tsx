@@ -7,7 +7,7 @@ import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './state/endDelay'
 import { gameReducer, initialState } from './state/gameReducer'
 import type { BadgesAction, GameState, HistoryAction, LeaderboardAction, ProfileAction } from './state/gameReducer'
-import type { Cell, ClientVerb, LobbyClient } from './protocol'
+import type { Cell, ClientCommand as ClientVerb, LobbyClient } from './protocol'
 import { BadgesScreen } from './screens/BadgesScreen'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
@@ -29,13 +29,18 @@ export default function App() {
   useEffect(() => { document.documentElement.lang = language }, [language])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
-  const { send, link } = useGameSocket(dispatch)
+  const [ghostLaunching, setGhostLaunching] = useState(false)
+  const { send, link } = useGameSocket((event) => {
+    if (['matchStart', 'error', 'reset', 'opponentLeft'].includes(event.type)) setGhostLaunching(false)
+    dispatch(event)
+  })
   const screen = useEndDelay(state.screen)
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
   const myStatus = state.lobby.find((c) => c.id === state.myId)?.status
-  const searching = myStatus === 'searching' || pressedAt === state.lobby
+  const ghostStarting = ghostLaunching && screen === 'lobby'
+  const searching = ghostStarting || myStatus === 'searching' || pressedAt === state.lobby
 
   const openHistory = () => {
     dispatch({ type: 'openHistory' })
@@ -83,7 +88,10 @@ export default function App() {
           <p>{localizeMessage(state.fatal, language)}</p>
         </main>
       ) : (
-        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open} searching={searching} startGame={() => {
+        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open} searching={searching} ghostStarting={ghostStarting} startGhost={() => {
+          setGhostLaunching(true)
+          send({ type: 'playGhost' })
+        }} startGame={() => {
           setPressedAt(state.lobby)
           send({ type: 'findMatch' })
         }} placeShips={(ships) => {
@@ -110,11 +118,13 @@ type ScreenProps = {
   open: { history: () => void; leaderboard: () => void; badges: () => void; profile: () => void }
   searching: boolean
   startGame: () => void
+  startGhost: () => void
+  ghostStarting: boolean
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
 
-function Screen({ state, send, dispatch, open, searching, startGame, placeShips, goHome }: ScreenProps) {
+function Screen({ state, send, dispatch, open, searching, startGame, startGhost, ghostStarting, placeShips, goHome }: ScreenProps) {
   // The login card comes first; "Play as guest" swaps in the nickname card.
   const [guest, setGuest] = useState(false)
   const loadMore = () => {
@@ -143,7 +153,7 @@ function Screen({ state, send, dispatch, open, searching, startGame, placeShips,
       )
     case 'lobby':
       return (
-        <LobbyScreen state={state} searching={searching} onStartGame={startGame} />
+        <LobbyScreen state={state} searching={searching} onStartGame={startGame} onStartGhost={startGhost} ghostStarting={ghostStarting} />
       )
     case 'history':
       return (

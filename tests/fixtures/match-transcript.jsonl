@@ -283,11 +283,11 @@
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"idle"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
-{"from":"p2","to":"server","frame":{"type":"findMatch"}}
+{"from":"p2","to":"server","frame":{"type":"findMatch","matchKey":"0123456789abcdef0123456789abcdef"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p2","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
 {"from":"server","to":"p3","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"idle"},{"id":"p2","name":"Bob","status":"searching"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}
-{"from":"p1","to":"server","frame":{"type":"findMatch"}}
+{"from":"p1","to":"server","frame":{"type":"findMatch","matchKey":"0123456789abcdef0123456789abcdef"}}
 {"from":"server","to":"p1","frame":{"type":"matchStart","matchId":"m3","players":[{"id":"p2","name":"Bob","score":0},{"id":"p1","name":"Alice","score":0}],"firstPlayerId":"p1"}}
 {"from":"server","to":"p2","frame":{"type":"matchStart","matchId":"m3","players":[{"id":"p2","name":"Bob","score":0},{"id":"p1","name":"Alice","score":0}],"firstPlayerId":"p1"}}
 {"from":"server","to":"p1","frame":{"type":"lobby","count":3,"clients":[{"id":"p1","name":"Alice","status":"placing"},{"id":"p2","name":"Bob","status":"placing"},{"id":"p3","name":"Alice (2)","status":"idle"}]}}

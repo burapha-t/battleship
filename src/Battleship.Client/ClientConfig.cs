@@ -10,6 +10,9 @@ public sealed class ClientConfig
 {
     public string ServerHost { get; set; } = "127.0.0.1";
     public int ServerPort { get; set; } = 5050;
+    /// <summary>Optional Python executable for the bundled Ghost Fleet bot.</summary>
+    public string? PythonExecutable { get; set; }
+
     public int WebPort { get; set; } = 3000;
 
     /// <summary>

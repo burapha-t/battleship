@@ -1,0 +1,71 @@
+import json
+import socket
+import threading
+import unittest
+from unittest.mock import Mock
+from bot.main import GhostFleetBot
+from bot.protocol_client import JsonLineClient
+
+
+class ClientTests(unittest.TestCase):
+    def bot(self):
+        bot = GhostFleetBot()
+        bot.client = Mock()
+        bot.on_message({'type': 'connected', 'id': 'ghost', 'protocolVersion': 1})
+        bot.on_message({'type': 'welcome', 'nickname': 'Ghost Fleet'})
+        bot.on_message({'type': 'matchStart'})
+        bot.engine.budget_seconds = 0
+        return bot
+
+    def test_lifecycle_and_duplicate_turns(self):
+        bot = self.bot()
+        self.assertEqual([c.args[0]['type'] for c in bot.client.send.call_args_list], ['join', 'findMatch', 'place'])
+        event = {'type': 'turn', 'turnNumber': 1, 'activePlayerId': 'ghost'}
+        bot.on_message(event)
+        count = bot.client.send.call_count
+        bot.on_message(event)
+        self.assertEqual(bot.client.send.call_count, count)
+        bot.on_message({'type': 'matchEnd'})
+        bot.on_message({'type': 'matchEnd'})
+        self.assertEqual(bot.client.send.call_count, count + 1)
+        bot.on_message({'type': 'matchStart'})
+        self.assertFalse(bot.engine.knowledge.attempted)
+        for kind in ('reset', 'opponentLeft'):
+            bot.on_message({'type': kind})
+            self.assertIsNone(bot.engine)
+            bot.client.send.assert_called_with({'type': 'findMatch'})
+
+    def test_only_own_public_results_enter_engine(self):
+        bot = self.bot()
+        msg = {'type': 'fireResult', 'by': 'human', 'row': 0, 'col': 0, 'result': 'hit', 'ships': 'hidden'}
+        bot.on_message(msg)
+        self.assertFalse(bot.engine.knowledge.hits)
+        bot.on_message(dict(msg, by='ghost', auto=True))
+        self.assertEqual(bot.engine.knowledge.hits, {(0, 0)})
+        self.assertEqual(bot.engine.knowledge.attempted, {(0, 0)})
+        self.assertFalse(hasattr(bot.engine, 'ships'))
+        bot.on_message({'type': 'unknown', 'ships': 'hidden'})
+
+    def test_version_rejected(self):
+        with self.assertRaises(RuntimeError):
+            self.bot().on_message({'type': 'connected', 'protocolVersion': 2})
+
+    def test_fragmented_utf8_malformed_and_eof(self):
+        left, right = socket.socketpair()
+        client = JsonLineClient('unused')
+        client.sock = left
+        received = []
+        payload = (json.dumps({'type': 'welcome', 'nickname': 'ผี'}, ensure_ascii=False) + '\n').encode()
+        def sender():
+            with right:
+                for byte in payload:
+                    right.sendall(bytes([byte]))
+                right.sendall(b'not json\n[]\n{"type":"reset"}\n{"type":"partial"}')
+        thread = threading.Thread(target=sender)
+        thread.start()
+        try:
+            client.run(received.append)
+        finally:
+            client.close()
+            thread.join()
+        self.assertEqual(received, [{'type': 'welcome', 'nickname': 'ผี'}, {'type': 'reset'}])

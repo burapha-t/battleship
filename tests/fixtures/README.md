@@ -29,7 +29,8 @@ To replay one player's view, keep the lines where `to` is that player.
 
 Cast: `p1` Alice, a guest; `p2` Bob, who signs up for an account; and `p3`, a
 guest who asks for "Alice" and is welcomed as "Alice (2)". `p3` stays idle in
-the lobby throughout.
+the lobby throughout. The later pairing uses matching private `matchKey` values;
+the initial pairing remains public.
 
 1. **Lobby.** All three connect. Alice joins. Bob's first nickname (`"   "`) gets
    `bad-nickname`; his `signup` with a 3-character password gets `invalid-input`;

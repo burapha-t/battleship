@@ -871,3 +871,5 @@
     justify-content: center;
   }
 }
+
+.ghost-start { margin-top: 12px; white-space: normal; }

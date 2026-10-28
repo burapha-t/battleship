@@ -44,6 +44,9 @@ namespace Battleship.Core.Protocol
     public sealed class FindMatch : ProtocolMessage
     {
         public FindMatch() : base("findMatch") { }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? MatchKey { get; set; }
     }
 
     /// <summary><c>place</c>: the player's 4 ships, each 4 cells.</summary>

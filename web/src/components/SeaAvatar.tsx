@@ -1,5 +1,20 @@
 // Profile (#42): the sea creatures from docs/frontend/9_profile.html.
 const CREATURES = {
+  // Ghost Fleet's mascot uses the same palette and outlines as profile creatures.
+  ghost: (
+    <svg viewBox="0 0 64 64" aria-hidden="true" stroke="#14325A" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round">
+      <ellipse cx="32" cy="56" rx="17" ry="4" fill="#A98BFF" opacity="0.35" stroke="none" />
+      <path d="M14 49V29c0-12 7-20 18-20s18 8 18 20v20l-7-5-6 7-5-6-6 6-6-7z" fill="#fff" />
+      <path d="M44 23c2 8 0 15-3 19l2 2 7 5V29c0-8-3-14-8-17" fill="#E6F1FB" stroke="none" />
+      <path d="M14 49V29c0-12 7-20 18-20s18 8 18 20v20l-7-5-6 7-5-6-6 6-6-7z" fill="none" />
+      <ellipse cx="25" cy="29" rx="3" ry="4" fill="#14325A" stroke="none" />
+      <ellipse cx="39" cy="29" rx="3" ry="4" fill="#14325A" stroke="none" />
+      <circle cx="21" cy="35" r="3" fill="#FFA7B7" stroke="none" />
+      <circle cx="43" cy="35" r="3" fill="#FFA7B7" stroke="none" />
+      <path d="M28 36q4 5 8 0" fill="none" strokeWidth="2.5" />
+      <path d="M8 16v6m-3-3h6M55 35v6m-3-3h6" fill="none" stroke="#A98BFF" strokeWidth="2.5" />
+    </svg>
+  ),
   whale: (<svg viewBox="0 0 64 64" aria-hidden="true" stroke="#14325A" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"><path d="M31 15c0-4-3-6-3-8M31 15c0-4 3-6 3-8" fill="none"/><path d="M8 38c0-11 10-19 23-19 13 0 21 7 21 16 0 9-8 15-20 15H18c-6 0-10-5-10-12z" fill="#2F8FE0"/><path d="M51 35c5-1 8-6 8-12-4 1-8 4-9 8" fill="#2F8FE0"/><path d="M13 44c7 3 18 3 27 0" fill="none"/><circle cx="22" cy="32" r="4.800000000000001" fill="#fff"/><circle cx="22.8" cy="32" r="2.4000000000000004" fill="#14325A" stroke="none"/><path d="M17 38c2 2 5 2 7 0" fill="none"/></svg>),
   octopus: (<svg viewBox="0 0 64 64" aria-hidden="true" stroke="#14325A" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"><path d="M19 40c-2 6-8 8-9 14" fill="none" stroke="#14325A" strokeWidth="10"/><path d="M19 40c-2 6-8 8-9 14" fill="none" stroke="#A98BFF" strokeWidth="4.5"/><path d="M28 42c0 6-3 9-2 15" fill="none" stroke="#14325A" strokeWidth="10"/><path d="M28 42c0 6-3 9-2 15" fill="none" stroke="#A98BFF" strokeWidth="4.5"/><path d="M36 42c0 6 3 9 2 15" fill="none" stroke="#14325A" strokeWidth="10"/><path d="M36 42c0 6 3 9 2 15" fill="none" stroke="#A98BFF" strokeWidth="4.5"/><path d="M45 40c2 6 8 8 9 14" fill="none" stroke="#14325A" strokeWidth="10"/><path d="M45 40c2 6 8 8 9 14" fill="none" stroke="#A98BFF" strokeWidth="4.5"/><path d="M13 40c0-15 8-25 19-25s19 10 19 25z" fill="#A98BFF"/><circle cx="25" cy="30" r="4.800000000000001" fill="#fff"/><circle cx="25.8" cy="30" r="2.4000000000000004" fill="#14325A" stroke="none"/><circle cx="39" cy="30" r="4.800000000000001" fill="#fff"/><circle cx="39.8" cy="30" r="2.4000000000000004" fill="#14325A" stroke="none"/><path d="M28 36c2 2 6 2 8 0" fill="none"/></svg>),
   crab: (<svg viewBox="0 0 64 64" aria-hidden="true" stroke="#14325A" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"><path d="M12 46l-6 4M14 51l-5 6M52 46l6 4M50 51l5 6M27 28l-2-8M37 28l2-8M20 33l-6-6M44 33l6-6" fill="none"/><path d="M8 20a7 7 0 1 1 12 3l-5-3z" fill="#FF4F5E"/><path d="M56 20a7 7 0 1 0-12 3l5-3z" fill="#FF4F5E"/><ellipse cx="32" cy="40" rx="18" ry="12" fill="#FF4F5E"/><circle cx="25" cy="18" r="4.800000000000001" fill="#fff"/><circle cx="25.8" cy="18" r="2.4000000000000004" fill="#14325A" stroke="none"/><circle cx="39" cy="18" r="4.800000000000001" fill="#fff"/><circle cx="39.8" cy="18" r="2.4000000000000004" fill="#14325A" stroke="none"/><path d="M27 42c3 3 7 3 10 0" fill="none"/></svg>),

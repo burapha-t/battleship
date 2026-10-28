@@ -190,4 +190,75 @@ public class ClientRelayTests
         Assert.False(ClientConfig.Load([]).Lan);
         Assert.True(ClientConfig.Load(["--lan"]).Lan);
     }
+    private static async Task<T> WaitForBrowserAsync<T>(WebSocket browser) where T : ProtocolMessage
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            var frame = await ReceiveAsync(browser);
+            Assert.NotNull(frame);
+            var message = ProtocolJson.Parse(frame!);
+            Assert.IsNotType<Error>(message);
+            if (message is T wanted) return wanted;
+        }
+        throw new InvalidOperationException("Expected browser event did not arrive.");
+    }
+
+    [Fact]
+    public async Task GhostButton_LaunchesPrivateOpponent_ResetAndDisconnectCleanUp()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var publicPlayer = await server.JoinAsync("Public player");
+        await publicPlayer.SendAsync(new FindMatch());
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        var id = (await WaitForBrowserAsync<Connected>(browser)).Id;
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Ghost player\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        var match = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(match.Players, p => p.Id == id);
+        Assert.Contains(match.Players, p => p.Name == "Ghost Fleet");
+        Assert.DoesNotContain(match.Players, p => p.Id == publicPlayer.Id);
+        await WaitForBrowserAsync<Placed>(browser);
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 3 && l.Clients.Any(p => p.Id == publicPlayer.Id && p.Status == "searching"));
+
+        (await server.Dashboard.PostAsync("/api/reset", null)).EnsureSuccessStatusCode();
+        await WaitForBrowserAsync<Reset>(browser);
+        // Wait until the old bot has actually disconnected before launching another.
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 2);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        await browser.CloseAsync(WebSocketCloseStatus.NormalClosure, "tab closed", CancellationToken.None);
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 1);
+    }
+
+    [Fact]
+    public async Task GhostButton_MissingPython_ReportsErrorAndKeepsPlayerIdle()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = WebHost.Build(new ClientConfig
+        {
+            ServerPort = server.Port, WebPort = FreePort(),
+            PythonExecutable = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing-python")
+        });
+        await client.StartAsync();
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        Error? error = null;
+        for (int i = 0; i < 10 && error == null; i++)
+            error = ProtocolJson.Parse((await ReceiveAsync(browser))!) as Error;
+        Assert.NotNull(error);
+        Assert.Contains("Python", error!.Message);
+        await using var bob = await server.JoinAsync("Bob");
+        await SendAsync(browser, "{\"type\":\"findMatch\"}");
+        await bob.SendAsync(new FindMatch());
+        var match = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(match.Players, p => p.Id == bob.Id);
+    }
+
 }

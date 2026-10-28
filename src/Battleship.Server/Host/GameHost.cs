@@ -138,8 +138,8 @@ public sealed class GameHost
             case Login login:
                 OnAccount(player, login.Username, login.Password, signUp: false);
                 break;
-            case FindMatch:
-                Send(_engine.FindMatch(playerId));
+            case FindMatch find:
+                Send(_engine.FindMatch(playerId, find.MatchKey));
                 break;
             case Place place:
                 Send(_engine.Place(playerId, place.Ships));

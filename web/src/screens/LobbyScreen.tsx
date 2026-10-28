@@ -20,9 +20,11 @@ type Props = {
   /** I'm waiting to be paired (App works it out, so the header's buttons can follow it too). */
   searching: boolean
   onStartGame: () => void
+  onStartGhost: () => void
+  ghostStarting: boolean
 }
 
-export function LobbyScreen({ state, searching, onStartGame }: Props) {
+export function LobbyScreen({ state, searching, onStartGame, onStartGhost, ghostStarting }: Props) {
   const { t } = useTranslation('game')
   return (
     <main className="home">
@@ -36,7 +38,10 @@ export function LobbyScreen({ state, searching, onStartGame }: Props) {
               : t('startHint')}
           </p>
           <button type="button" className="btn wide" disabled={searching} onClick={onStartGame}>
-            {searching ? t('searchingOpponent') : t('startGame')}
+            {searching && !ghostStarting ? t('searchingOpponent') : t('startGame')}
+          </button>
+          <button type="button" className="btn white wide ghost-start" disabled={searching} onClick={onStartGhost}>
+            {ghostStarting ? t('startingGhost') : t('playGhost')}
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

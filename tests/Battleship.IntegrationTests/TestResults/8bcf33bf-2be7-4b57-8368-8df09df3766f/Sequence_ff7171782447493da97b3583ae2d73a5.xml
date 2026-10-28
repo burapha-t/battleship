@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<TestSequence>
+  <Test Name="Battleship.IntegrationTests.AuthTests.RegisterLoginLogout_PersistsHashedPassword_AndRevokesSession" DisplayName="Battleship.IntegrationTests.AuthTests.RegisterLoginLogout_PersistsHashedPassword_AndRevokesSession" Source="/Users/siprapapuprasert/battleship/tests/Battleship.IntegrationTests/bin/Debug/net8.0/Battleship.IntegrationTests.dll" Completed="False" />
+</TestSequence>
