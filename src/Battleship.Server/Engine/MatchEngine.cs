@@ -66,6 +66,25 @@ public sealed class MatchEngine
         return StartMatch(first, second, firstPlayerId: null);
     }
 
+    /// <summary>
+    /// Removes a waiting player from matchmaking. If pairing already won the
+    /// race, the match remains authoritative and the cancellation is rejected.
+    /// </summary>
+    public IReadOnlyList<Outbound> CancelSearch(string playerId)
+    {
+        var player = _roster.Find(playerId);
+        if (player == null || !player.HasJoined)
+            return NotInMatch(playerId);
+        if (player.Status == LobbyStatus.Idle) return None;
+        if (player.Status != LobbyStatus.Searching)
+            return new[] { Outbound.Error(playerId, ErrorCodes.NotInMatch, "Matchmaking has already completed.") };
+
+        _searching.Remove(playerId);
+        _matchKeys.Remove(playerId);
+        player.Status = LobbyStatus.Idle;
+        return None;
+    }
+
     public IReadOnlyList<Outbound> Place(string playerId, IReadOnlyList<IReadOnlyList<Coord>> ships) =>
         MatchOf(playerId) is { } match ? Track(match, match.Place(playerId, ships)) : NotInMatch(playerId);
 

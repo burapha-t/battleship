@@ -64,6 +64,35 @@ public class MatchmakingTests
     }
 
     [Fact]
+    public void CancelSearch_RemovesPlayerAndReturnsThemIdle()
+    {
+        var setup = new EngineSetup();
+        var alice = setup.Join("p1", "Alice");
+        setup.Engine.FindMatch("p1", new string('a', 32));
+
+        Assert.Empty(setup.Engine.CancelSearch("p1"));
+
+        Assert.Equal(LobbyStatus.Idle, alice.Status);
+        Assert.Empty(setup.Engine.Searching);
+        setup.Join("p2", "Bob");
+        setup.Engine.FindMatch("p2", new string('a', 32));
+        Assert.Empty(setup.Engine.Matches);
+    }
+
+    [Fact]
+    public void CancelSearch_AfterPairingLosesRaceAndDoesNotDestroyMatch()
+    {
+        var setup = new EngineSetup();
+        setup.Pair();
+
+        var error = Assert.IsType<Error>(Assert.Single(setup.Engine.CancelSearch("p1")).Message);
+
+        Assert.Equal(ErrorCodes.NotInMatch, error.Code);
+        Assert.Single(setup.Engine.Matches);
+        Assert.All(setup.Engine.Matches.Single().Players, p => Assert.Equal(LobbyStatus.Placing, p.Status));
+    }
+
+    [Fact]
     public void FindMatch_MidMatch_GetsNotInMatch()
     {
         var setup = new EngineSetup();

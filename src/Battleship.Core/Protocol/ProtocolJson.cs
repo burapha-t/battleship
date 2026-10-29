@@ -25,6 +25,7 @@ namespace Battleship.Core.Protocol
             ["signup"] = typeof(Signup),
             ["login"] = typeof(Login),
             ["findMatch"] = typeof(FindMatch),
+            ["cancelSearch"] = typeof(CancelSearch),
             ["place"] = typeof(Place),
             ["fire"] = typeof(Fire),
             ["rematch"] = typeof(Rematch),

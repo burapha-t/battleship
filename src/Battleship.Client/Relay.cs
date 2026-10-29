@@ -103,6 +103,10 @@ public static class Relay
                 try
                 {
                     await ghost.StartAsync(config, key, cancellationToken);
+                    await state.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+                    {
+                        type = "ghostMode", active = true
+                    })), cancellationToken);
                     var command = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { type = "findMatch", matchKey = key }) + "\n");
                     await server.WriteAsync(command, cancellationToken);
                 }
@@ -116,6 +120,15 @@ public static class Relay
                         message = "Ghost Fleet could not start. Install Python 3.9 or newer on the client computer and try again."
                     })), cancellationToken);
                 }
+                continue;
+            }
+            if (type == "quitGhost")
+            {
+                message.SetLength(0);
+                // Killing the managed opponent closes its TCP session. The
+                // server then ends the unfinished match and returns the human
+                // to idle through the normal opponentLeft + lobby events.
+                state.StopGhost();
                 continue;
             }
             if (type == "leave") state.StopGhost();

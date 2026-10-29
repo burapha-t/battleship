@@ -141,6 +141,9 @@ public sealed class GameHost
             case FindMatch find:
                 Send(_engine.FindMatch(playerId, find.MatchKey));
                 break;
+            case CancelSearch:
+                Send(_engine.CancelSearch(playerId));
+                break;
             case Place place:
                 Send(_engine.Place(playerId, place.Ships));
                 break;

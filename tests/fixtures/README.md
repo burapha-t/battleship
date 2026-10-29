@@ -54,7 +54,7 @@ the initial pairing remains public.
    then Bob disconnects → `opponentLeft` to Alice, who ends idle in the lobby.
 
 Every message type except `leave` and all five lobby statuses appear.
-`achievementUnlocked` appears only as an example line (below). The `unknown` error
+`cancelSearch` and `achievementUnlocked` appear only as example lines (below). The `unknown` error
 code does not, and neither does `invalid-profile`, which needs a logged-in player
 to send a bad profile.
 

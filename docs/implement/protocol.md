@@ -73,7 +73,7 @@ either side.
 
 ### Message direction
 
-`C→S` client to server (13 verbs) · `S→C` server to client (17 events)
+`C→S` client to server (14 verbs) · `S→C` server to client (17 events)
 
 | Type | Dir | Sent when |
 |---|---|---|
@@ -84,6 +84,7 @@ either side.
 | `welcome` | S→C | Nickname accepted, or signed up or logged in |
 | `lobby` | S→C | Any client connects, names itself, changes state, or leaves |
 | `findMatch` | C→S | Player presses *Start game* in the lobby |
+| `cancelSearch` | C→S | A searching player returns to the idle lobby |
 | `matchStart` | S→C | Two searching players are paired, or both asked for a rematch |
 | `place` | C→S | Player finishes placing 4 ships |
 | `placed` | S→C | Placement accepted |
@@ -476,7 +477,7 @@ Errors never change client state — the client stays where it was.
 | `not-your-turn` | `fire` from the player who is not active |
 | `already-fired` | That cell was already targeted this match |
 | `out-of-range` | `row` or `col` outside `0..7` |
-| `not-in-match` | `findMatch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
+| `not-in-match` | `findMatch`, `cancelSearch`, `place`, `fire`, `rematch`, or `leave` sent in the wrong state |
 | `invalid-profile` | `profileUpdate` broke a rule under it — `message` says which. Nothing was saved |
 | `not-logged-in` | A guest sent `profileUpdate` |
 | `invalid-input` | `signup` or `login` broke a rule under `signup` (username 1–16, password 4–16) |
@@ -549,8 +550,7 @@ and `login` get `error` `unknown`. A server with no database answers both with
 Sent when the player presses *Start game*. Valid only in `IDLE`. The player's
 lobby status becomes `"searching"`, and the server pairs them as soon as a second
 player is searching. Sending it again while `SEARCHING` is idempotent — ignored,
-not an error. There is no cancel in v1: a searching player stays searching until
-paired or disconnected.
+not an error.
 
 Optional `matchKey` selects a private matchmaking queue. It must be exactly 32
 hexadecimal characters; invalid values return `invalid-input`. Missing or null
@@ -574,6 +574,25 @@ to the browser and leaves the player idle. Duplicate launch requests are ignored
 The client stops its bot on Home, RESET, opponent departure or socket closure;
 rematches reuse it. Python 3.9+ is required on the client host. Unexpected bot
 failure closes the player's connection to avoid leaving a private search stuck.
+
+The relay sends `{"type":"ghostMode","active":true}` only to its browser after
+the managed bot has joined and before it submits the private `findMatch`. This
+local event lets the UI show bot-only controls without inspecting nicknames. The
+browser's local `{"type":"quitGhost"}` command stops that managed process. Its
+TCP disconnect then ends the unfinished match through the normal authoritative
+`opponentLeft` and `lobby` events; unfinished matches are not archived.
+
+### `cancelSearch`
+
+```json
+{"type":"cancelSearch"}
+```
+
+Valid while `SEARCHING`. The server removes the player and any private match key
+from matchmaking, changes them to `IDLE`, and broadcasts the resulting `lobby`.
+From `IDLE` it is idempotent. If pairing wins the race first, the match remains
+authoritative and the command returns `not-in-match`; clients must follow the
+`matchStart` rather than locally pretending cancellation succeeded.
 
 ### `place`
 
@@ -771,6 +790,7 @@ export type ClientVerb =
   | { type: "signup"; username: string; password: string }
   | { type: "login"; username: string; password: string }
   | { type: "findMatch" }
+  | { type: "cancelSearch" }
   | { type: "place"; ships: Cell[][] }
   | { type: "fire"; row: number; col: number }
   | { type: "rematch" }
@@ -818,8 +838,6 @@ the team picks its extra features:
 - **Chat, spectators, rooms, replay.** All reachable by adding new `type` values
   under the ignore-unknown rules in section 1 — no re-freeze required.
 - **Placement time limit.** Only the 10-second turn timer is specified.
-- **Cancelling a search.** Once `findMatch` is sent the player stays searching.
-  A cancel verb can be added later under the ignore-unknown rules.
 - **Encryption.** Every frame, passwords included, crosses the LAN in clear text
   (raw TCP, no TLS). Acceptable for the classroom demo.
 - **Account management.** No log out, password change or reset, or account

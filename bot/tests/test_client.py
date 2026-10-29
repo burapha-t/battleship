@@ -2,7 +2,7 @@ import json
 import socket
 import threading
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, call, patch
 from bot.main import GhostFleetBot
 from bot.protocol_client import JsonLineClient
 
@@ -34,6 +34,18 @@ class ClientTests(unittest.TestCase):
             bot.on_message({'type': kind})
             self.assertIsNone(bot.engine)
             bot.client.send.assert_called_with({'type': 'findMatch'})
+
+    def test_omitted_seed_is_fresh_but_explicit_seed_stays_reproducible(self):
+        with patch('bot.main.secrets.randbits', side_effect=[111, 222]) as fresh:
+            first = GhostFleetBot()
+            second = GhostFleetBot()
+        self.assertEqual((first.seed, second.seed), (111, 222))
+        self.assertEqual(fresh.call_args_list, [call(64), call(64)])
+
+        a, b = GhostFleetBot(seed=42), GhostFleetBot(seed=42)
+        self.assertEqual(a.seed, 42)
+        self.assertEqual([a.rng.randrange(2**32) for _ in range(4)],
+                         [b.rng.randrange(2**32) for _ in range(4)])
 
     def test_only_own_public_results_enter_engine(self):
         bot = self.bot()

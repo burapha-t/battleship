@@ -2,17 +2,19 @@
 import argparse
 import logging
 import random
+import secrets
 
 from .engine import DecisionEngine, random_fleet
 from .protocol_client import JsonLineClient
 
 
 class GhostFleetBot:
-    def __init__(self, host='127.0.0.1', port=5050, nickname='Ghost Fleet', seed=42, match_key=None):
+    def __init__(self, host='127.0.0.1', port=5050, nickname='Ghost Fleet', seed=None, match_key=None):
         self.client = JsonLineClient(host, port)
         self.match_key = match_key
         self.nickname = nickname
-        self.rng = random.Random(seed)
+        self.seed = secrets.randbits(64) if seed is None else seed
+        self.rng = random.Random(self.seed)
         self.my_id = None
         self.engine = None
         self.last_turn = 0
@@ -79,7 +81,7 @@ def main():
     parser.add_argument('--server', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=5050)
     parser.add_argument('--nickname', default='Ghost Fleet')
-    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--seed', type=int, help='reproducible random seed (fresh seed when omitted)')
     parser.add_argument('--match-key', help=argparse.SUPPRESS)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format='[ghost] %(message)s')

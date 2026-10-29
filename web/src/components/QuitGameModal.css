@@ -1,0 +1,72 @@
+.quit-modal {
+  position: fixed !important;
+  inset: 0;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  overflow: auto;
+  padding: 28px 30px 30px;
+  color: var(--ink);
+  text-align: center;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 7px 7px 0 var(--ink);
+}
+
+.quit-modal::backdrop {
+  background: rgb(20 50 90 / 62%);
+  backdrop-filter: blur(2px);
+}
+
+.quit-modal h2 {
+  font-size: 36px;
+}
+
+.quit-modal p {
+  max-width: 360px;
+  margin: 10px auto 24px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.quit-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.quit-modal-actions .btn {
+  min-height: 52px;
+  padding-inline: 14px;
+  font-size: 19px;
+}
+
+.btn.quit-confirm {
+  color: white;
+  background: var(--coral);
+}
+
+.btn.quit-confirm:hover {
+  background: #e93e4c;
+}
+
+.quit-modal :focus-visible {
+  outline: 4px solid var(--sea);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .quit-modal {
+    padding: 24px 20px 26px;
+  }
+
+  .quit-modal h2 {
+    font-size: 32px;
+  }
+
+  .quit-modal-actions {
+    grid-template-columns: 1fr;
+  }
+}

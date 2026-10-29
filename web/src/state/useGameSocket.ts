@@ -4,13 +4,13 @@
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { GameAction } from './gameReducer'
-import type { ClientCommand as ClientVerb, ServerEvent } from '../protocol'
+import type { ClientCommand as ClientVerb, RelayEvent, ServerEvent } from '../protocol'
 import { startReplay } from './replay'
 
 export type Link = 'connecting' | 'open' | 'closed'
 
 // A Record so the build fails if protocol.ts gains an event this list lacks.
-const EVENT_TYPES: Record<ServerEvent['type'], true> = {
+const EVENT_TYPES: Record<(ServerEvent | RelayEvent)['type'], true> = {
   connected: true,
   welcome: true,
   lobby: true,
@@ -28,13 +28,14 @@ const EVENT_TYPES: Record<ServerEvent['type'], true> = {
   achievementUnlocked: true,
   profile: true,
   error: true,
+  ghostMode: true,
 }
 
 /**
  * One frame → a typed event, or null. Malformed JSON and unknown `type`s are
  * logged and skipped, never thrown (protocol §1); unknown fields pass through.
  */
-export function parseServerEvent(text: string): ServerEvent | null {
+export function parseServerEvent(text: string): ServerEvent | RelayEvent | null {
   let value: unknown
   try {
     value = JSON.parse(text)
@@ -47,7 +48,7 @@ export function parseServerEvent(text: string): ServerEvent | null {
     console.warn('Skipped a frame with an unknown type:', text)
     return null
   }
-  return value as ServerEvent
+  return value as ServerEvent | RelayEvent
 }
 
 /**

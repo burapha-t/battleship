@@ -106,6 +106,7 @@ export type ClientVerb =
   // Log in to an existing account; the reply is `welcome` or `error`.
   | { type: 'login'; username: string; password: string }
   | { type: 'findMatch'; matchKey?: string }
+  | { type: 'cancelSearch' }
   | { type: 'place'; ships: Cell[][] }
   | { type: 'fire'; row: number; col: number }
   | { type: 'rematch' }
@@ -135,5 +136,8 @@ export type ClientVerb =
  */
 export function assertNever(_value: never): void {}
 
-/** Local relay command; playGhost is never sent to the TCP server. */
-export type ClientCommand = ClientVerb | { type: 'playGhost' }
+/** Local relay events describe managed-process state; they never come from the server. */
+export type RelayEvent = { type: 'ghostMode'; active: boolean }
+
+/** Local relay commands are never sent to the TCP server. */
+export type ClientCommand = ClientVerb | { type: 'playGhost' } | { type: 'quitGhost' }

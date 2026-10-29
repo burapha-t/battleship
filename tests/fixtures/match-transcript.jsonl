@@ -246,6 +246,7 @@
 {"from":"server","to":"p2","frame":{"type":"fireResult","by":"p1","target":"p2","row":7,"col":7,"result":"hit","sunk":true,"sunkCells":[[4,7],[5,7],[6,7],[7,7]],"allSunk":true,"auto":false}}
 {"from":"server","to":"p1","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
 {"from":"server","to":"p2","frame":{"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[{"id":"p1","name":"Alice","score":1},{"id":"p2","name":"Bob","score":0}]}}
+{"example":true,"from":"p1","to":"server","frame":{"type":"cancelSearch"}}
 {"example":true,"from":"server","to":"p1","frame":{"type":"achievementUnlocked","matchId":"m1","badges":[{"code":"accuracy-40","unlockedAt":"2026-10-19T07:00:00Z"}]}}
 {"from":"p2","to":"server","frame":{"type":"rematch"}}
 {"from":"server","to":"p1","frame":{"type":"rematchPending","from":"p2"}}

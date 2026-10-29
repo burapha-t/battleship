@@ -5,7 +5,10 @@ A standard-library-only Python 3.9+ opponent for the current C# server.
 From the game lobby, click **Play vs Bot**. The C# client starts a
 Python bot automatically and pairs it only with your current player connection.
 The normal **Play vs player** button still uses public matchmaking. Rematch works as
-usual; Home, reset and closing the browser stop the managed bot.
+usual. During bot placement and play, **Quit Game** asks for confirmation, then
+stops the managed bot; its disconnect ends the unfinished match on the server
+and returns the human to the lobby without a result or achievement. Home after
+a completed match, reset and closing the browser also stop the managed bot.
 
 Python 3.9+ must be installed on the computer running `Battleship.Client`, even
 when the browser is on another device via `--lan`. The Python source files are
@@ -22,6 +25,8 @@ python3 -m bot.main --server 127.0.0.1 --seed 42
 ```
 
 Use `--port` for a different TCP port or `--nickname` for another display name.
+Omitting `--seed` generates a fresh seed from the operating system for each bot
+process; pass `--seed` when a reproducible placement and decision sequence is useful.
 A manually launched bot searches again after opponent departure or reset.
 Restart the process to reconnect after socket closure; the protocol has no
 session resumption. Guest games are not archived in SQLite.

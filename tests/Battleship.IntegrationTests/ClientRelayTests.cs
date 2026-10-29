@@ -261,4 +261,49 @@ public class ClientRelayTests
         Assert.Contains(match.Players, p => p.Id == bob.Id);
     }
 
+    [Fact]
+    public async Task QuitGhost_DuringPlacementAndGameplay_CleansUpAndAllowsAnotherMatch()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        var humanId = (await WaitForBrowserAsync<Connected>(browser)).Id;
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+
+        // Quit the first bot while ships are still being placed.
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        await SendAsync(browser, "{\"type\":\"quitGhost\"}");
+        await WaitForBrowserAsync<OpponentLeft>(browser);
+        var idle = await WaitForBrowserAsync<LobbyUpdate>(browser);
+        Assert.Single(idle.Clients);
+        Assert.Equal(LobbyStatus.Idle, idle.Clients.Single(c => c.Id == humanId).Status);
+        Assert.Empty(server.Host.Snapshot.Matches);
+        Assert.Equal(0, server.Host.Snapshot.Clients.Single(c => c.Id == humanId).Score);
+
+        // A new managed bot starts normally. Place the human fleet so this
+        // quit exercises an active game and its turn timer as well.
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        var fleet = Battleship.Core.RandomPlacement.Generate(new Random(7));
+        await SendAsync(browser, ProtocolJson.Serialize(new Place { Ships = fleet }));
+        await WaitForBrowserAsync<Turn>(browser);
+        await SendAsync(browser, "{\"type\":\"quitGhost\"}");
+        await WaitForBrowserAsync<OpponentLeft>(browser);
+        idle = await WaitForBrowserAsync<LobbyUpdate>(browser);
+        Assert.Single(idle.Clients);
+        Assert.Empty(server.Host.Snapshot.Matches);
+        Assert.Equal(0, server.Host.Snapshot.Clients.Single(c => c.Id == humanId).Score);
+
+        // The human connection remains usable for ordinary matchmaking.
+        await using var bob = await server.JoinAsync("Bob");
+        await SendAsync(browser, "{\"type\":\"findMatch\"}");
+        await bob.SendAsync(new FindMatch());
+        var humanMatch = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(humanMatch.Players, p => p.Id == bob.Id);
+    }
+
 }

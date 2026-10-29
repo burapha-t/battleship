@@ -294,6 +294,16 @@ h4 {
   height: 26px;
 }
 
+.iconbtn.danger {
+  color: #fff;
+  background: var(--coral);
+  transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.iconbtn.danger:hover {
+  background: #e93e4c;
+}
+
 .iconbtn:not(:disabled):active {
   transform: translateY(2px);
   box-shadow: 0 2px 0 var(--ink);
