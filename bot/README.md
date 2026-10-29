@@ -1,6 +1,9 @@
-# Ghost Fleet V1
+# Ghost Fleet V1 and experimental V2
 
-A standard-library-only Python 3.9+ opponent for the current C# server.
+A standard-library-only Python 3.9+ runtime opponent for the current C# server.
+V2 adds a pretrained synthetic Global ML prior while preserving V1's legal-fleet
+reasoning. See [`docs/ghost-fleet-v2.md`](../docs/ghost-fleet-v2.md) for training,
+mode selection, limitations, and benchmark results.
 
 From the game lobby, click **Play vs Bot**. The C# client starts a
 Python bot automatically and pairs it only with your current player connection.
@@ -40,12 +43,17 @@ server. The UI launcher intercepts only the local `playGhost` command and uses
 the optional `findMatch.matchKey` field to isolate its pair from public searchers.
 The server still owns all game rules; no account is required.
 
+The default mode is `auto`: use the checked-in V2 artifact when valid, otherwise
+fall back to V1. Set `BATTLESHIP_GHOST_MODE=v1` before starting the client to
+force the uniform prior. Scikit-learn is an offline training dependency only.
+
 `feat/AI-9` was inspected read-only. Its `bot/protocol_client.py` transport and
 `bot/main.py` event lifecycle are the basis of this client. Byte-oriented buffered
 reading fixes its per-chunk UTF-8 decoding problem. V1 adds protocol-version
 checking, duplicate-turn suppression, sunk-cell constraints, timeout-shot updates,
-and clean state resets. The old branch's Random Forest shooting imitation,
-JSONL history, AI proxy/service, Sonar and Decoy are not included. Current account,
+and clean state resets. The old branch's direct Random Forest shooting imitation,
+JSONL history, AI proxy/service, Sonar and Decoy are not included; this V2 model
+only weights V1-valid fleets. Current account,
 profile, history and leaderboard events are additive and safely ignored.
 
 - `engine.py`: legal placements, public shot knowledge, fleet inference and the

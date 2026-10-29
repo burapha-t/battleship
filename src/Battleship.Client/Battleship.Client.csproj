@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <Content Include="..\..\bot\*.py" LinkBase="bot" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\bot\models\*.json" LinkBase="bot\models" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="client.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- The built UI, served as wwwroot/. Matches nothing until `npm run build` in web/. -->
     <Content Include="..\..\web\dist\**\*" LinkBase="wwwroot" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

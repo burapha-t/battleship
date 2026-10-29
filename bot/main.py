@@ -1,20 +1,24 @@
 """Run from the repository root with python3 -m bot.main."""
 import argparse
 import logging
+import os
 import random
 import secrets
 
 from .engine import DecisionEngine, random_fleet
+from .prior import DEFAULT_ARTIFACT, select_prior
 from .protocol_client import JsonLineClient
 
 
 class GhostFleetBot:
-    def __init__(self, host='127.0.0.1', port=5050, nickname='Ghost Fleet', seed=None, match_key=None):
+    def __init__(self, host='127.0.0.1', port=5050, nickname='Ghost Fleet', seed=None,
+                 match_key=None, mode='auto', model_path=DEFAULT_ARTIFACT):
         self.client = JsonLineClient(host, port)
         self.match_key = match_key
         self.nickname = nickname
         self.seed = secrets.randbits(64) if seed is None else seed
         self.rng = random.Random(self.seed)
+        self.prior, self.mode_status = select_prior(mode, model_path)
         self.my_id = None
         self.engine = None
         self.last_turn = 0
@@ -22,6 +26,7 @@ class GhostFleetBot:
 
     def run(self):
         try:
+            logging.info('%s', self.mode_status)
             self.client.connect()
             self.client.run(self.on_message)
         finally:
@@ -41,7 +46,7 @@ class GhostFleetBot:
             if self.match_key:
                 print('GHOST_READY', flush=True)
         elif kind == 'matchStart':
-            self.engine = DecisionEngine(seed=self.rng.randrange(2**32))
+            self.engine = DecisionEngine(seed=self.rng.randrange(2**32), prior=self.prior)
             self.last_turn = 0
             self.ended = False
             self.client.send({'type': 'place', 'ships': random_fleet(self.rng)})
@@ -82,11 +87,15 @@ def main():
     parser.add_argument('--port', type=int, default=5050)
     parser.add_argument('--nickname', default='Ghost Fleet')
     parser.add_argument('--seed', type=int, help='reproducible random seed (fresh seed when omitted)')
+    parser.add_argument('--mode', choices=('auto', 'v1', 'v2'),
+                        default=os.environ.get('BATTLESHIP_GHOST_MODE', 'auto'))
+    parser.add_argument('--model', default=os.environ.get('BATTLESHIP_GHOST_MODEL', str(DEFAULT_ARTIFACT)))
     parser.add_argument('--match-key', help=argparse.SUPPRESS)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format='[ghost] %(message)s')
     try:
-        GhostFleetBot(args.server, args.port, args.nickname, args.seed, args.match_key).run()
+        GhostFleetBot(args.server, args.port, args.nickname, args.seed, args.match_key,
+                      args.mode, args.model).run()
     except KeyboardInterrupt:
         pass
     except (OSError, RuntimeError) as exc:

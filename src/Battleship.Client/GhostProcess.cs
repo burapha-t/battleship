@@ -31,8 +31,11 @@ internal sealed class GhostProcess : IDisposable
             info.ArgumentList.Add(arg);
         var process = Process.Start(info) ?? throw new IOException("Could not start Ghost Fleet.");
         _process = process;
-        // Drain diagnostics without logging any wire frames.
-        process.ErrorDataReceived += (_, _) => { };
+        // Forward mode and failure diagnostics; the bot never writes wire frames to stderr.
+        process.ErrorDataReceived += (_, args) =>
+        {
+            if (!string.IsNullOrWhiteSpace(args.Data)) Console.Error.WriteLine(args.Data);
+        };
         process.BeginErrorReadLine();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         timeout.CancelAfter(TimeSpan.FromSeconds(8));

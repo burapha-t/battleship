@@ -1,0 +1,39 @@
+{
+  "artifact_version": 1,
+  "calibration": {
+    "clip_max": 0.72,
+    "clip_min": 0.08,
+    "prior_strength": 0.35,
+    "shrinkage": 0.15
+  },
+  "dataset": {
+    "seed": 20261029,
+    "size": 5000,
+    "style_distribution": {
+      "center": 0.1,
+      "corner": 0.14,
+      "edge": 0.18,
+      "horizontal": 0.16,
+      "mixed": 0.22,
+      "random": 0.1,
+      "vertical": 0.1
+    }
+  },
+  "features": [
+    "row", "column", "distance_to_edge", "distance_to_corner",
+    "distance_to_center", "is_edge", "is_corner", "row_squared", "column_squared"
+  ],
+  "model": {
+    "class_weight": null,
+    "max_depth": 8,
+    "max_features": "sqrt",
+    "min_samples_leaf": 32,
+    "n_estimators": 160,
+    "n_jobs": 1,
+    "random_state": 20261029
+  },
+  "split": {
+    "seed": 314159,
+    "test_fraction": 0.2
+  }
+}

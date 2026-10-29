@@ -12,6 +12,17 @@ namespace Battleship.IntegrationTests;
 // CLI-2 / CLI-3: the client's web host and its WebSocket ↔ TCP relay, against the real server.
 public class ClientRelayTests
 {
+    [Fact]
+    public void PackagedClient_IncludesV2GlobalPriorArtifact()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "bot", "models", "global_prior_v2.json");
+        Assert.True(File.Exists(path), $"Missing packaged model artifact: {path}");
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        Assert.Equal(1, json.RootElement.GetProperty("artifact_version").GetInt32());
+        Assert.Equal("synthetic", json.RootElement.GetProperty("training").GetProperty("data_source").GetString());
+        Assert.Equal(64, json.RootElement.GetProperty("cell_occupancy_probabilities").GetArrayLength());
+    }
+
     private static int FreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);

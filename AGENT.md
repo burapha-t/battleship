@@ -33,7 +33,7 @@ The application and Ghost Fleet V1 are built; `IntegrationTests` plays full matc
 - Settings (#43): header popup with independent music/effect volumes and EN/TH preference saved in browser storage; all current game screens use the shared catalogue/hook (#38); profile/badge phrases for pending PR #65 are prepared but its feature code is not included.
 - Database (DB-1, schema version 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop). LOGIN-1 (#46) sets `PlayerRecord.UserId` on `signup` / `login`; a player who `join`s is a guest and nothing of theirs is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros). #42: `profileGet` / `profileUpdate` read and save my picture and shown badges; guests get an empty profile marked `guest` and can't save.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
-- `bot/`: Ghost Fleet V1 probability-based TCP opponent, launched from the lobby or CLI; Python 3.9+ is required on the client host (`bot/README.md`).
+- `bot/`: Ghost Fleet V1 full-fleet reasoning plus an experimental offline-trained synthetic V2 prior, launched from the lobby or CLI; Python 3.9+ is required on the client host (`bot/README.md`, `docs/ghost-fleet-v2.md`).
 
 ## Invariants
 

@@ -60,10 +60,12 @@ class Estimate:
 
 
 class DecisionEngine:
-    def __init__(self, seed=42, prior: FleetPrior | None = None, budget_seconds=2.0):
+    def __init__(self, seed=42, prior: FleetPrior | None = None, budget_seconds=2.0,
+                 node_budget: int | None = None):
         self.rng = random.Random(seed)
         self.prior = prior
         self.budget_seconds = budget_seconds
+        self.node_budget = node_budget
         self.knowledge = Knowledge()
 
     def estimate(self) -> Estimate:
@@ -99,6 +101,9 @@ class DecisionEngine:
         def visit(start, used, remaining):
             nonlocal total, found, nodes, complete
             nodes += 1
+            if self.node_budget is not None and nodes > self.node_budget:
+                complete = False
+                return
             if nodes % 256 == 1 and time.monotonic() >= deadline:
                 complete = False
                 return

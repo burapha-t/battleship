@@ -1,0 +1,51 @@
+{
+  "artifact": "global_prior_v2.json",
+  "benchmark_version": 1,
+  "decision_budget_seconds": 2.0,
+  "deterministic_node_budget": 25000,
+  "engine_seeds": [
+    11,
+    29,
+    47
+  ],
+  "games_per_group": 12,
+  "groups": {
+    "held_out_synthetic": {
+      "v1_uniform": {
+        "average_decision_ms": 9.785,
+        "average_shots": 26.833,
+        "games": 12,
+        "median_shots": 28.0,
+        "shot_accuracy": 0.59627,
+        "total_decision_seconds": 3.151
+      },
+      "v2_synthetic_ml": {
+        "average_decision_ms": 16.186,
+        "average_shots": 26.5,
+        "games": 12,
+        "median_shots": 26.0,
+        "shot_accuracy": 0.60377,
+        "total_decision_seconds": 5.147
+      }
+    },
+    "random_legal": {
+      "v1_uniform": {
+        "average_decision_ms": 10.037,
+        "average_shots": 26.417,
+        "games": 12,
+        "median_shots": 27.0,
+        "shot_accuracy": 0.60568,
+        "total_decision_seconds": 3.182
+      },
+      "v2_synthetic_ml": {
+        "average_decision_ms": 16.546,
+        "average_shots": 26.75,
+        "games": 12,
+        "median_shots": 26.5,
+        "shot_accuracy": 0.59813,
+        "total_decision_seconds": 5.311
+      }
+    }
+  },
+  "warning": "Synthetic performance does not establish performance against real humans."
+}

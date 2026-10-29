@@ -116,6 +116,11 @@ behind the scenes, and nobody types it.
 2. Each player clicks **Start game**.
 3. The server pairs two waiting players and the match starts.
 
+**Play vs Bot** launches Ghost Fleet. Its default `auto` mode uses the checked-in
+experimental synthetic V2 prior and falls back to V1 if the artifact is invalid
+or missing. See [Ghost Fleet V2](docs/ghost-fleet-v2.md) for mode selection,
+retraining, and honest benchmark results.
+
 ### 7. Stop
 
 Press Ctrl+C in each terminal.
