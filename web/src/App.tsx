@@ -145,8 +145,8 @@ type ScreenProps = {
 }
 
 function Screen({ state, send, dispatch, open, publicSearching, startGame, startGhost, ghostStarting, cancelSearch, placeShips, goHome }: ScreenProps) {
-  // The login card comes first; "Play as guest" swaps in the nickname card.
-  const [guest, setGuest] = useState(false)
+  // The guest nickname card comes first; its login link swaps in the login card.
+  const [guest, setGuest] = useState(true)
   const loadMore = () => {
     if (!state.history?.more || state.history.loadingMore) return
     dispatch({ type: 'loadMoreHistory' })

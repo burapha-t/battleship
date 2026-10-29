@@ -33,7 +33,7 @@ h4 {
 }
 
 /* The mockups' 1280×800 canvas. It fills smaller windows and gets its
-   rounded frame back once the window has room for it. */
+   rounded frame back, centered in the window, once the window has room for it. */
 .app {
   position: relative;
   max-width: 1280px;
@@ -50,6 +50,9 @@ h4 {
 @media (min-width: 1320px) and (min-height: 880px) {
   body {
     padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .app {
     min-height: 800px;
