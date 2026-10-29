@@ -98,10 +98,10 @@ describe('login card (#47)', () => {
     expect(html).not.toContain('progressbar')
   })
 
-  it('is the first screen, with the nickname screen behind "Play as guest"', () => {
+  it('sits behind "Log in or sign up", with the guest nickname screen first', () => {
     const html = renderToStaticMarkup(createElement(App))
-    expect(html).toContain('id="login-username"')
-    expect(html).not.toContain('Your nickname')
+    expect(html).toContain('Your nickname')
+    expect(html).not.toContain('id="login-username"')
   })
 
   it('links the nickname screen back to the login card', () => {
