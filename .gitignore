@@ -20,3 +20,6 @@ publish/
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Ignore auto-generated .NET test results
+**/TestResults/

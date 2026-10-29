@@ -18,11 +18,14 @@ const OTHER_COLORS = ['var(--lilac)', 'var(--peach)', 'var(--kelp)']
 type Props = {
   state: GameState
   /** I'm waiting to be paired (App works it out, so the header's buttons can follow it too). */
-  searching: boolean
+  publicSearching: boolean
   onStartGame: () => void
+  onStartGhost: () => void
+  ghostStarting: boolean
+  onCancelSearch: () => void
 }
 
-export function LobbyScreen({ state, searching, onStartGame }: Props) {
+export function LobbyScreen({ state, publicSearching, onStartGame, onStartGhost, ghostStarting, onCancelSearch }: Props) {
   const { t } = useTranslation('game')
   return (
     <main className="home">
@@ -31,12 +34,16 @@ export function LobbyScreen({ state, searching, onStartGame }: Props) {
         <div className="card join">
           <h2>{t('welcome', { name: state.myName ?? '' })}</h2>
           <p className="hint">
-            {searching
+            {publicSearching
               ? t('searchHint')
               : t('startHint')}
           </p>
-          <button type="button" className="btn wide" disabled={searching} onClick={onStartGame}>
-            {searching ? t('searchingOpponent') : t('startGame')}
+          <button type="button" className="btn wide" disabled={publicSearching || ghostStarting} onClick={onStartGame}>
+            {publicSearching ? t('searchingOpponent') : t('startGame')}
+          </button>
+          <button type="button" className={`btn wide ghost-start${publicSearching ? ' cancel-search' : ' white'}`} disabled={ghostStarting}
+            onClick={publicSearching ? onCancelSearch : onStartGhost}>
+            {publicSearching ? t('cancelSearch') : ghostStarting ? t('startingGhost') : t('playGhost')}
           </button>
         </div>
         <section className="card lobby" aria-labelledby="lobby-title">

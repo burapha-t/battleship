@@ -31,7 +31,7 @@ public class ProtocolJsonTests
         }
     }
 
-    // leave came after the transcript was recorded.
+    // These commands came after the transcript was recorded.
     [Fact]
     public void Leave_RoundTrips()
     {
@@ -43,12 +43,21 @@ public class ProtocolJsonTests
     }
 
     [Fact]
+    public void CancelSearch_RoundTrips()
+    {
+        const string frame = "{\"type\":\"cancelSearch\"}";
+        Assert.IsType<CancelSearch>(ProtocolJson.Parse(frame));
+        Assert.Equal(frame, ProtocolJson.Serialize(new CancelSearch()));
+    }
+
+    [Fact]
     public void Transcript_CoversEveryTypeButLeave()
     {
         var types = TranscriptFrames().Select(frame => ProtocolJson.Parse(frame)!.GetType()).ToHashSet();
 
-        Assert.Equal(29, types.Count);
+        Assert.Equal(30, types.Count);
         Assert.DoesNotContain(typeof(Leave), types);
+        Assert.Contains(typeof(CancelSearch), types);
     }
 
     [Fact]

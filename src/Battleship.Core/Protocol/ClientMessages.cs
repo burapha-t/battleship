@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-// The 13 client → server verbs (protocol.md §5). Property order is wire order.
+// The 14 client → server verbs (protocol.md §5). Property order is wire order.
 namespace Battleship.Core.Protocol
 {
     /// <summary><c>join</c>: the player submits a nickname.</summary>
@@ -44,6 +44,15 @@ namespace Battleship.Core.Protocol
     public sealed class FindMatch : ProtocolMessage
     {
         public FindMatch() : base("findMatch") { }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? MatchKey { get; set; }
+    }
+
+    /// <summary><c>cancelSearch</c>: leave matchmaking and return to the idle lobby.</summary>
+    public sealed class CancelSearch : ProtocolMessage
+    {
+        public CancelSearch() : base("cancelSearch") { }
     }
 
     /// <summary><c>place</c>: the player's 4 ships, each 4 cells.</summary>

@@ -3,11 +3,12 @@ import { ErrorToast } from './components/ErrorToast'
 import { Header } from './components/Header'
 import { LinkBanner } from './components/LinkBanner'
 import { Notice } from './components/Notice'
+import { QuitGameModal } from './components/QuitGameModal'
 import { SettingsModal } from './components/SettingsModal'
 import { useEndDelay } from './state/endDelay'
-import { gameReducer, initialState } from './state/gameReducer'
+import { canQuitGhostMatch, gameReducer, initialState } from './state/gameReducer'
 import type { BadgesAction, GameState, HistoryAction, LeaderboardAction, ProfileAction } from './state/gameReducer'
-import type { Cell, ClientVerb, LobbyClient } from './protocol'
+import type { Cell, ClientCommand as ClientVerb, LobbyClient } from './protocol'
 import { BadgesScreen } from './screens/BadgesScreen'
 import { EndScreen } from './screens/EndScreen'
 import { GameScreen } from './screens/GameScreen'
@@ -28,14 +29,24 @@ export default function App() {
   const { language, t } = useTranslation('game')
   useEffect(() => { document.documentElement.lang = language }, [language])
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [quitOpen, setQuitOpen] = useState(false)
   const [state, dispatch] = useReducer(gameReducer, initialState)
-  const { send, link } = useGameSocket(dispatch)
+  const [ghostLaunching, setGhostLaunching] = useState(false)
+  const { send, link } = useGameSocket((event) => {
+    if (['ghostMode', 'matchStart', 'error', 'reset', 'opponentLeft'].includes(event.type)) setGhostLaunching(false)
+    if (['matchEnd', 'reset', 'opponentLeft'].includes(event.type)) setQuitOpen(false)
+    dispatch(event)
+  })
   const screen = useEndDelay(state.screen)
+  const canQuitGhost = canQuitGhostMatch(state)
   // The lobby list I had when I pressed Start game. Until the server sends a
   // new one, trust the press; after that, trust my status in the list.
   const [pressedAt, setPressedAt] = useState<LobbyClient[] | null>(null)
   const myStatus = state.lobby.find((c) => c.id === state.myId)?.status
-  const searching = myStatus === 'searching' || pressedAt === state.lobby
+  const ghostStarting = screen === 'lobby' && (ghostLaunching || state.gameMode === 'bot')
+  const publicSearching = state.gameMode !== 'bot' && !ghostStarting
+    && (myStatus === 'searching' || pressedAt === state.lobby)
+  const searching = ghostStarting || publicSearching
 
   const openHistory = () => {
     dispatch({ type: 'openHistory' })
@@ -73,6 +84,7 @@ export default function App() {
         nav={!state.fatal && screen === 'lobby'
           ? { disabled: searching, onHistory: openHistory, onLeaderboard: openLeaderboard, onBadges: openBadges, onProfile: openProfile }
           : null}
+        onQuitGame={canQuitGhost ? () => setQuitOpen(true) : undefined}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <LinkBanner link={link} connected={state.myId !== null} />
@@ -83,9 +95,15 @@ export default function App() {
           <p>{localizeMessage(state.fatal, language)}</p>
         </main>
       ) : (
-        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open} searching={searching} startGame={() => {
+        <Screen state={{ ...state, screen }} send={send} dispatch={dispatch} open={open}
+          publicSearching={publicSearching} ghostStarting={ghostStarting} startGhost={() => {
+          setGhostLaunching(true)
+          send({ type: 'playGhost' })
+        }} startGame={() => {
           setPressedAt(state.lobby)
           send({ type: 'findMatch' })
+        }} cancelSearch={() => {
+          send({ type: 'cancelSearch' })
         }} placeShips={(ships) => {
           // The server never sends my ships back, so keep the ones I send.
           dispatch({ type: 'myShips', ships })
@@ -98,6 +116,15 @@ export default function App() {
       )}
       <ErrorToast error={state.lastError} />
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {quitOpen && canQuitGhost && (
+        <QuitGameModal
+          onClose={() => setQuitOpen(false)}
+          onConfirm={() => {
+            setQuitOpen(false)
+            send({ type: 'quitGhost' })
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -108,13 +135,16 @@ type ScreenProps = {
   dispatch: (action: HistoryAction | LeaderboardAction | BadgesAction | ProfileAction) => void
   /** Opens (or retries) the lobby's screens. */
   open: { history: () => void; leaderboard: () => void; badges: () => void; profile: () => void }
-  searching: boolean
+  publicSearching: boolean
   startGame: () => void
+  startGhost: () => void
+  ghostStarting: boolean
+  cancelSearch: () => void
   placeShips: (ships: Cell[][]) => void
   goHome: () => void
 }
 
-function Screen({ state, send, dispatch, open, searching, startGame, placeShips, goHome }: ScreenProps) {
+function Screen({ state, send, dispatch, open, publicSearching, startGame, startGhost, ghostStarting, cancelSearch, placeShips, goHome }: ScreenProps) {
   // The login card comes first; "Play as guest" swaps in the nickname card.
   const [guest, setGuest] = useState(false)
   const loadMore = () => {
@@ -143,7 +173,8 @@ function Screen({ state, send, dispatch, open, searching, startGame, placeShips,
       )
     case 'lobby':
       return (
-        <LobbyScreen state={state} searching={searching} onStartGame={startGame} />
+        <LobbyScreen state={state} publicSearching={publicSearching} onStartGame={startGame}
+          onStartGhost={startGhost} ghostStarting={ghostStarting} onCancelSearch={cancelSearch} />
       )
     case 'history':
       return (

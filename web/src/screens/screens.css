@@ -871,3 +871,7 @@
     justify-content: center;
   }
 }
+
+.ghost-start { margin-top: 12px; white-space: normal; }
+.btn.cancel-search { color: #fff; background: var(--coral); }
+.btn.cancel-search:hover { background: #e93e4c; }

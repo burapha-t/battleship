@@ -4,6 +4,13 @@ import type { Language } from '../settings/settings'
 
 export const translations = {
   game: {
+    playGhost: ['Play vs Bot', 'เล่นกับบอท'],
+    startingGhost: ['Starting Ghost Fleet…', 'กำลังเริ่ม Ghost Fleet…'],
+    cancelSearch: ['Cancel Search', 'ยกเลิกการค้นหา'],
+    quitGame: ['Quit Game', 'ออกจากเกม'],
+    quitGameTitle: ['Quit Game?', 'ออกจากเกม?'],
+    quitGameDescription: ['Are you sure you want to leave your match against Ghost Fleet?', 'คุณแน่ใจหรือไม่ว่าต้องการออกจากการแข่งขันกับ Ghost Fleet?'],
+    keepPlaying: ['Keep Playing', 'เล่นต่อ'],
     "settings": ["Settings", "การตั้งค่า"],
     "close": ["Close", "ปิด"],
     "sound": ["Sound", "เสียง"],
@@ -31,9 +38,9 @@ export const translations = {
     "dismiss": ["Dismiss", "ปิดข้อความ"],
     "welcome": ["Welcome, {name}.", "ยินดีต้อนรับ {name}"],
     "searchHint": ["You will be paired with the next captain who presses Start game.", "ระบบจะจับคู่คุณกับกัปตันคนถัดไปที่กดเริ่มเกม"],
-    "startHint": ["Press Start game when you're ready to play.", "กดเริ่มเกมเมื่อพร้อมเล่น"],
-    "searchingOpponent": ["Looking for an opponent…", "กำลังหาคู่แข่ง…"],
-    "startGame": ["Start game", "เริ่มเกม"],
+    "startHint": ["Choose a player or Ghost Fleet as your opponent.", "เลือกเล่นกับผู้เล่นหรือ Ghost Fleet"],
+    "searchingOpponent": ["Looking for an opponent...", "กำลังหาคู่แข่ง…"],
+    "startGame": ["Play vs player", "เล่นกับผู้เล่น"],
     "history": ["Match history", "ประวัติการแข่งขัน"],
     "leaderboard": ["Leaderboard", "ทำเนียบกัปตันทั่วโลก"],
     "profile": ["Profile", "โปรไฟล์"],
@@ -114,6 +121,7 @@ export const translations = {
     "winsMany": ["{count} wins", "ชนะ {count} ครั้ง"],
   },
   errors: {
+    ghostStart: ['Ghost Fleet could not start. Install Python 3.9 or newer on the client computer and try again.', 'ไม่สามารถเริ่ม Ghost Fleet ได้ โปรดติดตั้ง Python 3.9 ขึ้นไปบนเครื่องไคลเอนต์แล้วลองอีกครั้ง'],
     "unknown": ["Something went wrong. Try again.", "เกิดข้อผิดพลาด โปรดลองอีกครั้ง"],
     "bad-nickname": ["Nickname must be 1–16 characters.", "ชื่อเล่นต้องมีความยาว 1–16 ตัวอักษร"],
     "invalid-placement": ["Check your fleet placement.", "ตรวจสอบการวางเรือของคุณ"],

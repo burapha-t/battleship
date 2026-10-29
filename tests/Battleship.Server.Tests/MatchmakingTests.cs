@@ -64,6 +64,35 @@ public class MatchmakingTests
     }
 
     [Fact]
+    public void CancelSearch_RemovesPlayerAndReturnsThemIdle()
+    {
+        var setup = new EngineSetup();
+        var alice = setup.Join("p1", "Alice");
+        setup.Engine.FindMatch("p1", new string('a', 32));
+
+        Assert.Empty(setup.Engine.CancelSearch("p1"));
+
+        Assert.Equal(LobbyStatus.Idle, alice.Status);
+        Assert.Empty(setup.Engine.Searching);
+        setup.Join("p2", "Bob");
+        setup.Engine.FindMatch("p2", new string('a', 32));
+        Assert.Empty(setup.Engine.Matches);
+    }
+
+    [Fact]
+    public void CancelSearch_AfterPairingLosesRaceAndDoesNotDestroyMatch()
+    {
+        var setup = new EngineSetup();
+        setup.Pair();
+
+        var error = Assert.IsType<Error>(Assert.Single(setup.Engine.CancelSearch("p1")).Message);
+
+        Assert.Equal(ErrorCodes.NotInMatch, error.Code);
+        Assert.Single(setup.Engine.Matches);
+        Assert.All(setup.Engine.Matches.Single().Players, p => Assert.Equal(LobbyStatus.Placing, p.Status));
+    }
+
+    [Fact]
     public void FindMatch_MidMatch_GetsNotInMatch()
     {
         var setup = new EngineSetup();
@@ -118,5 +147,40 @@ public class MatchmakingTests
         var second = setup.Engine.Matches.Single(m => m.Id == "m2");
         Assert.True(second.Has("p3") && second.Has("p4"));
         Assert.Empty(setup.Engine.Searching);
+    }
+}
+
+public class PrivateMatchmakingTests
+{
+    [Fact]
+    public void PrivateQueues_DoNotStealPublicPlayers_OrEachOther()
+    {
+        var setup = new EngineSetup();
+        foreach (var id in new[] { "public1", "private1", "other", "ghost", "public2" }) setup.Join(id, id);
+        setup.Engine.FindMatch("public1");
+        setup.Engine.FindMatch("private1", new string('a', 32));
+        setup.Engine.FindMatch("other", new string('b', 32));
+        Assert.Empty(setup.Engine.Matches);
+        setup.Engine.FindMatch("ghost", new string('a', 32));
+        Assert.Equal(new[] { "private1", "ghost" }, setup.Engine.Matches.Single().Players.Select(p => p.Id));
+        setup.Engine.FindMatch("public2");
+        Assert.Equal(2, setup.Engine.Matches.Count());
+        Assert.Equal(new[] { "other" }, setup.Engine.Searching);
+    }
+
+    [Fact]
+    public void InvalidKey_IsRejected_AndResetRemovesPrivateSearch()
+    {
+        var setup = new EngineSetup();
+        var player = setup.Join("p1", "Alice");
+        var error = Assert.IsType<Error>(Assert.Single(setup.Engine.FindMatch("p1", "bad")).Message);
+        Assert.Equal("invalid-input", error.Code);
+        Assert.Equal("idle", player.Status);
+        setup.Engine.FindMatch("p1", new string('c', 32));
+        setup.Engine.Reset();
+        setup.Join("p2", "Bob");
+        setup.Engine.FindMatch("p1");
+        setup.Engine.FindMatch("p2");
+        Assert.Single(setup.Engine.Matches);
     }
 }

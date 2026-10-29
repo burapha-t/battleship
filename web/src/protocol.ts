@@ -105,7 +105,8 @@ export type ClientVerb =
   | { type: 'signup'; username: string; password: string }
   // Log in to an existing account; the reply is `welcome` or `error`.
   | { type: 'login'; username: string; password: string }
-  | { type: 'findMatch' }
+  | { type: 'findMatch'; matchKey?: string }
+  | { type: 'cancelSearch' }
   | { type: 'place'; ships: Cell[][] }
   | { type: 'fire'; row: number; col: number }
   | { type: 'rematch' }
@@ -134,3 +135,9 @@ export type ClientVerb =
  * and §1 rule 1 says to ignore it.
  */
 export function assertNever(_value: never): void {}
+
+/** Local relay events describe managed-process state; they never come from the server. */
+export type RelayEvent = { type: 'ghostMode'; active: boolean }
+
+/** Local relay commands are never sent to the TCP server. */
+export type ClientCommand = ClientVerb | { type: 'playGhost' } | { type: 'quitGhost' }

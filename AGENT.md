@@ -22,7 +22,7 @@ bot. 7 people, 4 weeks, graded.
 
 ## Stage
 
-Everything but the bot is built, and `IntegrationTests` plays full matches end to end.
+The application and Ghost Fleet V1 are built; `IntegrationTests` plays full matches end to end.
 
 - Protocol: frozen.
 - `Battleship.Core`: complete — rules (`Ship`, `Board`, `PlacementValidator`, `RandomPlacement`,
@@ -33,12 +33,12 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 - Settings (#43): header popup with independent music/effect volumes and EN/TH preference saved in browser storage; all current game screens use the shared catalogue/hook (#38); profile/badge phrases for pending PR #65 are prepared but its feature code is not included.
 - Database (DB-1, schema version 2): `Battleship.Server/Data/GameDatabase.cs`, one SQLite file only the server opens (`docs/implement/database.md`). DB-2 saves each finished match between two accounts via `DatabaseWorker` (off the game loop). LOGIN-1 (#46) sets `PlayerRecord.UserId` on `signup` / `login`; a player who `join`s is a guest and nothing of theirs is saved. HIST-1 answers `historyList` from it (guests get zeros); LB-1 answers `leaderboardGet` with the all-time top 50 (guests may ask too). ACH-1 unlocks badges after each save and sends `achievementUnlocked`; `achievementsGet` answers with my badges (guests get zeros). #42: `profileGet` / `profileUpdate` read and save my picture and shown badges; guests get an empty profile marked `guest` and can't save.
 - Demo build: `scripts/publish.*` makes self-contained folders for win-x64, osx-arm64 and linux-x64.
-- `bot/` (BOT-1…8): not scaffolded yet — the remaining work.
+- `bot/`: Ghost Fleet V1 full-fleet reasoning plus an experimental offline-trained synthetic V2 prior, launched from the lobby or CLI; Python 3.9+ is required on the client host (`bot/README.md`, `docs/ghost-fleet-v2.md`).
 
 ## Invariants
 
 - `Battleship.Core` targets `netstandard2.1`; every other project `net8.0`.
-- Server is authoritative; `Battleship.Client` carries zero game logic.
+- Server is authoritative; `Battleship.Client` carries zero game rules and manages the UI-launched Ghost Fleet process.
 - The server never sends a player's ship positions to their opponent.
 - Only the `GameHost` loop touches server state; sessions, the turn timer and the dashboard `Post` a `HostInput` to it.
 - `Engine/` and `Lobby/` stay socket-free, so `Battleship.Server.Tests` drives them directly.
@@ -51,7 +51,8 @@ Everything but the bot is built, and `IntegrationTests` plays full matches end t
 Run from the repo root. Needs the .NET 8 SDK (`dotnet --list-sdks` shows `8.0.x`).
 
 - `dotnet build` — build the whole solution
-- `dotnet test` — every test project: `Battleship.Core.Tests` (rules, protocol), `Battleship.Server.Tests`
+- `python3 -m unittest discover -s bot/tests -v` — Ghost Fleet engine and TCP client tests.
+- `dotnet test` — requires Python 3.9+ for the Ghost Fleet integration test; every test project: `Battleship.Core.Tests` (rules, protocol), `Battleship.Server.Tests`
   (engine, no sockets), `Battleship.IntegrationTests` (real server + client relay on loopback ports)
 - `dotnet test tests/<project>` — one test project only
 - `dotnet run --project src/Battleship.Server` — game server (all interfaces :5050) + dashboard http://localhost:8080

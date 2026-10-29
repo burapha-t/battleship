@@ -19,7 +19,12 @@ export type Nav = {
  * settings menu. In a match it shows both players; outside one, my name and
  * last known score (`lobby` carries none).
  */
-export function Header({ state, nav, onOpenSettings }: { state: GameState; nav: Nav | null; onOpenSettings: () => void }) {
+export function Header({ state, nav, onQuitGame, onOpenSettings }: {
+  state: GameState
+  nav: Nav | null
+  onQuitGame?: () => void
+  onOpenSettings: () => void
+}) {
   const { t } = useTranslation('game')
   const { me, opponent } = matchSides(state)
   const inMatch = state.screen === 'placement' || state.screen === 'game' || state.screen === 'end'
@@ -58,6 +63,14 @@ export function Header({ state, nav, onOpenSettings }: { state: GameState; nav: 
             </IconButton>
           </>
         )}
+        {onQuitGame && (
+          <IconButton label={t('quitGame')} onClick={onQuitGame} dialog danger>
+            <svg viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10" />
+              <path d="m14 8 4 4-4 4M18 12H9" />
+            </svg>
+          </IconButton>
+        )}
         <IconButton label={t('settings')} onClick={onOpenSettings} dialog>
           <svg viewBox="0 0 24 24" aria-hidden fill="none" stroke="#14325A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
@@ -71,12 +84,12 @@ export function Header({ state, nav, onOpenSettings }: { state: GameState; nav: 
   )
 }
 
-type IconButtonProps = { label: string; disabled?: boolean; dialog?: boolean; onClick: () => void; children: ReactNode }
+type IconButtonProps = { label: string; disabled?: boolean; dialog?: boolean; danger?: boolean; onClick: () => void; children: ReactNode }
 
 /** Icon only, so the name is its aria-label and its hover tooltip. */
-function IconButton({ label, disabled = false, dialog = false, onClick, children }: IconButtonProps) {
+function IconButton({ label, disabled = false, dialog = false, danger = false, onClick, children }: IconButtonProps) {
   return (
-    <button type="button" className="iconbtn" aria-label={label} title={label} disabled={disabled} onClick={onClick}
+    <button type="button" className={`iconbtn${danger ? ' danger' : ''}`} aria-label={label} title={label} disabled={disabled} onClick={onClick}
       aria-haspopup={dialog ? 'dialog' : undefined}>
       {children}
     </button>

@@ -196,6 +196,34 @@ public class MatchArchiveTests : IDisposable
     }
 
     [Fact]
+    public async Task Worker_GuestOpponentLeavesMidMatch_WritesNoMatchStatsOrBadges()
+    {
+        var database = new GameDatabase(Path.Combine(_folder, "test.db"));
+        long alice = database.CreateUser("Alice", new byte[16], new byte[32], 1)!.Value;
+        var worker = new DatabaseWorker(database);
+        var setup = new EngineSetup(archive: worker);
+        setup.Join("p1", "Alice").UserId = alice;
+        setup.Join("p2", "Guest");
+        setup.Engine.FindMatch("p1");
+        setup.Engine.FindMatch("p2");
+        setup.Engine.Place("p1", FleetA);
+        setup.Engine.Place("p2", FleetB);
+        setup.Engine.Fire(setup.Engine.Matches.Single().ActivePlayerId!, 7, 7);
+
+        setup.Engine.Leave("p2");
+        await worker.CompleteAsync();
+
+        using var connection = new SqliteConnection($"Data Source={database.Path};Pooling=False");
+        connection.Open();
+        long Count(string sql) { using var c = connection.CreateCommand(); c.CommandText = sql; return (long)c.ExecuteScalar()!; }
+        Assert.Equal(0, Count("SELECT COUNT(*) FROM matches"));
+        Assert.Equal(0, Count("SELECT COUNT(*) FROM match_players"));
+        Assert.Equal(0, Count("SELECT COUNT(*) FROM achievements"));
+        Assert.Empty(database.GetAchievements(alice).Badges);
+        Assert.Equal(0, database.GetHistory(alice, 1).Stats.MatchCount);
+    }
+
+    [Fact]
     public async Task Worker_LogsAFailedSave_AndKeepsWorking()
     {
         var database = new GameDatabase(Path.Combine(_folder, "test.db"));

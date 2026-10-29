@@ -12,6 +12,17 @@ namespace Battleship.IntegrationTests;
 // CLI-2 / CLI-3: the client's web host and its WebSocket ↔ TCP relay, against the real server.
 public class ClientRelayTests
 {
+    [Fact]
+    public void PackagedClient_IncludesV2GlobalPriorArtifact()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "bot", "models", "global_prior_v2.json");
+        Assert.True(File.Exists(path), $"Missing packaged model artifact: {path}");
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        Assert.Equal(1, json.RootElement.GetProperty("artifact_version").GetInt32());
+        Assert.Equal("synthetic", json.RootElement.GetProperty("training").GetProperty("data_source").GetString());
+        Assert.Equal(64, json.RootElement.GetProperty("cell_occupancy_probabilities").GetArrayLength());
+    }
+
     private static int FreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -190,4 +201,235 @@ public class ClientRelayTests
         Assert.False(ClientConfig.Load([]).Lan);
         Assert.True(ClientConfig.Load(["--lan"]).Lan);
     }
+    private static async Task<T> WaitForBrowserAsync<T>(WebSocket browser) where T : ProtocolMessage
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            var frame = await ReceiveAsync(browser);
+            Assert.NotNull(frame);
+            var message = ProtocolJson.Parse(frame!);
+            Assert.IsNotType<Error>(message);
+            if (message is T wanted) return wanted;
+        }
+        throw new InvalidOperationException("Expected browser event did not arrive.");
+    }
+
+    // The relay's own ghostMode frame is not a protocol message, so read it as raw JSON.
+    private static async Task<bool> WaitForGhostModeAsync(WebSocket browser)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            using var json = System.Text.Json.JsonDocument.Parse((await ReceiveAsync(browser))!);
+            if (json.RootElement.GetProperty("type").GetString() == "ghostMode")
+                return json.RootElement.GetProperty("active").GetBoolean();
+        }
+        throw new InvalidOperationException("Expected ghostMode did not arrive.");
+    }
+
+    [Fact]
+    public async Task GhostButton_LaunchesPrivateOpponent_ResetAndDisconnectCleanUp()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var publicPlayer = await server.JoinAsync("Public player");
+        await publicPlayer.SendAsync(new FindMatch());
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        var id = (await WaitForBrowserAsync<Connected>(browser)).Id;
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Ghost player\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        var match = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(match.Players, p => p.Id == id);
+        Assert.Contains(match.Players, p => p.Name == "Ghost Fleet");
+        Assert.DoesNotContain(match.Players, p => p.Id == publicPlayer.Id);
+        await WaitForBrowserAsync<Placed>(browser);
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 3 && l.Clients.Any(p => p.Id == publicPlayer.Id && p.Status == "searching"));
+
+        (await server.Dashboard.PostAsync("/api/reset", null)).EnsureSuccessStatusCode();
+        await WaitForBrowserAsync<Reset>(browser);
+        // Wait until the old bot has actually disconnected before launching another.
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 2);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        await browser.CloseAsync(WebSocketCloseStatus.NormalClosure, "tab closed", CancellationToken.None);
+        await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 1);
+    }
+
+    // The browser waits after every playGhost click, so a refused one is still answered.
+    [Fact]
+    public async Task PlayGhost_WhileAGhostIsRunning_RepeatsGhostModeActive()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        Assert.True(await WaitForGhostModeAsync(browser));
+        await WaitForBrowserAsync<MatchStart>(browser);
+
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+
+        Assert.True(await WaitForGhostModeAsync(browser));
+    }
+
+    [Fact]
+    public async Task PlayGhost_BeforeJoining_AnswersGhostModeInactive()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+
+        Assert.False(await WaitForGhostModeAsync(browser));
+    }
+
+    [Fact]
+    public async Task Leave_DuringGhostMatch_RemovesTheBotSession()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var observer = await server.JoinAsync("Observer");
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await observer.WaitForAsync<LobbyUpdate>(l => l.Count == 3);
+
+        await SendAsync(browser, "{\"type\":\"leave\"}");
+
+        // The bot never closes its socket itself, so its row leaving the lobby means the process died.
+        await observer.WaitForAsync<LobbyUpdate>(l => l.Count == 2);
+    }
+
+    // A fake interpreter that reports GHOST_READY and then idles, so the keyed findMatch
+    // has no partner and the human stays out of any match.
+    private static string FakeIdleBot(string folder)
+    {
+        Directory.CreateDirectory(folder);
+        if (OperatingSystem.IsWindows())
+        {
+            var cmd = Path.Combine(folder, "fake-python.cmd");
+            File.WriteAllText(cmd, "@echo GHOST_READY\r\n@ping -n 60 127.0.0.1 >nul\r\n");
+            return cmd;
+        }
+        var sh = Path.Combine(folder, "fake-python.sh");
+        File.WriteAllText(sh, "#!/bin/sh\necho GHOST_READY\nsleep 60\n");
+        File.SetUnixFileMode(sh, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        return sh;
+    }
+
+    [Fact]
+    public async Task ServerError_BeforeAMatch_StopsTheGhostAndLeavesGhostMode()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "battleship-fake-bot-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var server = await TestServer.StartAsync();
+            await using var client = WebHost.Build(new ClientConfig
+            {
+                ServerPort = server.Port, WebPort = FreePort(), PythonExecutable = FakeIdleBot(folder)
+            });
+            await client.StartAsync();
+            using var browser = await OpenAsync(client);
+            await WaitForBrowserAsync<Connected>(browser);
+            await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+            await WaitForBrowserAsync<Welcome>(browser);
+            await SendAsync(browser, "{\"type\":\"playGhost\"}");
+            Assert.True(await WaitForGhostModeAsync(browser));
+
+            // Alice is only searching, so the server rejects this like it would a refused findMatch.
+            await SendAsync(browser, "{\"type\":\"fire\",\"row\":0,\"col\":0}");
+
+            Error? error = null;
+            for (int i = 0; i < 10 && error == null; i++)
+                error = ProtocolJson.Parse((await ReceiveAsync(browser))!) as Error;
+            Assert.NotNull(error);
+            Assert.False(await WaitForGhostModeAsync(browser));
+        }
+        finally
+        {
+            try { if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true); } catch (IOException) { }
+        }
+    }
+
+    [Fact]
+    public async Task GhostButton_MissingPython_ReportsErrorAndKeepsPlayerIdle()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = WebHost.Build(new ClientConfig
+        {
+            ServerPort = server.Port, WebPort = FreePort(),
+            PythonExecutable = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing-python")
+        });
+        await client.StartAsync();
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        Error? error = null;
+        for (int i = 0; i < 10 && error == null; i++)
+            error = ProtocolJson.Parse((await ReceiveAsync(browser))!) as Error;
+        Assert.NotNull(error);
+        Assert.Contains("Python", error!.Message);
+        await using var bob = await server.JoinAsync("Bob");
+        await SendAsync(browser, "{\"type\":\"findMatch\"}");
+        await bob.SendAsync(new FindMatch());
+        var match = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(match.Players, p => p.Id == bob.Id);
+    }
+
+    [Fact]
+    public async Task QuitGhost_DuringPlacementAndGameplay_CleansUpAndAllowsAnotherMatch()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        var humanId = (await WaitForBrowserAsync<Connected>(browser)).Id;
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+
+        // Quit the first bot while ships are still being placed.
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        await SendAsync(browser, "{\"type\":\"quitGhost\"}");
+        await WaitForBrowserAsync<OpponentLeft>(browser);
+        var idle = await WaitForBrowserAsync<LobbyUpdate>(browser);
+        Assert.Single(idle.Clients);
+        Assert.Equal(LobbyStatus.Idle, idle.Clients.Single(c => c.Id == humanId).Status);
+        Assert.Empty(server.Host.Snapshot.Matches);
+        Assert.Equal(0, server.Host.Snapshot.Clients.Single(c => c.Id == humanId).Score);
+
+        // A new managed bot starts normally. Place the human fleet so this
+        // quit exercises an active game and its turn timer as well.
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await WaitForBrowserAsync<Placed>(browser);
+        var fleet = Battleship.Core.RandomPlacement.Generate(new Random(7));
+        await SendAsync(browser, ProtocolJson.Serialize(new Place { Ships = fleet }));
+        await WaitForBrowserAsync<Turn>(browser);
+        await SendAsync(browser, "{\"type\":\"quitGhost\"}");
+        await WaitForBrowserAsync<OpponentLeft>(browser);
+        idle = await WaitForBrowserAsync<LobbyUpdate>(browser);
+        Assert.Single(idle.Clients);
+        Assert.Empty(server.Host.Snapshot.Matches);
+        Assert.Equal(0, server.Host.Snapshot.Clients.Single(c => c.Id == humanId).Score);
+
+        // The human connection remains usable for ordinary matchmaking.
+        await using var bob = await server.JoinAsync("Bob");
+        await SendAsync(browser, "{\"type\":\"findMatch\"}");
+        await bob.SendAsync(new FindMatch());
+        var humanMatch = await WaitForBrowserAsync<MatchStart>(browser);
+        Assert.Contains(humanMatch.Players, p => p.Id == bob.Id);
+    }
+
 }

@@ -19,6 +19,7 @@ public sealed class MatchEngine
     private readonly Random _random;
     private readonly IMatchArchive? _archive;
     private readonly List<string> _searching = new();
+    private readonly Dictionary<string, string> _matchKeys = new();
     private readonly Dictionary<string, Match> _matches = new();
     private int _matchCount;
 
@@ -41,21 +42,47 @@ public sealed class MatchEngine
     /// An idle player starts searching; the first two searchers are paired.
     /// A repeat while searching is ignored.
     /// </summary>
-    public IReadOnlyList<Outbound> FindMatch(string playerId)
+    public IReadOnlyList<Outbound> FindMatch(string playerId, string? matchKey = null)
     {
         var player = _roster.Find(playerId);
         if (player == null || player.Status == LobbyStatus.Searching) return None;
         if (player.Status != LobbyStatus.Idle)
             return new[] { Outbound.Error(playerId, ErrorCodes.NotInMatch, "You can only look for a match from the lobby.") };
 
+        if (matchKey != null && (matchKey.Length != 32 || !matchKey.All(Uri.IsHexDigit)))
+            return new[] { Outbound.Error(playerId, ErrorCodes.InvalidInput, "Invalid private match key.") };
+        _matchKeys[playerId] = matchKey ?? "";
         player.Status = LobbyStatus.Searching;
         _searching.Add(playerId);
-        if (_searching.Count < 2) return None;
+        var partnerId = _searching.FirstOrDefault(id => id != playerId && _matchKeys[id] == _matchKeys[playerId]);
+        if (partnerId == null) return None;
 
-        var first = _roster.Find(_searching[0])!;
-        var second = _roster.Find(_searching[1])!;
-        _searching.RemoveRange(0, 2);
+        var first = _roster.Find(partnerId)!;
+        var second = player;
+        _searching.Remove(partnerId);
+        _searching.Remove(playerId);
+        _matchKeys.Remove(partnerId);
+        _matchKeys.Remove(playerId);
         return StartMatch(first, second, firstPlayerId: null);
+    }
+
+    /// <summary>
+    /// Removes a waiting player from matchmaking. If pairing already won the
+    /// race, the match remains authoritative and the cancellation is rejected.
+    /// </summary>
+    public IReadOnlyList<Outbound> CancelSearch(string playerId)
+    {
+        var player = _roster.Find(playerId);
+        if (player == null || !player.HasJoined)
+            return NotInMatch(playerId);
+        if (player.Status == LobbyStatus.Idle) return None;
+        if (player.Status != LobbyStatus.Searching)
+            return new[] { Outbound.Error(playerId, ErrorCodes.NotInMatch, "Matchmaking has already completed.") };
+
+        _searching.Remove(playerId);
+        _matchKeys.Remove(playerId);
+        player.Status = LobbyStatus.Idle;
+        return None;
     }
 
     public IReadOnlyList<Outbound> Place(string playerId, IReadOnlyList<IReadOnlyList<Coord>> ships) =>
@@ -113,6 +140,7 @@ public sealed class MatchEngine
     public IReadOnlyList<Outbound> PlayerLeft(string playerId)
     {
         _searching.Remove(playerId);
+        _matchKeys.Remove(playerId);
         var match = MatchOf(playerId);
         if (match == null) return None;
 
@@ -130,6 +158,7 @@ public sealed class MatchEngine
     {
         foreach (var match in _matches.Values.ToList()) End(match);
         _searching.Clear();
+        _matchKeys.Clear();
         foreach (var player in _roster.Players)
         {
             player.Score = 0;

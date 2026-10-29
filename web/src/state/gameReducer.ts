@@ -5,7 +5,7 @@
 // leaderboard and the badges screen, and opening, saving and closing the profile.
 
 import { PROTOCOL_VERSION, assertNever } from '../protocol'
-import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ProfileView, ServerEvent } from '../protocol'
+import type { AchievementsView, BadgeUnlock, Cell, ErrorCode, HistoryMatch, HistoryStats, LeaderboardRow, LobbyClient, PlayerInfo, ProfileView, RelayEvent, ServerEvent } from '../protocol'
 
 export type Screen = 'connecting' | 'nickname' | 'lobby' | 'history' | 'leaderboard' | 'badges' | 'profile' | 'placement' | 'game' | 'end'
 
@@ -26,7 +26,7 @@ export type BadgesAction = { type: 'openBadges' } | { type: 'closeBadges' }
  * `achievementsGet`), or again to retry; Save (I send `profileUpdate`); go back.
  */
 export type ProfileAction = { type: 'openProfile' } | { type: 'saveProfile' } | { type: 'closeProfile' }
-export type GameAction = ServerEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | BadgesAction | ProfileAction
+export type GameAction = ServerEvent | RelayEvent | MyShipsAction | WentHomeAction | HistoryAction | LeaderboardAction | BadgesAction | ProfileAction
 
 /** The pages of `history` received so far, joined into one list. */
 export type HistoryView = {
@@ -51,6 +51,8 @@ export type GameState = {
   /** My last known score; `lobby` carries none. */
   myScore: number
   lobby: LobbyClient[]
+  /** Set by the relay handshake; never inferred from an opponent nickname. */
+  gameMode: 'player' | 'bot' | null
   /** Both players of the current (or last) match, in the server's order. */
   players: PlayerInfo[]
   myShips: Cell[][] | null
@@ -96,6 +98,11 @@ export type GameState = {
   profileSaving: boolean
 }
 
+/** The header quit affordance exists only while a tracked bot match can still be abandoned. */
+export function canQuitGhostMatch(state: Pick<GameState, 'gameMode' | 'screen'>): boolean {
+  return state.gameMode === 'bot' && (state.screen === 'placement' || state.screen === 'game')
+}
+
 const noMatch = {
   myShips: null,
   placed: [],
@@ -114,6 +121,7 @@ export const initialState: GameState = {
   myName: null,
   myScore: 0,
   lobby: [],
+  gameMode: null,
   players: [],
   ...noMatch,
   leaving: false,
@@ -151,6 +159,9 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, lobby: event.clients, leaving: back ? false : state.leaving }
     }
 
+    case 'ghostMode':
+      return { ...state, gameMode: event.active ? 'bot' : null }
+
     case 'matchStart':
       if (state.leaving) return state
       return {
@@ -158,6 +169,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         ...noMatch,
         screen: 'placement',
         players: event.players,
+        gameMode: state.gameMode ?? 'player',
         myScore: scoreOf(event.players, state.myId) ?? state.myScore,
         notice: null,
       }
@@ -196,6 +208,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         ...noMatch,
         screen: 'lobby',
         notice: { text: `${nameOf(state, event.id)} left the game` },
+        gameMode: null,
       }
 
     case 'reset':
@@ -207,6 +220,7 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
         myScore: 0,
         players: state.players.map((p) => ({ ...p, score: 0 })),
         notice: { text: 'The server was reset' },
+        gameMode: null,
       }
 
     // Page 1 starts the list over; the next page adds to it. Anything else
@@ -317,7 +331,9 @@ export function gameReducer(state: GameState, event: GameAction): GameState {
       return { ...state, myShips: event.ships }
 
     case 'wentHome':
-      return state.screen === 'end' ? { ...state, ...noMatch, screen: 'lobby', leaving: true, notice: null } : state
+      return state.screen === 'end'
+        ? { ...state, ...noMatch, screen: 'lobby', leaving: true, notice: null, gameMode: null }
+        : state
 
     default:
       assertNever(event)
