@@ -17,6 +17,16 @@ def play(hidden, engine):
     occupied = {cell for ship in hidden for cell in ship}
     shots = hits = 0
     decision_seconds = 0.0
+    truncated = 0
+    estimate = engine.estimate
+
+    def counted():
+        nonlocal truncated
+        result = estimate()
+        truncated += not result.complete
+        return result
+
+    engine.estimate = counted
     fired = set()
     while len(engine.knowledge.sunk) < 4:
         started = time.monotonic()
@@ -31,7 +41,7 @@ def play(hidden, engine):
             hits += 1
         sunk = ship if ship and set(ship) <= fired else ()
         engine.knowledge.observe(cell, 'hit' if cell in occupied else 'miss', sunk)
-    return {'shots': shots, 'hits': hits, 'decision_seconds': decision_seconds}
+    return {'shots': shots, 'hits': hits, 'decision_seconds': decision_seconds, 'truncated_decisions': truncated}
 
 
 def summarize(results):
@@ -44,6 +54,8 @@ def summarize(results):
         'median_shots': round(statistics.median(shots), 3),
         'shot_accuracy': round(sum(row['hits'] for row in results) / total_shots, 5),
         'average_decision_ms': round(1000 * total_seconds / total_shots, 3),
+        'truncated_decisions': sum(row['truncated_decisions'] for row in results),
+        'decisions': total_shots,
         'total_decision_seconds': round(total_seconds, 3),
     }
 
@@ -87,8 +99,9 @@ def main():
     parser.add_argument('--games-per-group', type=int, default=12)
     parser.add_argument('--seeds', default='11,29,47')
     parser.add_argument('--budget', type=float, default=2.0,
-                        help='safety time limit; deterministic node budget normally stops first')
-    parser.add_argument('--nodes', type=int, default=25000)
+                        help='per-decision time limit (the shipped runtime default)')
+    parser.add_argument('--nodes', type=int, default=None,
+                        help='opt-in deterministic node cap (the shipped runtime has none)')
     parser.add_argument('--artifact', type=Path, default=root / 'models' / 'global_prior_v2.json')
     parser.add_argument('--output', type=Path, default=root / 'benchmarks' / 'v1_vs_v2.json')
     args = parser.parse_args()

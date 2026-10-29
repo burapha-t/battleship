@@ -73,6 +73,13 @@ public static class Relay
                 var frame = line.ToArray();
                 state.Observe(frame);
                 await state.SendAsync(frame, cancellationToken);
+                // The human never reached a match, so nothing will end the bot's
+                // session: stop it and put the browser back in ordinary mode.
+                if (MessageType(frame) == "error" && state.Ghost != null && state.Status is not ("placing" or "in-match"))
+                {
+                    state.StopGhost();
+                    await state.SendAsync(GhostMode(false), cancellationToken);
+                }
                 line.SetLength(0);
             }
             line.Write(buffer, start, read - start);
@@ -96,17 +103,19 @@ public static class Relay
             if (type == "playGhost")
             {
                 message.SetLength(0);
-                if (state.Status != "idle" || state.Ghost != null) continue;
+                if (state.Status != "idle" || state.Ghost != null)
+                {
+                    // Every playGhost gets an answer, so the browser never waits on a refused click.
+                    await state.SendAsync(GhostMode(state.Ghost != null), cancellationToken);
+                    continue;
+                }
                 var ghost = new GhostProcess(state.UnexpectedExit);
                 state.Ghost = ghost;
                 var key = Guid.NewGuid().ToString("N");
                 try
                 {
                     await ghost.StartAsync(config, key, cancellationToken);
-                    await state.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
-                    {
-                        type = "ghostMode", active = true
-                    })), cancellationToken);
+                    await state.SendAsync(GhostMode(true), cancellationToken);
                     var command = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { type = "findMatch", matchKey = key }) + "\n");
                     await server.WriteAsync(command, cancellationToken);
                 }
@@ -137,6 +146,9 @@ public static class Relay
             message.SetLength(0);
         }
     }
+
+    private static byte[] GhostMode(bool active) =>
+        Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { type = "ghostMode", active }));
 
     private static string? MessageType(byte[] frame)
     {

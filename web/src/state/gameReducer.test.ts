@@ -91,6 +91,13 @@ describe('gameReducer', () => {
     expect(human.gameMode).toBe('player')
   })
 
+  it('ghostMode inactive and reset both clear bot mode', () => {
+    const bot = gameReducer(joined, { type: 'ghostMode', active: true })
+    expect(bot.gameMode).toBe('bot')
+    expect(gameReducer(bot, { type: 'ghostMode', active: false }).gameMode).toBeNull()
+    expect(gameReducer(bot, { type: 'reset' }).gameMode).toBeNull()
+  })
+
   it('stops on an unsupported protocol version', () => {
     const state = fold([
       { type: 'connected', id: 'p1', protocolVersion: 2 },
@@ -143,17 +150,15 @@ describe('gameReducer', () => {
       { id: 'p1', name: 'Alice', score: 2 },
       { id: 'p2', name: 'Bob', score: 1 },
     ]
-    const ended = fold(
-      [
-        { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
-        { type: 'myShips', ships: [[[0, 0], [0, 1], [0, 2], [0, 3]]] },
-        { type: 'turn', activePlayerId: 'p1', seconds: 10, turnNumber: 1 },
-        { type: 'fireResult', by: 'p1', target: 'p2', row: 1, col: 1, result: 'hit', sunk: false, sunkCells: null, allSunk: false, auto: false },
-        { type: 'matchEnd', matchId: 'm1', winnerId: 'p1', players },
-        { type: 'rematchPending', from: 'p2' },
-      ],
-      joined,
-    )
+    const endedEvents: GameAction[] = [
+      { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
+      { type: 'myShips', ships: [[[0, 0], [0, 1], [0, 2], [0, 3]]] },
+      { type: 'turn', activePlayerId: 'p1', seconds: 10, turnNumber: 1 },
+      { type: 'fireResult', by: 'p1', target: 'p2', row: 1, col: 1, result: 'hit', sunk: false, sunkCells: null, allSunk: false, auto: false },
+      { type: 'matchEnd', matchId: 'm1', winnerId: 'p1', players },
+      { type: 'rematchPending', from: 'p2' },
+    ]
+    const ended = fold(endedEvents, joined)
 
     it('wentHome takes me to the lobby, keeps my score and clears the match', () => {
       const state = gameReducer(ended, { type: 'wentHome' })
@@ -161,6 +166,12 @@ describe('gameReducer', () => {
       expect(state.myScore).toBe(2)
       expect(state.leaving).toBe(true)
       expect(state).toMatchObject({ myShips: null, shots: [], turn: null, winnerId: null, rematchFrom: [], notice: null })
+    })
+
+    it('wentHome clears bot mode', () => {
+      const botEnded = fold([{ type: 'ghostMode', active: true }, ...endedEvents], joined)
+      expect(botEnded.gameMode).toBe('bot')
+      expect(gameReducer(botEnded, { type: 'wentHome' }).gameMode).toBeNull()
     })
 
     it('wentHome does nothing off the end screen', () => {

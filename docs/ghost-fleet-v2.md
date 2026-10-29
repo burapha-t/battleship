@@ -72,10 +72,15 @@ and ROC AUC `0.57096354`. The empirical baseline has marginally better Brier and
 log loss at `0.18527364` and `0.55618919`, while its ROC AUC is marginally lower
 at `0.57095443`. The artifact records this result.
 
-Run `python3 -m bot.ml.benchmark`. Checked-in results are in
-`bot/benchmarks/v1_vs_v2.md` and its JSON companion. V2 improved mean shots
-slightly on held-out synthetic-style fleets, but performed worse on random legal
-fleets. Synthetic gains must not be assumed to transfer to real players.
+Run `python3 -m bot.ml.benchmark`. It measures the shipped runtime
+configuration (no node cap, two-second decision budget); `--nodes N` opts in to
+a node cap. Checked-in results are in `bot/benchmarks/v1_vs_v2.md` and its JSON
+companion. All 1,239 decisions completed exactly within the budget, so the shot
+counts do not depend on the machine. V2 averaged 0.084 fewer shots than V1 on
+held-out synthetic-style fleets (25.833 versus 25.917) and 0.5 more on random
+legal fleets (26.0 versus 25.5). With 12 games per group that is within noise:
+the benchmark does not show V2 beating V1. Synthetic results must not be assumed
+to transfer to real players.
 
 ## Distribution through the client
 

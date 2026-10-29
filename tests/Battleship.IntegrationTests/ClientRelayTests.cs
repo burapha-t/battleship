@@ -214,6 +214,18 @@ public class ClientRelayTests
         throw new InvalidOperationException("Expected browser event did not arrive.");
     }
 
+    // The relay's own ghostMode frame is not a protocol message, so read it as raw JSON.
+    private static async Task<bool> WaitForGhostModeAsync(WebSocket browser)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            using var json = System.Text.Json.JsonDocument.Parse((await ReceiveAsync(browser))!);
+            if (json.RootElement.GetProperty("type").GetString() == "ghostMode")
+                return json.RootElement.GetProperty("active").GetBoolean();
+        }
+        throw new InvalidOperationException("Expected ghostMode did not arrive.");
+    }
+
     [Fact]
     public async Task GhostButton_LaunchesPrivateOpponent_ResetAndDisconnectCleanUp()
     {
@@ -243,6 +255,109 @@ public class ClientRelayTests
         await WaitForBrowserAsync<Placed>(browser);
         await browser.CloseAsync(WebSocketCloseStatus.NormalClosure, "tab closed", CancellationToken.None);
         await publicPlayer.WaitForAsync<LobbyUpdate>(l => l.Count == 1);
+    }
+
+    // The browser waits after every playGhost click, so a refused one is still answered.
+    [Fact]
+    public async Task PlayGhost_WhileAGhostIsRunning_RepeatsGhostModeActive()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        Assert.True(await WaitForGhostModeAsync(browser));
+        await WaitForBrowserAsync<MatchStart>(browser);
+
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+
+        Assert.True(await WaitForGhostModeAsync(browser));
+    }
+
+    [Fact]
+    public async Task PlayGhost_BeforeJoining_AnswersGhostModeInactive()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+
+        Assert.False(await WaitForGhostModeAsync(browser));
+    }
+
+    [Fact]
+    public async Task Leave_DuringGhostMatch_RemovesTheBotSession()
+    {
+        await using var server = await TestServer.StartAsync();
+        await using var observer = await server.JoinAsync("Observer");
+        await using var client = await StartClientAsync(server.Port);
+        using var browser = await OpenAsync(client);
+        await WaitForBrowserAsync<Connected>(browser);
+        await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+        await WaitForBrowserAsync<Welcome>(browser);
+        await SendAsync(browser, "{\"type\":\"playGhost\"}");
+        await WaitForBrowserAsync<MatchStart>(browser);
+        await observer.WaitForAsync<LobbyUpdate>(l => l.Count == 3);
+
+        await SendAsync(browser, "{\"type\":\"leave\"}");
+
+        // The bot never closes its socket itself, so its row leaving the lobby means the process died.
+        await observer.WaitForAsync<LobbyUpdate>(l => l.Count == 2);
+    }
+
+    // A fake interpreter that reports GHOST_READY and then idles, so the keyed findMatch
+    // has no partner and the human stays out of any match.
+    private static string FakeIdleBot(string folder)
+    {
+        Directory.CreateDirectory(folder);
+        if (OperatingSystem.IsWindows())
+        {
+            var cmd = Path.Combine(folder, "fake-python.cmd");
+            File.WriteAllText(cmd, "@echo GHOST_READY\r\n@ping -n 60 127.0.0.1 >nul\r\n");
+            return cmd;
+        }
+        var sh = Path.Combine(folder, "fake-python.sh");
+        File.WriteAllText(sh, "#!/bin/sh\necho GHOST_READY\nsleep 60\n");
+        File.SetUnixFileMode(sh, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        return sh;
+    }
+
+    [Fact]
+    public async Task ServerError_BeforeAMatch_StopsTheGhostAndLeavesGhostMode()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "battleship-fake-bot-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var server = await TestServer.StartAsync();
+            await using var client = WebHost.Build(new ClientConfig
+            {
+                ServerPort = server.Port, WebPort = FreePort(), PythonExecutable = FakeIdleBot(folder)
+            });
+            await client.StartAsync();
+            using var browser = await OpenAsync(client);
+            await WaitForBrowserAsync<Connected>(browser);
+            await SendAsync(browser, "{\"type\":\"join\",\"nickname\":\"Alice\"}");
+            await WaitForBrowserAsync<Welcome>(browser);
+            await SendAsync(browser, "{\"type\":\"playGhost\"}");
+            Assert.True(await WaitForGhostModeAsync(browser));
+
+            // Alice is only searching, so the server rejects this like it would a refused findMatch.
+            await SendAsync(browser, "{\"type\":\"fire\",\"row\":0,\"col\":0}");
+
+            Error? error = null;
+            for (int i = 0; i < 10 && error == null; i++)
+                error = ProtocolJson.Parse((await ReceiveAsync(browser))!) as Error;
+            Assert.NotNull(error);
+            Assert.False(await WaitForGhostModeAsync(browser));
+        }
+        finally
+        {
+            try { if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true); } catch (IOException) { }
+        }
     }
 
     [Fact]

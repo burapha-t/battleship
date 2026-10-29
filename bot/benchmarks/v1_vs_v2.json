@@ -2,7 +2,7 @@
   "artifact": "global_prior_v2.json",
   "benchmark_version": 1,
   "decision_budget_seconds": 2.0,
-  "deterministic_node_budget": 25000,
+  "deterministic_node_budget": null,
   "engine_seeds": [
     11,
     29,
@@ -12,38 +12,46 @@
   "groups": {
     "held_out_synthetic": {
       "v1_uniform": {
-        "average_decision_ms": 9.785,
-        "average_shots": 26.833,
+        "average_decision_ms": 47.134,
+        "average_shots": 25.917,
+        "decisions": 311,
         "games": 12,
-        "median_shots": 28.0,
-        "shot_accuracy": 0.59627,
-        "total_decision_seconds": 3.151
+        "median_shots": 26.5,
+        "shot_accuracy": 0.61736,
+        "total_decision_seconds": 14.659,
+        "truncated_decisions": 0
       },
       "v2_synthetic_ml": {
-        "average_decision_ms": 16.186,
-        "average_shots": 26.5,
+        "average_decision_ms": 84.406,
+        "average_shots": 25.833,
+        "decisions": 310,
         "games": 12,
         "median_shots": 26.0,
-        "shot_accuracy": 0.60377,
-        "total_decision_seconds": 5.147
+        "shot_accuracy": 0.61935,
+        "total_decision_seconds": 26.166,
+        "truncated_decisions": 0
       }
     },
     "random_legal": {
       "v1_uniform": {
-        "average_decision_ms": 10.037,
-        "average_shots": 26.417,
+        "average_decision_ms": 66.623,
+        "average_shots": 25.5,
+        "decisions": 306,
         "games": 12,
-        "median_shots": 27.0,
-        "shot_accuracy": 0.60568,
-        "total_decision_seconds": 3.182
+        "median_shots": 25.0,
+        "shot_accuracy": 0.62745,
+        "total_decision_seconds": 20.387,
+        "truncated_decisions": 0
       },
       "v2_synthetic_ml": {
-        "average_decision_ms": 16.546,
-        "average_shots": 26.75,
+        "average_decision_ms": 152.193,
+        "average_shots": 26,
+        "decisions": 312,
         "games": 12,
-        "median_shots": 26.5,
-        "shot_accuracy": 0.59813,
-        "total_decision_seconds": 5.311
+        "median_shots": 26.0,
+        "shot_accuracy": 0.61538,
+        "total_decision_seconds": 47.484,
+        "truncated_decisions": 0
       }
     }
   },

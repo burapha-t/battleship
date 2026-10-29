@@ -22,12 +22,13 @@ internal sealed class GhostProcess : IDisposable
                 ?? (OperatingSystem.IsWindows() ? "python" : "python3"),
             WorkingDirectory = folder,
             UseShellExecute = false,
+            RedirectStandardInput = true, // never written or closed: EOF tells the bot its client died
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
         foreach (var arg in new[] { "-m", "bot.main", "--server", config.ServerHost,
-                     "--port", config.ServerPort.ToString(), "--match-key", key })
+                     "--port", config.ServerPort.ToString(), "--match-key", key, "--exit-with-parent" })
             info.ArgumentList.Add(arg);
         var process = Process.Start(info) ?? throw new IOException("Could not start Ghost Fleet.");
         _process = process;

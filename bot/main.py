@@ -4,6 +4,8 @@ import logging
 import os
 import random
 import secrets
+import sys
+import threading
 
 from .engine import DecisionEngine, random_fleet
 from .prior import DEFAULT_ARTIFACT, select_prior
@@ -81,6 +83,18 @@ class GhostFleetBot:
                 raise RuntimeError('Server rejected bot command: ' + str(code))
 
 
+def exit_when_stdin_closes():
+    """Exit once the launching client's stdin pipe closes, even if its process was killed."""
+    def watch():
+        try:
+            while sys.stdin.buffer.read(4096):
+                pass
+        except (OSError, ValueError, AttributeError):
+            pass
+        os._exit(0)
+    threading.Thread(target=watch, daemon=True).start()
+
+
 def main():
     parser = argparse.ArgumentParser(description='Ghost Fleet V1 probability-based TCP opponent')
     parser.add_argument('--server', default='127.0.0.1')
@@ -91,8 +105,11 @@ def main():
                         default=os.environ.get('BATTLESHIP_GHOST_MODE', 'auto'))
     parser.add_argument('--model', default=os.environ.get('BATTLESHIP_GHOST_MODEL', str(DEFAULT_ARTIFACT)))
     parser.add_argument('--match-key', help=argparse.SUPPRESS)
+    parser.add_argument('--exit-with-parent', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format='[ghost] %(message)s')
+    if args.exit_with_parent:
+        exit_when_stdin_closes()
     try:
         GhostFleetBot(args.server, args.port, args.nickname, args.seed, args.match_key,
                       args.mode, args.model).run()

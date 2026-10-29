@@ -3,7 +3,9 @@
 ## Run the demo
 
 Demo machines need nothing installed: the published folders carry their own .NET
-runtime and the built web UI.
+runtime and the built web UI. The one exception is Play vs Bot: the computer
+running `Battleship.Client` needs Python 3.9 or newer on its PATH (or set
+`BATTLESHIP_PYTHON`) for the Ghost Fleet opponent.
 
 ### 1. Build the folders (once, on a machine with the .NET 8 SDK and Node)
 

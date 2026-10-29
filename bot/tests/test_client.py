@@ -1,7 +1,11 @@
+import contextlib
 import json
 import socket
+import subprocess
+import sys
 import threading
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, call, patch
 from bot.main import GhostFleetBot
 from bot.protocol_client import JsonLineClient
@@ -81,3 +85,92 @@ class ClientTests(unittest.TestCase):
             client.close()
             thread.join()
         self.assertEqual(received, [{'type': 'welcome', 'nickname': 'ผี'}, {'type': 'reset'}])
+
+
+KEY = 'a1' * 16
+
+
+def frame(message):
+    return (json.dumps(message) + '\n').encode()
+
+
+class MatchKeyTests(unittest.TestCase):
+    def run_keyed_bot(self, ending):
+        left, right = socket.socketpair()
+        bot = GhostFleetBot(match_key=KEY)
+        bot.client.connect = lambda: None
+        bot.client.sock = left
+        events = []
+        send = bot.client.send
+        bot.client.send = lambda message: (events.append(message), send(message))
+        server_saw = []
+
+        def server():
+            with right, right.makefile('rb') as reader:
+                right.sendall(frame({'type': 'connected', 'id': 'ghost', 'protocolVersion': 1}))
+                server_saw.append(json.loads(reader.readline()))
+                right.sendall(frame({'type': 'welcome', 'nickname': 'Ghost Fleet'}))
+                server_saw.append(json.loads(reader.readline()))
+                right.sendall(frame({'type': ending}))
+                reader.read()
+
+        class Stdout:
+            def write(self, text):
+                if text.strip():
+                    events.append(text.strip())
+
+            def flush(self):
+                pass
+
+        thread = threading.Thread(target=server)
+        thread.start()
+        try:
+            with contextlib.redirect_stdout(Stdout()), self.assertRaises(SystemExit) as exit_info:
+                bot.run()
+        finally:
+            thread.join(10)
+        self.assertFalse(thread.is_alive())
+        return exit_info.exception.code, events, server_saw
+
+    def test_keyed_find_match_then_ready_then_exit_zero_on_end_of_session(self):
+        for ending in ('opponentLeft', 'reset'):
+            with self.subTest(ending):
+                code, events, server_saw = self.run_keyed_bot(ending)
+                self.assertEqual(server_saw[1], {'type': 'findMatch', 'matchKey': KEY})
+                self.assertEqual([e if isinstance(e, str) else e['type'] for e in events],
+                                 ['join', 'findMatch', 'GHOST_READY'])
+                self.assertEqual(code, 0)
+
+
+class ExitWithParentTests(unittest.TestCase):
+    def test_bot_exits_when_stdin_closes_while_connected_to_server(self):
+        root = Path(__file__).resolve().parents[2]
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            listener.listen(1)
+            listener.settimeout(10)
+            proc = subprocess.Popen(
+                [sys.executable, '-m', 'bot.main', '--port', str(listener.getsockname()[1]),
+                 '--match-key', KEY, '--exit-with-parent'],
+                cwd=root, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            conn = None
+            try:
+                conn, _ = listener.accept()
+                conn.settimeout(10)
+                conn.sendall(frame({'type': 'connected', 'id': 'ghost', 'protocolVersion': 1}))
+                with conn.makefile('rb') as reader:
+                    self.assertEqual(json.loads(reader.readline())['type'], 'join')
+                    conn.sendall(frame({'type': 'welcome', 'nickname': 'Ghost Fleet'}))
+                    self.assertEqual(json.loads(reader.readline())['type'], 'findMatch')
+                # The bot is now idle on a live connection, so only stdin EOF can end it.
+                self.assertEqual(proc.stdout.readline().strip(), b'GHOST_READY')
+                self.assertIsNone(proc.poll())
+                proc.stdin.close()
+                self.assertEqual(proc.wait(timeout=5), 0)
+            finally:
+                if conn is not None:
+                    conn.close()
+                if proc.poll() is None:
+                    proc.kill()
+                proc.wait()
+                proc.stdout.close()
