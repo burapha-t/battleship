@@ -12,6 +12,8 @@ import type { Cell } from '../protocol'
 import { playSound } from '../sound/sound'
 import { STREAK_MIN, consecutiveHits } from '../rules/streak'
 import { SHIP_COLORS } from '../components/shipColors'
+import { suggestSonarRegions } from '../aiSonar'
+import type { SonarRegion } from '../aiSonar'
 import './screens.css'
 
 const LOG_LENGTH = 4
@@ -32,6 +34,8 @@ export function GameScreen({ state, onFire }: Props) {
   // The turn I fired on: no second shot until the next `turn`.
   const [firedOn, setFiredOn] = useState<number | null>(null)
   const [aim, setAim] = useState<Cell | null>(null)
+  const [sonarScans, setSonarScans] = useState(0)
+  const [sonarRegions, setSonarRegions] = useState<SonarRegion[]>([])
 
   const turn = state.turn
   const myTurn = turn !== null && turn.activePlayerId === myId
@@ -45,6 +49,21 @@ export function GameScreen({ state, onFire }: Props) {
   const sunkByMe = sunkShips(myShots)
   const sunkAtMe = sunkShips(incoming)
   const alreadyShot = new Set(myShots.map((s) => `${s.row},${s.col}`))
+
+  // A region may include an old hit as useful evidence, but once every cell
+  // in that region has been attempted it disappears instead of staying useless.
+  const liveSonarRegions = sonarRegions.filter((region) =>
+    region.cells.some(([row, col]) => !alreadyShot.has(`${row},${col}`)),
+  )
+  const sonarCells = liveSonarRegions.flatMap((region) => region.cells)
+
+  const scanSonar = () => {
+    if (sonarScans >= 2) return
+    const regions = suggestSonarRegions(myShots, 2)
+    setSonarRegions(regions)
+    setSonarScans((count) => count + 1)
+  }
+
   // My newest shot, if it hit, gets the yellow ring until my next shot.
   const myLast = myShots.at(-1)
   const freshHit: Cell | null = myLast?.result === 'hit' ? [myLast.row, myLast.col] : null
@@ -136,6 +155,19 @@ export function GameScreen({ state, onFire }: Props) {
             </div>
           </div>
           <StreakLevels />
+          <div className="sonar-card card">
+            <b>{t('sonarTitle')}</b>
+            <button type="button" className="btn" disabled={sonarScans >= 2 || over} onClick={scanSonar}>
+              {t('sonarScan', { count: Math.max(0, 2 - sonarScans) })}
+            </button>
+            {sonarScans > 0 && (
+              <span>
+                {liveSonarRegions.length
+                  ? t('sonarSignals', { count: liveSonarRegions.length })
+                  : t('sonarNoUseful')}
+              </span>
+            )}
+          </div>
           <div className="legend">
             <span>
               <i className="sw hit">✕</i>{t('hit')}
@@ -164,6 +196,7 @@ export function GameScreen({ state, onFire }: Props) {
             enemy
             ships={sunkByMe.map((cells) => ({ cells, sunk: true }))}
             shots={myShots}
+            sonar={sonarCells}
             hover={canFire && aim && !alreadyShot.has(`${aim[0]},${aim[1]}`) ? aim : null}
             fresh={freshHit}
             disabled={!canFire}

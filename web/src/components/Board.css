@@ -73,8 +73,25 @@
 /* Ship hulls, marks and the aim marker sit on top of the cells and let
    clicks through to them. */
 .ship,
-.mark {
+.mark,
+.sonar-cell {
   pointer-events: none;
+}
+
+.sonar-cell {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  margin: 4px;
+  background: rgba(255, 200, 61, 0.28);
+  border: 3px dashed var(--sun);
+  border-radius: 12px;
+}
+
+.sonar-cell b {
+  color: var(--ink);
+  font: 900 calc(var(--cell) * 0.42) / 1 var(--font-display);
 }
 
 .ship {
