@@ -875,3 +875,28 @@
 .ghost-start { margin-top: 12px; white-space: normal; }
 .btn.cancel-search { color: #fff; background: var(--coral); }
 .btn.cancel-search:hover { background: #e93e4c; }
+
+
+/* ── AI Sonar (#73) ─────────────────────────────────────────── */
+.sonar-card {
+  width: 250px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.sonar-card > b {
+  font: 800 19px / 1.1 var(--font-display);
+}
+
+.sonar-card .btn {
+  padding: 6px 10px;
+  font-size: 15px;
+}
+
+.sonar-card span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
