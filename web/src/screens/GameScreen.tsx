@@ -12,7 +12,7 @@ import type { Cell } from '../protocol'
 import { playSound } from '../sound/sound'
 import { STREAK_MIN, consecutiveHits } from '../rules/streak'
 import { SHIP_COLORS } from '../components/shipColors'
-import { suggestSonarRegions } from '../aiSonar'
+import { isUsefulRegion, suggestSonarRegions } from '../aiSonar'
 import type { SonarRegion } from '../aiSonar'
 import './screens.css'
 
@@ -50,12 +50,14 @@ export function GameScreen({ state, onFire }: Props) {
   const sunkAtMe = sunkShips(incoming)
   const alreadyShot = new Set(myShots.map((s) => `${s.row},${s.col}`))
 
-  // A region may include an old hit as useful evidence, but once every cell
-  // in that region has been attempted it disappears instead of staying useless.
-  const liveSonarRegions = sonarRegions.filter((region) =>
-    region.cells.some(([row, col]) => !alreadyShot.has(`${row},${col}`)),
-  )
-  const sonarCells = liveSonarRegions.flatMap((region) => region.cells)
+  // A region may include an old hit as useful evidence, but it disappears once
+  // a cell turns out to be a miss or part of a sunk ship, or once every cell
+  // has been attempted: the same rule the scan uses.
+  const liveSonarRegions = sonarRegions.filter((region) => isUsefulRegion(region.cells, myShots))
+  // Late-match regions may overlap; Board keys sonar cells by position.
+  const sonarCells = liveSonarRegions
+    .flatMap((region) => region.cells)
+    .filter(([row, col], i, cells) => cells.findIndex(([r, c]) => r === row && c === col) === i)
 
   const scanSonar = () => {
     if (sonarScans >= 2) return

@@ -30,6 +30,39 @@ const GLOBAL_ML_PRIOR = [
 const key = ([row, col]: Cell) => `${row},${col}`
 const prior = ([row, col]: Cell) => GLOBAL_ML_PRIOR[row * GRID + col]
 
+type ShotSets = {
+  attempted: Set<string>
+  misses: Set<string>
+  sunk: Set<string>
+}
+
+function shotSets(shots: readonly SonarShot[]): ShotSets {
+  return {
+    attempted: new Set(shots.map((shot) => `${shot.row},${shot.col}`)),
+    misses: new Set(
+      shots.filter((shot) => shot.result === 'miss').map((shot) => `${shot.row},${shot.col}`),
+    ),
+    sunk: new Set(shots.flatMap((shot) => shot.sunkCells ?? []).map(key)),
+  }
+}
+
+function isUseful(cells: readonly Cell[], { attempted, misses, sunk }: ShotSets): boolean {
+  // Do not highlight cells already proven empty or belonging to a sunk ship.
+  if (cells.some((cell) => misses.has(key(cell)) || sunk.has(key(cell)))) return false
+  // A region whose every cell was already fired at is exhausted.
+  if (cells.every((cell) => attempted.has(key(cell)))) return false
+  return true
+}
+
+/**
+ * True while a Sonar region is still worth showing: no cell is a known miss
+ * or part of a sunk ship, and at least one cell has never been fired at.
+ * The scan and the on-screen display share this rule.
+ */
+export function isUsefulRegion(cells: readonly Cell[], shots: readonly SonarShot[]): boolean {
+  return isUseful(cells, shotSets(shots))
+}
+
 /**
  * Returns up to `count` 2x2 Sonar regions.
  *
@@ -45,13 +78,8 @@ export function suggestSonarRegions(
 ): SonarRegion[] {
   if (count <= 0) return []
 
-  const attempted = new Set(shots.map((shot) => `${shot.row},${shot.col}`))
-  const misses = new Set(
-    shots.filter((shot) => shot.result === 'miss').map((shot) => `${shot.row},${shot.col}`),
-  )
-  const sunk = new Set(
-    shots.flatMap((shot) => shot.sunkCells ?? []).map(key),
-  )
+  const sets = shotSets(shots)
+  const { attempted, sunk } = sets
   const unresolvedHits = new Set(
     shots
       .filter((shot) => shot.result === 'hit' && !sunk.has(`${shot.row},${shot.col}`))
@@ -69,12 +97,9 @@ export function suggestSonarRegions(
         [row + 1, col + 1],
       ]
 
-      // Do not highlight cells already proven empty or belonging to a sunk ship.
-      if (cells.some((cell) => misses.has(key(cell)) || sunk.has(key(cell)))) continue
+      if (!isUseful(cells, sets)) continue
 
       const unshot = cells.filter((cell) => !attempted.has(key(cell)))
-      if (unshot.length === 0) continue // core bug fix
-
       const hits = cells.filter((cell) => unresolvedHits.has(key(cell))).length
 
       // ML prior drives the base score. Existing hits are strong evidence that
