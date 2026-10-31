@@ -1,5 +1,5 @@
 import { useTranslation } from '../i18n/useTranslation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Board } from '../components/Board'
 import type { BoardShip } from '../components/Board'
 import { Countdown } from '../components/Countdown'
@@ -36,6 +36,8 @@ export function GameScreen({ state, onFire }: Props) {
   const [aim, setAim] = useState<Cell | null>(null)
   const [sonarScans, setSonarScans] = useState(0)
   const [sonarRegions, setSonarRegions] = useState<SonarRegion[]>([])
+  const [sonarHelp, setSonarHelp] = useState(false)
+  const sonarCard = useRef<HTMLDivElement>(null)
 
   const turn = state.turn
   const myTurn = turn !== null && turn.activePlayerId === myId
@@ -65,6 +67,23 @@ export function GameScreen({ state, onFire }: Props) {
     setSonarRegions(regions)
     setSonarScans((count) => count + 1)
   }
+
+  // The "?" explanation closes on Escape or a click outside the Sonar card.
+  useEffect(() => {
+    if (!sonarHelp) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSonarHelp(false)
+    }
+    const onPointer = (e: PointerEvent) => {
+      if (!sonarCard.current?.contains(e.target as Node)) setSonarHelp(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onPointer)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onPointer)
+    }
+  }, [sonarHelp])
 
   // My newest shot, if it hit, gets the yellow ring until my next shot.
   const myLast = myShots.at(-1)
@@ -157,8 +176,25 @@ export function GameScreen({ state, onFire }: Props) {
             </div>
           </div>
           <StreakLevels />
-          <div className="sonar-card card">
+          <div className="sonar-card card" ref={sonarCard}>
             <b>{t('sonarTitle')}</b>
+            <button
+              type="button"
+              className="sonar-help"
+              aria-label={t('sonarHelpTitle')}
+              title={t('sonarHelpTitle')}
+              aria-expanded={sonarHelp}
+              aria-controls="sonar-help"
+              onClick={() => setSonarHelp((open) => !open)}
+            >
+              ?
+            </button>
+            {sonarHelp && (
+              <div id="sonar-help" className="sonar-help-box">
+                <b>{t('sonarHelpTitle')}</b>
+                <p>{t('sonarHelp')}</p>
+              </div>
+            )}
             <button type="button" className="btn" disabled={sonarScans >= 2 || over} onClick={scanSonar}>
               {t('sonarScan', { count: Math.max(0, 2 - sonarScans) })}
             </button>
