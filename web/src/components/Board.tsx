@@ -28,6 +28,8 @@ type Props = {
   hover?: Cell | null
   /** Rings this cell in yellow: the newest hit. */
   fresh?: Cell | null
+  /** AI Sonar region cells. Display only; they never reveal hidden ships. */
+  sonar?: Cell[]
   /** Darker water for the opponent's board. */
   enemy?: boolean
   /** No cell is clickable. */
@@ -49,6 +51,7 @@ export function Board({
   shots = [],
   hover = null,
   fresh = null,
+  sonar = [],
   enemy = false,
   disabled = false,
   canClick,
@@ -96,6 +99,11 @@ export function Board({
           }),
         )}
         {ships.map((ship, i) => <ShipHull key={i} ship={ship} />)}
+        {sonar.map(([row, col]) => (
+          <div key={`sonar-${row},${col}`} className="sonar-cell" style={at(row, col)} aria-hidden>
+            <b>?</b>
+          </div>
+        ))}
         {shots.map((s) => (
           <div key={`${s.row},${s.col}`} className={`mark ${s.result}`} style={at(s.row, s.col)} aria-hidden>
             <b>{s.result === 'hit' ? '✕' : ''}</b>

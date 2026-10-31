@@ -875,3 +875,79 @@
 .ghost-start { margin-top: 12px; white-space: normal; }
 .btn.cancel-search { color: #fff; background: var(--coral); }
 .btn.cancel-search:hover { background: #e93e4c; }
+
+
+/* ── AI Sonar (#73) ─────────────────────────────────────────── */
+.sonar-card {
+  position: relative;
+  width: 250px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.sonar-card > b {
+  font: 800 19px / 1.1 var(--font-display);
+}
+
+.sonar-card .btn {
+  padding: 6px 10px;
+  font-size: 15px;
+}
+
+.sonar-card span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* The "?" in the card's corner and the explanation it opens above the card,
+   so the box never runs past the bottom of a short window. */
+.sonar-help {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--sun);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  color: var(--ink);
+  font: 800 16px / 1 var(--font-display);
+  cursor: pointer;
+}
+
+.sonar-help:focus-visible {
+  outline: 3px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.sonar-help-box {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  right: 8px;
+  z-index: 5;
+  width: 230px;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.sonar-help-box b {
+  display: block;
+  margin-bottom: 4px;
+  font: 800 15px / 1.2 var(--font-display);
+}
+
+.sonar-help-box p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
