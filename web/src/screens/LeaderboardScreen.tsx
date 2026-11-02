@@ -61,7 +61,7 @@ export function LeaderboardScreen({ rows, failed, myName, onHome, onRetry }: Pro
                     <li key={row.name} className={`leaderboard-row${me ? ' me' : ''}`}>
                       <span className="leaderboard-rank">{row.rank}</span>
                       <span className="leaderboard-name">
-                        <Avatar name={row.name} color={colorOf(row.name, me)} />
+                        <Avatar name={row.name} avatar={row.avatar} color={colorOf(row.name, me)} />
                         {row.name}
                         {me && <span className="pill">{t('you')}</span>}
                       </span>
@@ -91,7 +91,7 @@ function Podium({ top, myName, language, t }: { top: LeaderboardRow[]; myName: s
         const me = row.name === myName
         return (
           <li key={row.name} className={`podium-spot podium-${i + 1}${me ? ' you' : ''}`}>
-            <Avatar name={row.name} color={colorOf(row.name, me)} />
+            <Avatar name={row.name} avatar={row.avatar} color={colorOf(row.name, me)} />
             <div className="podium-name">
               {row.name}
               {me && <span className="pill">{t('you')}</span>}

@@ -194,7 +194,7 @@ export function PlacementScreen({ state, onReady }: Props) {
           </div>
 
           <div className="card opp">
-            <Avatar name={opponentName} color="var(--lilac)" />
+            <Avatar name={opponentName} avatar={opponent?.avatar} color="var(--lilac)" />
             <div>
               <b>{opponentPlaced ? t('opponentReady', { name: opponentName }) : t('opponentPlacing', { name: opponentName })}</b>
               <span>{t('bothReady')}</span>

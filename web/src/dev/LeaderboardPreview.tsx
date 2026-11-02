@@ -7,16 +7,16 @@ import type { LeaderboardRow } from '../protocol'
 import { LeaderboardScreen } from '../screens/LeaderboardScreen'
 
 const ROWS: LeaderboardRow[] = [
-  { rank: 1, name: 'Mira', points: 11, accuracy: 62.5 },
-  { rank: 2, name: 'Bob', points: 9, accuracy: 55.1 },
-  { rank: 3, name: 'Alice', points: 8, accuracy: 48.7 },
-  { rank: 4, name: 'Ken', points: 7, accuracy: 51.2 },
-  { rank: 5, name: 'Chloe', points: 6, accuracy: 44 },
-  { rank: 6, name: 'Ploy', points: 5, accuracy: 47.9 },
-  { rank: 7, name: 'Dan', points: 4, accuracy: 39.3 },
-  { rank: 8, name: 'Tom', points: 3, accuracy: 41.6 },
-  { rank: 9, name: 'Nina', points: 2, accuracy: 35 },
-  { rank: 10, name: 'Sam', points: 1, accuracy: 28.4 },
+  { rank: 1, name: 'Mira', points: 11, accuracy: 62.5, avatar: 'octopus' },
+  { rank: 2, name: 'Bob', points: 9, accuracy: 55.1, avatar: 'crab' },
+  { rank: 3, name: 'Alice', points: 8, accuracy: 48.7, avatar: 'pufferfish' },
+  { rank: 4, name: 'Ken', points: 7, accuracy: 51.2, avatar: '' },
+  { rank: 5, name: 'Chloe', points: 6, accuracy: 44, avatar: 'jellyfish' },
+  { rank: 6, name: 'Ploy', points: 5, accuracy: 47.9, avatar: 'turtle' },
+  { rank: 7, name: 'Dan', points: 4, accuracy: 39.3, avatar: '' },
+  { rank: 8, name: 'Tom', points: 3, accuracy: 41.6, avatar: 'shark' },
+  { rank: 9, name: 'Nina', points: 2, accuracy: 35, avatar: 'starfish' },
+  { rank: 10, name: 'Sam', points: 1, accuracy: 28.4, avatar: '' },
 ]
 
 export function LeaderboardPreview({ mode }: { mode: string }) {

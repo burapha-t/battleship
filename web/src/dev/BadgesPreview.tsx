@@ -43,8 +43,8 @@ const END: GameState = {
   myName: 'Alice',
   myScore: 3,
   players: [
-    { id: 'p1', name: 'Alice', score: 3 },
-    { id: 'p2', name: 'Bob', score: 1 },
+    { id: 'p1', name: 'Alice', score: 3, avatar: '' },
+    { id: 'p2', name: 'Bob', score: 1, avatar: '' },
   ],
   winnerId: 'p1',
   matchId: 'm4',

@@ -27,8 +27,8 @@ describe("replaying p1's side of the golden transcript", () => {
     const { me, opponent } = matchSides(state)
     expect(state.screen).toBe('end')
     expect(state.winnerId).toBe(state.myId)
-    expect(me).toMatchObject({ id: 'p1', name: 'Alice', score: 1 })
-    expect(opponent).toMatchObject({ id: 'p2', name: 'Bob', score: 0 })
+    expect(me).toMatchObject({ id: 'p1', name: 'Alice', score: 1, avatar: '' })
+    expect(opponent).toMatchObject({ id: 'p2', name: 'Bob', score: 0, avatar: '' })
     expect(state.myScore).toBe(1)
   })
 
@@ -80,8 +80,8 @@ describe('gameReducer', () => {
     const bot = fold([
       { type: 'ghostMode', active: true },
       { type: 'matchStart', matchId: 'm1', players: [
-        { id: 'p1', name: 'Alice', score: 0 },
-        { id: 'p2', name: 'Not named Ghost Fleet', score: 0 },
+        { id: 'p1', name: 'Alice', score: 0, avatar: '' },
+        { id: 'p2', name: 'Not named Ghost Fleet', score: 0, avatar: '' },
       ], firstPlayerId: 'p1' },
     ], joined)
     expect(bot.gameMode).toBe('bot')
@@ -125,8 +125,8 @@ describe('gameReducer', () => {
 
   it('a rematch clears both boards and my ships', () => {
     const players = [
-      { id: 'p2', name: 'Bob', score: 0 },
-      { id: 'p1', name: 'Alice', score: 3 },
+      { id: 'p2', name: 'Bob', score: 0, avatar: '' },
+      { id: 'p1', name: 'Alice', score: 3, avatar: '' },
     ]
     const state = fold(
       [
@@ -147,8 +147,8 @@ describe('gameReducer', () => {
 
   describe('Home', () => {
     const players = [
-      { id: 'p1', name: 'Alice', score: 2 },
-      { id: 'p2', name: 'Bob', score: 1 },
+      { id: 'p1', name: 'Alice', score: 2, avatar: '' },
+      { id: 'p2', name: 'Bob', score: 1, avatar: '' },
     ]
     const endedEvents: GameAction[] = [
       { type: 'matchStart', matchId: 'm1', players, firstPlayerId: 'p1' },
@@ -188,8 +188,8 @@ describe('gameReducer', () => {
         type: 'lobby',
         count: 2,
         clients: [
-          { id: 'p1', name: 'Alice', status: 'placing' },
-          { id: 'p2', name: 'Bob', status: 'placing' },
+          { id: 'p1', name: 'Alice', status: 'placing', avatar: '' },
+          { id: 'p2', name: 'Bob', status: 'placing', avatar: '' },
         ],
       })
       expect(placing.leaving).toBe(true)
@@ -198,8 +198,8 @@ describe('gameReducer', () => {
         type: 'lobby',
         count: 2,
         clients: [
-          { id: 'p1', name: 'Alice', status: 'idle' },
-          { id: 'p2', name: 'Bob', status: 'idle' },
+          { id: 'p1', name: 'Alice', status: 'idle', avatar: '' },
+          { id: 'p2', name: 'Bob', status: 'idle', avatar: '' },
         ],
       })
       expect(idle.leaving).toBe(false)
@@ -239,6 +239,7 @@ describe('match history', () => {
     opponent: `Captain ${n}`,
     endedAt: `2026-10-19T07:${String(59 - n).padStart(2, '0')}:00Z`,
     accuracy: 50,
+    opponentAvatar: '',
   })
   const page1: ServerEvent = { type: 'history', page: 1, stats, matches: Array.from({ length: 20 }, (_, i) => match(i)), more: true }
   const page2: ServerEvent = { type: 'history', page: 2, stats, matches: [match(20)], more: false }
@@ -309,9 +310,9 @@ describe('leaderboard', () => {
     { type: 'welcome', id: 'p1', nickname: 'Alice' },
   ])
   const rows = [
-    { rank: 1, name: 'Mira', points: 11, accuracy: 62.5 },
-    { rank: 1, name: 'Bob', points: 11, accuracy: 62.5 },
-    { rank: 3, name: 'Alice', points: 8, accuracy: 48.7 },
+    { rank: 1, name: 'Mira', points: 11, accuracy: 62.5, avatar: '' },
+    { rank: 1, name: 'Bob', points: 11, accuracy: 62.5, avatar: '' },
+    { rank: 3, name: 'Alice', points: 8, accuracy: 48.7, avatar: '' },
   ]
   const open = gameReducer(lobby, { type: 'openLeaderboard' })
 
@@ -345,4 +346,19 @@ describe('leaderboard', () => {
     const placing = gameReducer(lobby, { type: 'matchStart', matchId: 'm1', players: [], firstPlayerId: 'p1' })
     expect(gameReducer(placing, { type: 'openLeaderboard' }).screen).toBe('placement')
   })
+})
+
+it('keeps each player\'s avatar from lobby and matchStart (#77)', () => {
+  const home = gameReducer({ ...initialState, screen: 'lobby', myId: 'p1', myName: 'Alice' },
+    { type: 'lobby', count: 2, clients: [
+      { id: 'p1', name: 'Alice', status: 'idle', avatar: 'shark' },
+      { id: 'p2', name: 'Bob', status: 'idle', avatar: '' },
+    ] })
+  expect(home.lobby.map((c) => c.avatar)).toEqual(['shark', ''])
+  const placing = gameReducer(home, { type: 'matchStart', matchId: 'm1', firstPlayerId: 'p1', players: [
+    { id: 'p1', name: 'Alice', score: 0, avatar: 'shark' },
+    { id: 'p2', name: 'Bob', score: 0, avatar: 'octopus' },
+  ] })
+  const { me, opponent } = matchSides(placing)
+  expect([me?.avatar, opponent?.avatar]).toEqual(['shark', 'octopus'])
 })

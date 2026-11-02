@@ -38,12 +38,14 @@ export function Header({ state, nav, onQuitGame, onOpenSettings }: {
       <div className="scoreboard">
         {inMatch && me && opponent ? (
           <>
-            <PlayerChip name={me.name} score={me.score} you turn={active === me.id} />
+            <PlayerChip name={me.name} avatar={me.avatar} score={me.score} you turn={active === me.id} />
             <span className="vs">{t('versus')}</span>
-            <PlayerChip name={opponent.name} score={opponent.score} turn={active === opponent.id} />
+            <PlayerChip name={opponent.name} avatar={opponent.avatar} score={opponent.score} turn={active === opponent.id} />
           </>
         ) : (
-          state.myName !== null && <PlayerChip name={state.myName} score={state.myScore} you />
+          state.myName !== null && (
+            <PlayerChip name={state.myName} avatar={state.lobby.find((c) => c.id === state.myId)?.avatar} score={state.myScore} you />
+          )
         )}
       </div>
       <nav className="topnav">
@@ -96,13 +98,13 @@ function IconButton({ label, disabled = false, dialog = false, danger = false, o
   )
 }
 
-type ChipProps = { name: string; score: number; you?: boolean; turn?: boolean }
+type ChipProps = { name: string; avatar?: string; score: number; you?: boolean; turn?: boolean }
 
-function PlayerChip({ name, score, you = false, turn = false }: ChipProps) {
+function PlayerChip({ name, avatar, score, you = false, turn = false }: ChipProps) {
   const { t } = useTranslation('game')
   return (
     <div className={`chip${you ? ' me' : ''}${turn ? ' turn' : ''}`}>
-      <Avatar name={name} color={you ? 'var(--sun)' : 'var(--lilac)'} />
+      <Avatar name={name} avatar={avatar} color={you ? 'var(--sun)' : 'var(--lilac)'} />
       <span className="name">
         {name}
         <small>{you ? t('you') : t('opponent')}</small>

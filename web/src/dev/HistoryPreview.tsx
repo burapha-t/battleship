@@ -16,6 +16,8 @@ function sample(count: number): HistoryMatch[] {
     return {
       won,
       opponent: OPPONENTS[(i * 3) % OPPONENTS.length],
+      // Some opponents have a saved picture (#77), some show their initial.
+      opponentAvatar: ['crab', '', 'octopus', 'shark', ''][(i * 3) % 5],
       endedAt: new Date(Date.now() - (i + 1) * 40 * 60_000).toISOString().replace(/\.\d+Z$/, 'Z'),
       accuracy: Math.round((won ? 48 + ((i * 13) % 30) : 22 + ((i * 11) % 20)) * 10) / 10,
     }

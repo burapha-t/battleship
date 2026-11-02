@@ -57,7 +57,7 @@ export function LobbyScreen({ state, publicSearching, onStartGame, onStartGhost,
               const status = STATUS[client.status] ?? STATUS.idle
               return (
                 <li key={client.id} className="who">
-                  <Avatar name={client.name} color={you ? 'var(--sun)' : client.name ? OTHER_COLORS[i % OTHER_COLORS.length] : '#C3D3E3'} />
+                  <Avatar name={client.name} avatar={client.avatar} color={you ? 'var(--sun)' : client.name ? OTHER_COLORS[i % OTHER_COLORS.length] : '#C3D3E3'} />
                   <span className="who-name">
                     {client.name ?? <em>{t('connecting')}</em>}
                     {you && <small>{t('thatsYou')}</small>}
