@@ -33,6 +33,18 @@ public class LeaderboardTests : IDisposable
         Assert.Empty(_database.GetLeaderboard().Rows);
     }
 
+    // #77: each row has the account's picture; "" for none.
+    [Fact]
+    public void EachRow_HasTheAccountsAvatar()
+    {
+        long alice = User("Alice"), bob = User("Bob");
+        Save(alice, bob, winner: alice, firstHits: 3, firstShots: 4, secondHits: 1, secondShots: 4);
+        _database.SetProfile(alice, "shark", Array.Empty<string>());
+
+        Assert.Equal(new[] { ("Alice", "shark"), ("Bob", "") },
+            _database.GetLeaderboard().Rows.Select(r => (r.Name, r.Avatar)));
+    }
+
     [Fact]
     public void RanksByPoints_TheTotalWins()
     {

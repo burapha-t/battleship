@@ -320,8 +320,10 @@ public sealed class GameDatabase
         using (var command = connection.CreateCommand())
         {
             command.CommandText = """
-                SELECT mp.won, mp.opponent_name, m.ended_at, mp.hits, mp.shots
+                SELECT mp.won, mp.opponent_name, m.ended_at, mp.hits, mp.shots, COALESCE(ou.avatar, '')
                 FROM match_players mp JOIN matches m ON m.id = mp.match_id
+                LEFT JOIN match_players op ON op.match_id = mp.match_id AND op.user_id <> mp.user_id
+                LEFT JOIN users ou ON ou.id = op.user_id
                 WHERE mp.user_id = $userId
                 ORDER BY m.ended_at DESC, m.id DESC
                 LIMIT $limit OFFSET $offset;
@@ -339,6 +341,7 @@ public sealed class GameDatabase
                     EndedAt = DateTimeOffset.Parse(reader.GetString(2), CultureInfo.InvariantCulture)
                         .ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
                     Accuracy = Percent(reader.GetInt64(3), reader.GetInt64(4)),
+                    OpponentAvatar = reader.GetString(5),
                 });
             }
         }
@@ -369,7 +372,7 @@ public sealed class GameDatabase
     {
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT u.id, u.username, SUM(mp.won), SUM(mp.hits), SUM(mp.shots)
+            SELECT u.id, u.username, SUM(mp.won), SUM(mp.hits), SUM(mp.shots), COALESCE(u.avatar, '')
             FROM match_players mp JOIN users u ON u.id = mp.user_id
             GROUP BY u.id;
             """;
@@ -384,6 +387,7 @@ public sealed class GameDatabase
                     Name = reader.GetString(1),
                     Points = reader.GetInt32(2),
                     Accuracy = Percent(reader.GetInt64(3), reader.GetInt64(4)),
+                    Avatar = reader.GetString(5),
                 }));
             }
         }

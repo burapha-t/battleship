@@ -36,5 +36,12 @@ public sealed class PlayerRecord
     /// </summary>
     public long? UserId { get; set; }
 
+    /// <summary>
+    /// The account's saved profile picture (#77), or "" for none. Set at login
+    /// and after a saved <c>profileUpdate</c>, both on the game loop; a guest's
+    /// stays "". Sent in <c>lobby</c>, <c>matchStart</c> and <c>matchEnd</c>.
+    /// </summary>
+    public string Avatar { get; set; } = "";
+
     public bool HasJoined => Name != null;
 }

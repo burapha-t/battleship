@@ -100,6 +100,10 @@ public sealed class GameHost
                 OnReset();
                 break;
             case HostInput.DatabaseReply reply:
+                // A profile read or saved (#77) carries the account's current
+                // picture; keeping it on the record re-sends lobby when it changed.
+                if (reply.Reply is Profile { Guest: false } profile && _roster.Find(reply.PlayerId) is { } owner)
+                    owner.Avatar = profile.Avatar;
                 Send(new[] { Outbound.ToPlayer(reply.PlayerId, reply.Reply) });
                 break;
             case HostInput.AccountChecked outcome:
@@ -247,7 +251,7 @@ public sealed class GameHost
     {
         var (salt, hash) = hasher.Hash(password);
         return database.CreateUser(name, salt, hash, hasher.Iterations) is long userId
-            ? new HostInput.AccountChecked(playerId, true, userId, name, null)
+            ? new HostInput.AccountChecked(playerId, true, userId, name, "", null)
             : HostInput.AccountChecked.Refused(playerId, ErrorCodes.UsernameTaken, "That username is taken.");
     }
 
@@ -262,7 +266,7 @@ public sealed class GameHost
             return BadCredentials(playerId);
         }
         if (!PasswordHasher.Verify(password, user.Salt, user.Hash, user.Iterations)) return BadCredentials(playerId);
-        return new HostInput.AccountChecked(playerId, false, user.Id, user.Username, null);
+        return new HostInput.AccountChecked(playerId, false, user.Id, user.Username, user.Avatar ?? "", null);
     }
 
     private static HostInput.AccountChecked BadCredentials(string playerId) =>
@@ -289,6 +293,7 @@ public sealed class GameHost
 
         player.Name = outcome.Username;
         player.UserId = outcome.UserId;
+        player.Avatar = outcome.Avatar;
         player.Status = LobbyStatus.Idle;
         Send(new[] { Outbound.ToPlayer(player.Id, new Welcome { Id = player.Id, Nickname = outcome.Username }) });
         Log($"{player.Id} {(outcome.SignedUp ? "signed up" : "logged in")} as {outcome.Username}");

@@ -73,14 +73,14 @@ public class ProtocolJsonTests
         {
             Page = 2,
             Stats = new HistoryStats { MatchCount = 3, WinCount = 2, LoseCount = 1, WinRate = 66.7, Accuracy = 52.5 },
-            Matches = new[] { new HistoryMatch { Won = true, Opponent = "Bob", EndedAt = "2026-10-19T07:00:00Z", Accuracy = 57.1 } },
+            Matches = new[] { new HistoryMatch { Won = true, Opponent = "Bob", EndedAt = "2026-10-19T07:00:00Z", Accuracy = 57.1, OpponentAvatar = "octopus" } },
             More = true,
         };
 
         const string frame =
             "{\"type\":\"history\",\"page\":2," +
             "\"stats\":{\"matchCount\":3,\"winCount\":2,\"loseCount\":1,\"winRate\":66.7,\"accuracy\":52.5}," +
-            "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1}]," +
+            "\"matches\":[{\"won\":true,\"opponent\":\"Bob\",\"endedAt\":\"2026-10-19T07:00:00Z\",\"accuracy\":57.1,\"opponentAvatar\":\"octopus\"}]," +
             "\"more\":true}";
         Assert.Equal(frame, ProtocolJson.Serialize(history));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
@@ -185,6 +185,30 @@ public class ProtocolJsonTests
         Assert.Equal(frame, ProtocolJson.Serialize(new LeaderboardGet()));
     }
 
+    // #77: every player carries their saved picture, "" for none.
+    [Fact]
+    public void LobbyAndMatchPlayers_CarryTheirAvatar()
+    {
+        const string lobby =
+            "{\"type\":\"lobby\",\"count\":2,\"clients\":[" +
+            "{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\",\"avatar\":\"shark\"}," +
+            "{\"id\":\"p2\",\"name\":\"Bob\",\"status\":\"idle\",\"avatar\":\"\"}]}";
+        const string start =
+            "{\"type\":\"matchStart\",\"matchId\":\"m1\",\"players\":[" +
+            "{\"id\":\"p1\",\"name\":\"Alice\",\"score\":0,\"avatar\":\"shark\"}," +
+            "{\"id\":\"p2\",\"name\":\"Bob\",\"score\":0,\"avatar\":\"\"}],\"firstPlayerId\":\"p1\"}";
+        const string end =
+            "{\"type\":\"matchEnd\",\"matchId\":\"m1\",\"winnerId\":\"p1\",\"players\":[" +
+            "{\"id\":\"p1\",\"name\":\"Alice\",\"score\":1,\"avatar\":\"shark\"}," +
+            "{\"id\":\"p2\",\"name\":\"Bob\",\"score\":0,\"avatar\":\"\"}]}";
+
+        Assert.Equal("shark", Assert.IsType<LobbyUpdate>(ProtocolJson.Parse(lobby)).Clients[0].Avatar);
+        Assert.Equal("shark", Assert.IsType<MatchStart>(ProtocolJson.Parse(start)).Players[0].Avatar);
+        Assert.Equal("shark", Assert.IsType<MatchEnd>(ProtocolJson.Parse(end)).Players[0].Avatar);
+        foreach (var frame in new[] { lobby, start, end })
+            Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
+    }
+
     [Fact]
     public void Leaderboard_WritesRowsInWireOrder()
     {
@@ -192,7 +216,7 @@ public class ProtocolJsonTests
         {
             Rows = new[]
             {
-                new LeaderboardRow { Rank = 1, Name = "Alice", Points = 11, Accuracy = 62.5 },
+                new LeaderboardRow { Rank = 1, Name = "Alice", Points = 11, Accuracy = 62.5, Avatar = "shark" },
                 new LeaderboardRow { Rank = 1, Name = "Bob", Points = 11, Accuracy = 62.5 },
                 new LeaderboardRow { Rank = 3, Name = "Carol", Points = 0, Accuracy = 0 },
             },
@@ -200,9 +224,9 @@ public class ProtocolJsonTests
 
         const string frame =
             "{\"type\":\"leaderboard\",\"rows\":[" +
-            "{\"rank\":1,\"name\":\"Alice\",\"points\":11,\"accuracy\":62.5}," +
-            "{\"rank\":1,\"name\":\"Bob\",\"points\":11,\"accuracy\":62.5}," +
-            "{\"rank\":3,\"name\":\"Carol\",\"points\":0,\"accuracy\":0}]}";
+            "{\"rank\":1,\"name\":\"Alice\",\"points\":11,\"accuracy\":62.5,\"avatar\":\"shark\"}," +
+            "{\"rank\":1,\"name\":\"Bob\",\"points\":11,\"accuracy\":62.5,\"avatar\":\"\"}," +
+            "{\"rank\":3,\"name\":\"Carol\",\"points\":0,\"accuracy\":0,\"avatar\":\"\"}]}";
         Assert.Equal(frame, ProtocolJson.Serialize(leaderboard));
         Assert.Equal(frame, ProtocolJson.Serialize(ProtocolJson.Parse(frame)!));
     }
@@ -284,7 +308,7 @@ public class ProtocolJsonTests
         };
 
         Assert.Equal(
-            "{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":null,\"status\":\"connecting\"}]}",
+            "{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":null,\"status\":\"connecting\",\"avatar\":\"\"}]}",
             ProtocolJson.Serialize(lobby));
         Assert.Contains("\"sunkCells\":null", ProtocolJson.Serialize(new FireResult()));
     }
