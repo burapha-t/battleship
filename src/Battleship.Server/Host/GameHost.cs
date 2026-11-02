@@ -464,7 +464,11 @@ public sealed class GameHost
         switch (message)
         {
             case MatchStart start:
-                Log($"Match {start.MatchId}: {start.Players[0].Name} vs {start.Players[1].Name}, {NameOf(start.FirstPlayerId)} goes first");
+                string opener = NameOf(start.FirstPlayerId);
+                bool random = _engine.Matches.FirstOrDefault(m => m.Id == start.MatchId)?.FirstPickedAtRandom ?? true;
+                Log($"Match {start.MatchId}: {start.Players[0].Name} vs {start.Players[1].Name}. " + (random
+                    ? $"The server picked {opener} at random to go first"
+                    : $"{opener} won the last match, so {opener} goes first"));
                 break;
             case MatchEnd end:
                 Log($"{NameOf(end.WinnerId)} won match {end.MatchId}");
