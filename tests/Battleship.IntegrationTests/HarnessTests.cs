@@ -15,18 +15,18 @@ public class HarnessTests
         Assert.Equal("p1", alice.Id);
         await alice.SendAsync(new Join { Nickname = "Alice" });
         Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await alice.NextRawAsync());
-        Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}]}",
+        Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\",\"avatar\":\"\"}]}",
             await alice.NextRawAsync());
 
         await using var bob = await server.ConnectAsync();
         Assert.Equal("p2", bob.Id);
-        Assert.Equal("{\"type\":\"lobby\",\"count\":2,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}," +
-                     "{\"id\":\"p2\",\"name\":null,\"status\":\"connecting\"}]}", await alice.NextRawAsync());
+        Assert.Equal("{\"type\":\"lobby\",\"count\":2,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\",\"avatar\":\"\"}," +
+                     "{\"id\":\"p2\",\"name\":null,\"status\":\"connecting\",\"avatar\":\"\"}]}", await alice.NextRawAsync());
 
         await bob.SendAsync(new Join { Nickname = "Bob" });
         Assert.Equal("Bob", (await bob.NextAsync<Welcome>()).Nickname);
-        string lobby = "{\"type\":\"lobby\",\"count\":2,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}," +
-                       "{\"id\":\"p2\",\"name\":\"Bob\",\"status\":\"idle\"}]}";
+        string lobby = "{\"type\":\"lobby\",\"count\":2,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\",\"avatar\":\"\"}," +
+                       "{\"id\":\"p2\",\"name\":\"Bob\",\"status\":\"idle\",\"avatar\":\"\"}]}";
         Assert.Equal(lobby, await bob.NextRawAsync());
         Assert.Equal(lobby, await alice.NextRawAsync());
     }

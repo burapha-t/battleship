@@ -185,15 +185,23 @@ dashboard's own display.
 
 ```json
 {"type":"lobby","count":3,"clients":[
-  {"id":"p1","name":"Alice","status":"in-match"},
-  {"id":"p2","name":"Bob","status":"in-match"},
-  {"id":"p3","name":"Carol","status":"idle"}
+  {"id":"p1","name":"Alice","status":"in-match","avatar":"shark"},
+  {"id":"p2","name":"Bob","status":"in-match","avatar":""},
+  {"id":"p3","name":"Carol","status":"idle","avatar":"octopus"}
 ]}
 ```
 
 `count` equals the length of `clients` and is sent explicitly so the dashboard
 needs no derivation. Every connected client is listed, including one that has not
 joined yet: its `name` is `null` until its `welcome`.
+
+`avatar` is the player's saved profile picture (#77): one of the codes under
+`profileUpdate`, or `""` for none. A guest, an account with no picture, and the
+Ghost Fleet bot (which joins as a guest) have `""`; the UI then shows the name's
+first letter, or the Ghost Fleet mascot. It is loaded from the account at
+`login` and changes when the player saves a new picture with `profileUpdate`,
+which also sends a new `lobby`. `matchStart` and `matchEnd` carry the same
+value in `players`.
 
 | `status` | From | Until |
 |---|---|---|
@@ -217,13 +225,14 @@ one `lobby` with both `"placing"`; the second player never appears as
 
 ```json
 {"type":"matchStart","matchId":"m1","players":[
-  {"id":"p1","name":"Alice","score":1},
-  {"id":"p2","name":"Bob","score":0}
+  {"id":"p1","name":"Alice","score":1,"avatar":"shark"},
+  {"id":"p2","name":"Bob","score":0,"avatar":""}
 ],"firstPlayerId":"p1"}
 ```
 
-`players` always has exactly 2 entries and carries current scores, so the UI can
-render both names and scores from this one message. Every match has its own
+`players` always has exactly 2 entries and carries current scores and pictures
+(`avatar`, as in `lobby`), so the UI can render both players from this one
+message. Every match has its own
 `matchId`, rematches included.
 
 `firstPlayerId` is **random** for a first match, and is the **previous match's
@@ -285,8 +294,8 @@ better in a demo than a shot appearing from nowhere.
 
 ```json
 {"type":"matchEnd","matchId":"m1","winnerId":"p1","players":[
-  {"id":"p1","name":"Alice","score":2},
-  {"id":"p2","name":"Bob","score":0}
+  {"id":"p1","name":"Alice","score":2,"avatar":"shark"},
+  {"id":"p2","name":"Bob","score":0,"avatar":""}
 ]}
 ```
 
@@ -334,8 +343,8 @@ about that player. Added with HIST-1, under the ignore-unknown rules (§1).
 {"type":"history","page":1,
  "stats":{"matchCount":12,"winCount":8,"loseCount":4,"winRate":66.7,"accuracy":50.4},
  "matches":[
-  {"won":true,"opponent":"Bob","endedAt":"2026-10-19T07:00:00Z","accuracy":57.1},
-  {"won":false,"opponent":"Carol","endedAt":"2026-10-18T19:42:00Z","accuracy":38.5}
+  {"won":true,"opponent":"Bob","endedAt":"2026-10-19T07:00:00Z","accuracy":57.1,"opponentAvatar":""},
+  {"won":false,"opponent":"Carol","endedAt":"2026-10-18T19:42:00Z","accuracy":38.5,"opponentAvatar":"octopus"}
  ],"more":false}
 ```
 
@@ -350,6 +359,7 @@ about that player. Added with HIST-1, under the ignore-unknown rules (§1).
 | `opponent` | The opponent's username at the time |
 | `endedAt` | When the match ended, UTC, ISO 8601 (`…Z`). The UI shows it in local time |
 | `accuracy` | This player's hits ÷ shots in that match, a percentage with one decimal |
+| `opponentAvatar` | The opponent's profile picture now (not at the time), or `""` for none (#77) |
 | `more` | `true` if an older page exists |
 
 Only finished matches between two logged-in players are saved
@@ -363,9 +373,9 @@ LB-1, under the ignore-unknown rules (§1).
 
 ```json
 {"type":"leaderboard","rows":[
-  {"rank":1,"name":"Alice","points":11,"accuracy":62.5},
-  {"rank":1,"name":"Bob","points":11,"accuracy":62.5},
-  {"rank":3,"name":"Carol","points":7,"accuracy":48.0}
+  {"rank":1,"name":"Alice","points":11,"accuracy":62.5,"avatar":"shark"},
+  {"rank":1,"name":"Bob","points":11,"accuracy":62.5,"avatar":""},
+  {"rank":3,"name":"Carol","points":7,"accuracy":48.0,"avatar":"octopus"}
 ]}
 ```
 
@@ -376,6 +386,7 @@ LB-1, under the ignore-unknown rules (§1).
 | `name` | The account's username |
 | `points` | Total wins over all the player's saved matches |
 | `accuracy` | hits ÷ shots over all their saved matches, a percentage with one decimal; `0` with no shots |
+| `avatar` | The account's profile picture, or `""` for none (#77) |
 
 All-time, from every saved match (`docs/implement/database.md`); a dashboard
 RESET doesn't change it. Only accounts with at least one saved match are listed.
@@ -775,7 +786,7 @@ reducer then fails to compile whenever an event is added but not handled — the
 reason TypeScript is on this project.
 
 ```ts
-export type PlayerInfo = { id: string; name: string; score: number };
+export type PlayerInfo = { id: string; name: string; score: number; avatar: string };
 export type Cell = [row: number, col: number];
 
 export type ServerEvent =

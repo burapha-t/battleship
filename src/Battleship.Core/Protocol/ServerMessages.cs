@@ -40,6 +40,9 @@ namespace Battleship.Core.Protocol
         public string Id { get; set; } = "";
         public string? Name { get; set; }
         public string Status { get; set; } = "";
+
+        /// <summary>The saved profile picture (#77), or "" for none: guests, no picture, Ghost Fleet.</summary>
+        public string Avatar { get; set; } = "";
     }
 
     /// <summary>The <see cref="LobbyClient.Status"/> values (protocol.md §4 <c>lobby</c>).</summary>
@@ -68,6 +71,9 @@ namespace Battleship.Core.Protocol
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
         public int Score { get; set; }
+
+        /// <summary>The saved profile picture (#77), or "" for none, as in <see cref="LobbyClient.Avatar"/>.</summary>
+        public string Avatar { get; set; } = "";
     }
 
     /// <summary>A placement was accepted. Carries only the id, never the cells.</summary>
@@ -175,6 +181,9 @@ namespace Battleship.Core.Protocol
 
         /// <summary>My hits / my shots in this match, a percentage with one decimal.</summary>
         public double Accuracy { get; set; }
+
+        /// <summary>The opponent's profile picture now (#77), or "" for none.</summary>
+        public string OpponentAvatar { get; set; } = "";
     }
 
     /// <summary>
@@ -202,6 +211,9 @@ namespace Battleship.Core.Protocol
         public string Name { get; set; } = "";
         public int Points { get; set; }
         public double Accuracy { get; set; }
+
+        /// <summary>The account's profile picture (#77), or "" for none.</summary>
+        public string Avatar { get; set; } = "";
     }
 
     /// <summary>

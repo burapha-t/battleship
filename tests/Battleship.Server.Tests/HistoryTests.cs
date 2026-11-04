@@ -39,6 +39,21 @@ public class HistoryTests : IDisposable
         Assert.False(history.More);
     }
 
+    // #77: the opponent's picture as it is now, from their account; "" for none.
+    [Fact]
+    public void EachMatch_HasTheOpponentsCurrentAvatar()
+    {
+        Save(_alice, _bob, winner: _alice, minutes: 0, aliceHits: 1, aliceShots: 2);
+        Save(_alice, _carol, winner: _alice, minutes: 10, aliceHits: 1, aliceShots: 2);
+        _database.SetProfile(_bob, "whale", Array.Empty<string>());
+        _database.SetProfile(_bob, "octopus", Array.Empty<string>()); // changed since: the new one shows
+
+        var matches = _database.GetHistory(_alice, 1).Matches;
+
+        Assert.Equal(new[] { ("Carol", ""), ("Bob", "octopus") }, matches.Select(m => (m.Opponent, m.OpponentAvatar)));
+        Assert.Equal("", Assert.Single(_database.GetHistory(_carol, 1).Matches).OpponentAvatar); // Alice has none
+    }
+
     [Fact]
     public void StatsAndList_MatchTheSavedMatches_NewestFirst()
     {

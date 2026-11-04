@@ -57,6 +57,9 @@ public class ProfileTests : IAsyncLifetime
         Assert.False(saved.Guest);
         Assert.Equal("pufferfish", saved.Avatar);
         Assert.Null(saved.Rank);
+        // The new picture reaches everyone's lobby (#77).
+        Assert.Equal("pufferfish", (await alice.NextAsync<LobbyUpdate>()).Clients.Single(c => c.Id == alice.Id).Avatar);
+        Assert.Equal("pufferfish", (await bob.NextAsync<LobbyUpdate>()).Clients.Single(c => c.Id == alice.Id).Avatar);
 
         await alice.SendAsync(new ProfileUpdate { Avatar = "crab", ShownBadges = new[] { "wins-5" } });
         var refused = await alice.NextAsync<Error>();

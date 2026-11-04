@@ -221,7 +221,7 @@ public sealed class Match
     private Board BoardOf(string playerId) => _boards[IndexOf(playerId)]!;
 
     private IReadOnlyList<PlayerInfo> PlayerInfos() =>
-        _players.Select(player => new PlayerInfo { Id = player.Id, Name = player.Name ?? player.Id, Score = player.Score }).ToList();
+        _players.Select(player => new PlayerInfo { Id = player.Id, Name = player.Name ?? player.Id, Score = player.Score, Avatar = player.Avatar }).ToList();
 
     private Outbound ToBoth(ProtocolMessage message) => new(new[] { _players[0].Id, _players[1].Id }, message);
 

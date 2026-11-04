@@ -92,7 +92,7 @@ function MatchRow({ match, language, t }: { match: HistoryMatch; language: Langu
     <li className="history-row">
       <Pennant won={match.won} label={match.won ? t('win') : t('lost')} />
       <span className="history-opponent">
-        <Avatar name={match.opponent} color={color} />
+        <Avatar name={match.opponent} avatar={match.opponentAvatar} color={color} />
         {match.opponent}
       </span>
       <time className="history-when" dateTime={match.endedAt}>

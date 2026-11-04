@@ -12,6 +12,7 @@ import { getSettings } from './settings/settings'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import { AvatarsPreview } from './dev/AvatarsPreview.tsx'
 import { BadgesPreview } from './dev/BadgesPreview.tsx'
 import { BoardPreview } from './dev/BoardPreview.tsx'
 import { HistoryPreview } from './dev/HistoryPreview.tsx'
@@ -34,6 +35,8 @@ createRoot(document.getElementById('root')!).render(
       <BadgesPreview mode={preview} />
     ) : preview?.startsWith('profile') ? (
       <ProfilePreview mode={preview} />
+    ) : preview?.startsWith('avatars') ? (
+      <AvatarsPreview mode={preview} />
     ) : (
       <App />
     )}

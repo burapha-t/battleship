@@ -9,14 +9,14 @@ export type Cell = [row: number, col: number]
 
 /**
  * A player in `matchStart` and `matchEnd`, which always list 2. The order isn't
- * fixed, so find yourself by `id`.
+ * fixed, so find yourself by `id`. `avatar` is their saved picture, '' for none (#77).
  */
-export type PlayerInfo = { id: string; name: string; score: number }
+export type PlayerInfo = { id: string; name: string; score: number; avatar: string }
 
 export type LobbyStatus = 'connecting' | 'idle' | 'searching' | 'placing' | 'in-match'
 
-/** `name` is null until that client's `welcome`. */
-export type LobbyClient = { id: string; name: string | null; status: LobbyStatus }
+/** `name` is null until that client's `welcome`. `avatar` is their saved picture, '' for none (#77). */
+export type LobbyClient = { id: string; name: string | null; status: LobbyStatus; avatar: string }
 
 export type ErrorCode =
   | 'bad-nickname'
@@ -36,14 +36,15 @@ export type ErrorCode =
 /** Totals over all my saved matches. Rates are percentages with one decimal; 0 with no matches. */
 export type HistoryStats = { matchCount: number; winCount: number; loseCount: number; winRate: number; accuracy: number }
 
-/** One saved match from my side. `endedAt` is UTC ISO 8601; show it in local time. */
-export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; accuracy: number }
+/** One saved match from my side. `endedAt` is UTC ISO 8601; show it in local time. `opponentAvatar`: their picture now, '' for none. */
+export type HistoryMatch = { won: boolean; opponent: string; endedAt: string; accuracy: number; opponentAvatar: string }
 
 /**
  * One ranked account. `points` = wins; `accuracy` = hits ÷ shots as a percentage
  * with one decimal, 0 with no shots. Ties on both share a `rank` (1, 1, 3).
+ * `avatar` is the account's picture, '' for none.
  */
-export type LeaderboardRow = { rank: number; name: string; points: number; accuracy: number }
+export type LeaderboardRow = { rank: number; name: string; points: number; accuracy: number; avatar: string }
 
 /** One badge I own (#41): `code` from the catalogue in badges.ts, `unlockedAt` UTC ISO 8601. */
 export type BadgeUnlock = { code: string; unlockedAt: string }

@@ -133,6 +133,7 @@ Each badge at most once per player (#41). The 15 codes, and when each is earned,
 | Badges: accuracy | match_players | hits / shots in one match strictly above 40, 50, 60, 70, 80% (`accuracy-40` … `accuracy-80`) |
 | Badges: hit streak | match_players | best_streak in one match reaches 4, 6, 8, 10, 12 (`streak-4` … `streak-12`) |
 | Profile | users, match_players, achievements | avatar and shown_badges columns; rank and wins as on the leaderboard; only earned badges may be shown |
+| Profile picture elsewhere (#77) | users | avatar is read at login (FindUser) and kept on the player's PlayerRecord for `lobby`, `matchStart` and `matchEnd`; the leaderboard and match history read it with their own queries (the opponent's current picture) |
 | AI ghost fleet, decoy | fleets, shots | Where a player hides ships and how they shoot |
 | Kill streak popup | none | The web counts hits live from fireResult |
 | Language, sound, settings | none | Saved in the browser |

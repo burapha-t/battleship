@@ -25,7 +25,7 @@ public sealed class Roster
     {
         Count = _players.Count,
         Clients = _players
-            .Select(player => new LobbyClient { Id = player.Id, Name = player.Name, Status = player.Status })
+            .Select(player => new LobbyClient { Id = player.Id, Name = player.Name, Status = player.Status, Avatar = player.Avatar })
             .ToList(),
     };
 

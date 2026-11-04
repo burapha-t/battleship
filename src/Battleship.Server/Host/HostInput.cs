@@ -35,9 +35,9 @@ public abstract record HostInput
     /// password was right and the player becomes <paramref name="Username"/>
     /// (users.id <paramref name="UserId"/>). Never holds a password or hash.
     /// </summary>
-    public sealed record AccountChecked(string PlayerId, bool SignedUp, long UserId, string Username, Error? Error) : HostInput
+    public sealed record AccountChecked(string PlayerId, bool SignedUp, long UserId, string Username, string Avatar, Error? Error) : HostInput
     {
         public static AccountChecked Refused(string playerId, string code, string message) =>
-            new(playerId, false, 0, "", new Error { Code = code, Message = message });
+            new(playerId, false, 0, "", "", new Error { Code = code, Message = message });
     }
 }

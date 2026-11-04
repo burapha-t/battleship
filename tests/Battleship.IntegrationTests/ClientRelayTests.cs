@@ -80,7 +80,7 @@ public class ClientRelayTests
         await SendAsync(browser, "\"nickname\":\"Alice\"}");
 
         Assert.Equal("{\"type\":\"welcome\",\"id\":\"p1\",\"nickname\":\"Alice\"}", await ReceiveAsync(browser));
-        Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\"}]}",
+        Assert.Equal("{\"type\":\"lobby\",\"count\":1,\"clients\":[{\"id\":\"p1\",\"name\":\"Alice\",\"status\":\"idle\",\"avatar\":\"\"}]}",
             await ReceiveAsync(browser));
     }
 
