@@ -12,6 +12,7 @@ bot. 7 people, 4 weeks, graded.
 | `docs/convention.md` | Branch, commit and PR names — every one must follow it |
 | `docs/implement/protocol.md` | **FROZEN wire contract** — wins over any code |
 | `docs/implement/implementation-plan.md` | Stack, repo layout, components, verification, team split |
+| `docs/team-responsibilities.md` | Who did what: each member's role, issues and PRs |
 | `docs/implement/database.md` | SQLite tables, where the file lives, rules for saving matches, which feature uses what |
 | `docs/implement/userflow.md` | Plain-language player journey and device connections — explainer only; `protocol.md` wins |
 | `docs/demo/v1/` | Node prototype — reference only; never ported, never shipped |
